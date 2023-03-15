@@ -100,8 +100,6 @@ class UsuarioController extends Controller
         $id = auth()->id();
         $users = user::join("roles", "roles.id", "=", "usuarios.rol_id")
             ->join("estado_usuarios", "estado_usuarios.id", "=", "usuarios.estado_id")
-            ->join("sig_usuarios_contratos", "sig_usuarios_contratos.usuario_id", "=", "usuarios.id")
-            ->join("sig_contratos", "sig_contratos.id", "=", "sig_usuarios_contratos.contrato_id")
             ->where('usuarios.id', '=', $id)
             ->select(
                 "roles.nombre as rol",
@@ -112,8 +110,6 @@ class UsuarioController extends Controller
                 "roles.id",
                 'usuarios.id as usuario_id',
                 "estado_usuarios.nombre as estado",
-                "sig_contratos.id as contrato_id",
-                "sig_contratos.numero as contrato_numero",
             )
             ->get();
         if (count($users) == 0) {
@@ -141,13 +137,13 @@ class UsuarioController extends Controller
     public function userById($id)
     {
         // $id = auth()->id();
-        $usuario_contrato = SigUsuarioContrato::join('usuarios', 'usuarios.id', '=', 'sig_usuarios_contratos.usuario_id')
-            ->where('sig_usuarios_contratos.usuario_id', '=', $id)
-            ->select(
-                'usuarios.id'
-            )
-            ->get();
-        if (empty($usuario_contrato[0])) {
+        // $usuario_contrato = SigUsuarioContrato::join('usuarios', 'usuarios.id', '=', 'sig_usuarios_contratos.usuario_id')
+        //     ->where('sig_usuarios_contratos.usuario_id', '=', $id)
+        //     ->select(
+        //         'usuarios.id'
+        //     )
+        //     ->get();
+        // if (empty($usuario_contrato[0])) {
             $users = user::join("roles", "roles.id", "=", "usuarios.rol_id")
                 ->join("estado_usuarios", "estado_usuarios.id", "=", "usuarios.estado_id")
                 ->where('usuarios.id', '=', $id)
@@ -164,29 +160,29 @@ class UsuarioController extends Controller
                 )
                 ->get();
             return response()->json($users);
-        } else {
-            $users = user::join("roles", "roles.id", "=", "usuarios.rol_id")
-                ->join("estado_usuarios", "estado_usuarios.id", "=", "usuarios.estado_id")
-                ->join("sig_usuarios_contratos", "sig_usuarios_contratos.usuario_id", "=", "usuarios.id")
-                ->join("sig_contratos", "sig_contratos.id", "=", "sig_usuarios_contratos.contrato_id")
-                ->where('usuarios.id', '=', $id)
-                ->select(
+        // } else {
+        //     $users = user::join("roles", "roles.id", "=", "usuarios.rol_id")
+        //         ->join("estado_usuarios", "estado_usuarios.id", "=", "usuarios.estado_id")
+        //         ->join("sig_usuarios_contratos", "sig_usuarios_contratos.usuario_id", "=", "usuarios.id")
+        //         ->join("sig_contratos", "sig_contratos.id", "=", "sig_usuarios_contratos.contrato_id")
+        //         ->where('usuarios.id', '=', $id)
+        //         ->select(
 
-                    "usuarios.nombres",
-                    "usuarios.apellidos",
-                    "usuarios.documento_identidad",
-                    "usuarios.email",
-                    "usuarios.id as id_user",
-                    "roles.nombre as rol",
-                    "roles.id as id_rol",
-                    "estado_usuarios.nombre as estado",
-                    "estado_usuarios.id as id_estado",
-                    "sig_contratos.id as contrato_id",
-                    "sig_contratos.numero as contrato_numero",
-                )
-                ->get();
-            return response()->json($users);
-        }
+        //             "usuarios.nombres",
+        //             "usuarios.apellidos",
+        //             "usuarios.documento_identidad",
+        //             "usuarios.email",
+        //             "usuarios.id as id_user",
+        //             "roles.nombre as rol",
+        //             "roles.id as id_rol",
+        //             "estado_usuarios.nombre as estado",
+        //             "estado_usuarios.id as id_estado",
+        //             "sig_contratos.id as contrato_id",
+        //             "sig_contratos.numero as contrato_numero",
+        //         )
+        //         ->get();
+        //     return response()->json($users);
+        // }
 
     }
 
