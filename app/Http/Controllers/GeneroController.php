@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use App\Models\Departamento;
+use App\Models\Genero;
 use Illuminate\Http\Request;
 
-class DepartamentoController extends Controller
+class GeneroController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,15 +13,8 @@ class DepartamentoController extends Controller
      */
     public function index()
     {
-        $result = Departamento::all();
-        return response()->json($result);
-    }
-
-    public function departamentopais($id)
-    {
-        $result = Departamento::where('cod_pai', '=', $id)
-            ->select()
-            ->get();
+        $result = Genero::select()
+        ->get();
         return response()->json($result);
     }
 
@@ -31,27 +23,9 @@ class DepartamentoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request)
+    public function create()
     {
-
-        try {
-            $documento = $request->file('departamentos')->getContent();
-            $lineas = explode("\n", $documento);
-            $numero_departamentos = count($lineas) - 1;
-            $posicion = 3;
-            $lineas = explode(",", $documento);
-            $lineas = explode("\"", $documento);
-            for ($departamento = 0; $departamento < $numero_departamentos; $departamento++) {
-                $tabla_departamentos = new Departamento;
-                $tabla_departamentos->nombre = $lineas[$posicion];
-                $tabla_departamentos->descripcion = $lineas[$posicion + 2];
-                $tabla_departamentos->save();
-                $posicion += 10;
-            }
-            return response()->json(['status' => 'success', 'message' => 'Registros guardados exitosamente']);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => 'Error al guardar los datos, por favor comuniquese con el administrador del sistema']);
-        }
+        //
     }
 
     /**

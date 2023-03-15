@@ -66,48 +66,48 @@ class AuthController extends Controller
             return response()->json($validator->errors()->toJson(), 400);
         }
       
-        DB::beginTransaction();
+        // DB::beginTransaction();
 
-        try {
+        // try {
 
             $user = User::create(array_merge(
                 $validator->validated(),
                 ['password' => bcrypt($request->password)]
             ));
 
-            if ($request->contrato_id != null || $request->contrato_id != '') {
-                $usuario_contrato = new SigUsuarioContrato;
-                $usuario_contrato->usuario_id = $user->id;
-                $usuario_contrato->contrato_id = $request->contrato_id;
-                $usuario_contrato->save();
+            // if ($request->contrato_id != null || $request->contrato_id != '') {
+            //     $usuario_contrato = new SigUsuarioContrato;
+            //     $usuario_contrato->usuario_id = $user->id;
+            //     $usuario_contrato->contrato_id = $request->contrato_id;
+            //     $usuario_contrato->save();
 
-                // inserta un usuario como empleado y lo asigna a un contrato,
-                //  falta que se pueda actuañlizar la información
-                //  del empleado desde módulo usuario
-                if ($request->empleado == true) {
-                    $empleado = new SigEmpleados;
-                    $empleado->nombres = $request->nombres;
-                    $empleado->apellidos = $request->apellidos;
-                    $empleado->documento_identidad = $request->documento_identidad;
-                    $empleado->tipo_documento_identidad_id = 1;
-                    $empleado->sig_cargo_id = 1;
-                    $empleado->save();
+            //     // inserta un usuario como empleado y lo asigna a un contrato,
+            //     //  falta que se pueda actuañlizar la información
+            //     //  del empleado desde módulo usuario
+            //     // if ($request->empleado == true) {
+            //     //     $empleado = new SigEmpleados;
+            //     //     $empleado->nombres = $request->nombres;
+            //     //     $empleado->apellidos = $request->apellidos;
+            //     //     $empleado->documento_identidad = $request->documento_identidad;
+            //     //     $empleado->tipo_documento_identidad_id = 1;
+            //     //     $empleado->sig_cargo_id = 1;
+            //     //     $empleado->save();
 
-                    $contrato_empleado = new SigContratoEmpleado;
-                    $contrato_empleado->empleado_id = $empleado->id;
-                    $contrato_empleado->contrato_id = $request->contrato_id;
-                    $contrato_empleado->zona_id = 1;
-                    $contrato_empleado->save();
-                }
-            }
-              DB::commit();
+            //     //     $contrato_empleado = new SigContratoEmpleado;
+            //     //     $contrato_empleado->empleado_id = $empleado->id;
+            //     //     $contrato_empleado->contrato_id = $request->contrato_id;
+            //     //     $contrato_empleado->zona_id = 1;
+            //     //     $contrato_empleado->save();
+            //     // }
+            // }
+            //   DB::commit();
               return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
-        } catch (\Exception$e) {
-            DB::rollback();
-            // something went wrong
-             return response()->json(['status' => 'error', 'message' => 'Hubo un error al procesar la solicitud por favor intente nuevamente']);
-           // return response()->json($e);
-        }
+        // } catch (\Exception$e) {
+        //     DB::rollback();
+        //     // something went wrong
+        //      return response()->json(['status' => 'error', 'message' => 'Hubo un error al procesar la solicitud por favor intente nuevamente']);
+        //    // return response()->json($e);
+        // }
     }
 
     /**

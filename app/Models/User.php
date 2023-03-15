@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
@@ -47,13 +48,14 @@ class User extends Authenticatable implements JWTSubject
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-    
+
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
      *
      * @return mixed
      */
-    public function getJWTIdentifier() {
+    public function getJWTIdentifier()
+    {
         return $this->getKey();
     }
 
@@ -62,7 +64,13 @@ class User extends Authenticatable implements JWTSubject
      *
      * @return array
      */
-    public function getJWTCustomClaims() {
+    public function getJWTCustomClaims()
+    {
         return [];
-    }    
+    }
+
+    public function fromDateTime($value)
+    {
+        return Carbon::parse(parent::fromDateTime($value))->format('Y-d-m H:i:s');
+    }
 }

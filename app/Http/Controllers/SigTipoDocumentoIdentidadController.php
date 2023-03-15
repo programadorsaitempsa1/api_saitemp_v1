@@ -25,11 +25,7 @@ class SigTipoDocumentoIdentidadController extends Controller
 
     public function lista()
     {
-        $result = SigTipoDocumentoIdentidad::select(
-            'sig_tipos_documento_identidad.id',
-            'sig_tipos_documento_identidad.nombre',
-            'sig_tipos_documento_identidad.descripcion',
-        )
+        $result = SigTipoDocumentoIdentidad::select()
         ->get();
         return response()->json($result);
     }

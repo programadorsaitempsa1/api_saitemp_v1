@@ -31,6 +31,8 @@ use App\Http\Controllers\UnidadMedidaController;
 use App\Http\Controllers\CodigoItemController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PaisController;
+use App\Http\Controllers\GeneroController;
+use App\Http\Controllers\EstadoCivilController;
 
 
 /*
@@ -91,6 +93,12 @@ Route::group([
     Route::post('/estadousuarios/{id}', [EstadoUsuarioController::class, 'update']);    
     Route::delete('/estadousuarios/{id}', [EstadoUsuarioController::class, 'destroy']);
 
+    // Géneros
+    Route::get('/genero', [GeneroController::class, 'index']);  
+    
+    // Estados civiles
+    Route::get('/estadocivil', [EstadoCivilController::class, 'index']);  
+    
     // Roles de usuario
     Route::get('/roles/{cantidad}', [RolController::class, 'index']);    
     Route::post('/roles', [RolController::class, 'create']);    
@@ -137,6 +145,7 @@ Route::group([
     Route::post('/departamentos', [DepartamentoController::class, 'create']);
     Route::post('/departamentos/{id}', [DepartamentoController::class, 'update']);
     Route::delete('/departamentos/{id}', [DepartamentoController::class, 'destroy']);
+    Route::get('/departamentos/{id}', [DepartamentoController::class, 'departamentopais']);
     
     // Municipios
     Route::get('/municipios', [MunicipioController::class, 'index']);

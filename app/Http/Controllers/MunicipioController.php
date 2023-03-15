@@ -20,13 +20,8 @@ class MunicipioController extends Controller
 
     public function municipiodepartamento($id)
     {
-        $municipios = Municipios::where('departamento_id', '=', $id)
-            ->select(
-
-                "municipios.id",
-                "municipios.nombre",
-                "municipios.descripcion",
-            )
+        $municipios = Municipios::where('cod_dep', '=', $id)
+            ->select()
             ->get();
         return response()->json($municipios);
 
