@@ -33,7 +33,11 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PaisController;
 use App\Http\Controllers\GeneroController;
 use App\Http\Controllers\EstadoCivilController;
-
+use App\Http\Controllers\FormaPagoController;
+use App\Http\Controllers\BancoController;
+use App\Http\Controllers\TipoContratoController;
+use App\Http\Controllers\EstadoLaboralEmpleadoController;
+use App\Http\Controllers\ConvenioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -99,6 +103,21 @@ Route::group([
     // Estados civiles
     Route::get('/estadocivil', [EstadoCivilController::class, 'index']);  
     
+    // Estados civiles
+    Route::get('/formapago', [FormaPagoController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/banco', [BancoController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/tipocontrato', [TipoContratoController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/estadolaboralempleado', [EstadoLaboralEmpleadoController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/convenio', [ConvenioController::class, 'index']); 
+
     // Roles de usuario
     Route::get('/roles/{cantidad}', [RolController::class, 'index']);    
     Route::post('/roles', [RolController::class, 'create']);    
