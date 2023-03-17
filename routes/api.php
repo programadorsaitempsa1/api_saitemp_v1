@@ -38,6 +38,13 @@ use App\Http\Controllers\BancoController;
 use App\Http\Controllers\TipoContratoController;
 use App\Http\Controllers\EstadoLaboralEmpleadoController;
 use App\Http\Controllers\ConvenioController;
+use App\Http\Controllers\EmpleadoController;
+use App\Http\Controllers\SucursalSSController;
+use App\Http\Controllers\CompaniaController;
+use App\Http\Controllers\SucursalController;
+use App\Http\Controllers\CentroCostosController;
+use App\Http\Controllers\AreaController;
+use App\Http\Controllers\CentroTrabajoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -117,6 +124,27 @@ Route::group([
     
     // Estados civiles
     Route::get('/convenio', [ConvenioController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/empleado', [EmpleadoController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/sucursalss', [SucursalSSController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/compania', [CompaniaController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/sucursal', [SucursalController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/centrocostos', [CentroCostosController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/area', [AreaController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/centrotrabajo', [CentroTrabajoController::class, 'index']); 
 
     // Roles de usuario
     Route::get('/roles/{cantidad}', [RolController::class, 'index']);    
