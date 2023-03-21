@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\CentroTrabajo;
+use App\Models\TipoCotizante;
 use Illuminate\Http\Request;
 
-class CentroTrabajoController extends Controller
+class TipoCotizanteController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -13,9 +13,11 @@ class CentroTrabajoController extends Controller
      */
     public function index()
     {
-        $result = CentroTrabajo::select()
-        ->orderby('cod_CT')
-        ->paginate(12);
+        $result = TipoCotizante::select(
+            'tip_cot',
+            'des_cot'
+        )
+        ->get();
         return response()->json($result);
     }
 

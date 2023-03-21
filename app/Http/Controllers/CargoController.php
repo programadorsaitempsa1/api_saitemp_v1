@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\CentroTrabajo;
+use App\Models\Cargo;
 use Illuminate\Http\Request;
 
-class CentroTrabajoController extends Controller
+class CargoController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -13,8 +13,11 @@ class CentroTrabajoController extends Controller
      */
     public function index()
     {
-        $result = CentroTrabajo::select()
-        ->orderby('cod_CT')
+        $result = Cargo::select(
+            'cod_car', 
+            'nom_car'
+        )
+        ->orderby('cod_car')
         ->paginate(12);
         return response()->json($result);
     }

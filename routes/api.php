@@ -45,6 +45,13 @@ use App\Http\Controllers\SucursalController;
 use App\Http\Controllers\CentroCostosController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\CentroTrabajoController;
+use App\Http\Controllers\CuentaGastosLController;
+use App\Http\Controllers\CargoController;
+use App\Http\Controllers\ModoLiquidacionController;
+use App\Http\Controllers\ClaseSalarioController;
+use App\Http\Controllers\FondoSPController;
+use App\Http\Controllers\TipoCotizanteController;
+use App\Http\Controllers\SubTipoCotizanteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -145,6 +152,31 @@ Route::group([
     
     // Estados civiles
     Route::get('/centrotrabajo', [CentroTrabajoController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/cuentagastosl', [CuentaGastosLController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/cargo', [CargoController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/modoliquidacion', [ModoLiquidacionController::class, 'index']); 
+    
+    // Estados civiles
+    Route::get('/clasesalario', [ClaseSalarioController::class, 'index']);
+    
+    // Estados civiles
+    Route::get('/tipocotizante', [TipoCotizanteController::class, 'index']);
+    
+    // Estados civiles
+    Route::get('/subtipocotizante', [SubTipoCotizanteController::class, 'index']);
+
+    // Estados civiles
+    Route::get('/fondosalud', [FondoSPController::class, 'fondosalud']);
+    Route::get('/fondopension', [FondoSPController::class, 'fondopension']);
+    Route::get('/cajaCompensacion', [FondoSPController::class, 'cajaCompensacion']);
+    Route::get('/riesgolaboral', [FondoSPController::class, 'riesgoLaboral']);
+    Route::get('/fondocesantias', [FondoSPController::class, 'fondoCesantias']);
 
     // Roles de usuario
     Route::get('/roles/{cantidad}', [RolController::class, 'index']);    

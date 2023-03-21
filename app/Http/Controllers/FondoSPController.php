@@ -1,21 +1,71 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\CentroTrabajo;
+use App\Models\fondoSP;
 use Illuminate\Http\Request;
 
-class CentroTrabajoController extends Controller
+class FondoSPController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function fondosalud()
     {
-        $result = CentroTrabajo::select()
-        ->orderby('cod_CT')
+        $result = fondoSP::select(
+            'cod_fdo',
+            'nom_fdo'
+        )
+        ->where('cod_fdo','>',199)
+        ->Where('cod_fdo','<=',299)
         ->paginate(12);
+        return response()->json($result);
+    }
+    
+    public function fondopension()
+    {
+        $result = fondoSP::select(
+            'cod_fdo',
+            'nom_fdo'
+        )
+        ->where('cod_fdo','<=',199)
+        ->get();
+        return response()->json($result);
+    }
+    
+    public function CajaCompensacion()
+    {
+        $result = fondoSP::select(
+            'cod_fdo',
+            'nom_fdo'
+        )
+        ->where('nom_fdo','like','CCF%')
+        ->get();
+        return response()->json($result);
+    }
+    
+    public function riesgoLaboral()
+    {
+        $result = fondoSP::select(
+            'cod_fdo',
+            'nom_fdo'
+        )
+        ->where('cod_fdo','>=',300)
+        ->Where('cod_fdo','<=',399)
+        ->get();
+        return response()->json($result);
+    }
+
+    public function fondoCesantias()
+    {
+        $result = fondoSP::select(
+            'cod_fdo',
+            'nom_fdo'
+        )
+        ->where('cod_fdo','>=',500)
+        ->where('cod_fdo','<=',599)
+        ->get();
         return response()->json($result);
     }
 

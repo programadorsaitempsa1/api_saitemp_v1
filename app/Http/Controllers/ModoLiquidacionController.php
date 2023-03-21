@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\CentroTrabajo;
-use Illuminate\Http\Request;
 
-class CentroTrabajoController extends Controller
+use Illuminate\Http\Request;
+use App\Models\ModoLiquidacion;
+class ModoLiquidacionController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -13,9 +13,8 @@ class CentroTrabajoController extends Controller
      */
     public function index()
     {
-        $result = CentroTrabajo::select()
-        ->orderby('cod_CT')
-        ->paginate(12);
+        $result = ModoLiquidacion::select()
+        ->get();
         return response()->json($result);
     }
 
