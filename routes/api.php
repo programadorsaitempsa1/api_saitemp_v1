@@ -52,6 +52,7 @@ use App\Http\Controllers\ClaseSalarioController;
 use App\Http\Controllers\FondoSPController;
 use App\Http\Controllers\TipoCotizanteController;
 use App\Http\Controllers\SubTipoCotizanteController;
+use App\Http\Controllers\TipoMedidaDianController;
 
 /*
 |--------------------------------------------------------------------------
@@ -170,6 +171,9 @@ Route::group([
     
     // Estados civiles
     Route::get('/subtipocotizante', [SubTipoCotizanteController::class, 'index']);
+    
+    // Estados civiles
+    Route::get('/tipomedidadian', [TipoMedidaDianController::class, 'index']);
 
     // Estados civiles
     Route::get('/fondosalud', [FondoSPController::class, 'fondosalud']);
