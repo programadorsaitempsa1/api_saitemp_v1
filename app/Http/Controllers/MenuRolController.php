@@ -28,7 +28,7 @@ class MenuRolController extends Controller
                     "roles.nombre as rol",
                 )
                 ->distinct()
-                ->orderby('roles.id', 'asc')
+                // ->orderby('roles.id', 'ASC')
                 ->get();
         } else {
             $roles = MenuRol::join("menus", "menus.id", "=", "menus_roles.menu_id")
@@ -38,7 +38,7 @@ class MenuRolController extends Controller
                     "roles.nombre as rol",
                 )
                 ->distinct()
-                ->orderby('roles.id', 'asc')
+                // ->orderby('roles.id', 'desc')
                 ->get();
 
         }
