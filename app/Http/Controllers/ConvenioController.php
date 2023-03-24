@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Convenio;
 use Illuminate\Http\Request;
 
@@ -17,9 +18,28 @@ class ConvenioController extends Controller
             'cod_conv',
             'nom_conv'
         )
-        ->orderby('cod_conv')
-        ->paginate(10);
+            ->orderby('cod_conv')
+            ->paginate(10);
         // ->get();
+        return response()->json($result);
+    }
+
+    public function search($texto)
+    {
+        $result = Convenio::select(
+            'cod_conv',
+            'nom_conv'
+        )
+            ->where('cod_conv', 'like', '%' . $texto . '%')
+            ->paginate(12);
+        if (count($result) == 0) {
+            $result = Convenio::select(
+                'cod_conv',
+                'nom_conv'
+            )
+                ->where('nom_conv', 'like', '%' . $texto . '%')
+                ->paginate(12);
+        }
         return response()->json($result);
     }
 

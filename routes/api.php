@@ -112,70 +112,74 @@ Route::group([
     Route::post('/estadousuarios/{id}', [EstadoUsuarioController::class, 'update']);    
     Route::delete('/estadousuarios/{id}', [EstadoUsuarioController::class, 'destroy']);
 
-    // Géneros
+    // Género
     Route::get('/genero', [GeneroController::class, 'index']);  
     
-    // Estados civiles
+    // Estado civil
     Route::get('/estadocivil', [EstadoCivilController::class, 'index']);  
     
-    // Estados civiles
+    // Forma de pago
     Route::get('/formapago', [FormaPagoController::class, 'index']); 
     
-    // Estados civiles
+    // Banco
     Route::get('/banco', [BancoController::class, 'index']); 
     
-    // Estados civiles
+    // Tipo de contrato
     Route::get('/tipocontrato', [TipoContratoController::class, 'index']); 
     
-    // Estados civiles
+    // Estado laboral empleado
     Route::get('/estadolaboralempleado', [EstadoLaboralEmpleadoController::class, 'index']); 
     
-    // Estados civiles
+    // Convenio
     Route::get('/convenio', [ConvenioController::class, 'index']); 
+    Route::get('/convenio/{texto}', [ConvenioController::class, 'search']); 
     
-    // Estados civiles
+    // Empleado
     Route::get('/empleado', [EmpleadoController::class, 'index']); 
+    Route::get('/empleado/{texto}', [EmpleadoController::class, 'search']); 
     
-    // Estados civiles
+    // Sucursales
     Route::get('/sucursalss', [SucursalSSController::class, 'index']); 
     
-    // Estados civiles
+    // Compañia
     Route::get('/compania', [CompaniaController::class, 'index']); 
+  
     
-    // Estados civiles
+    // Sucursal
     Route::get('/sucursal', [SucursalController::class, 'index']); 
     
-    // Estados civiles
+    // Cnetro de costos
     Route::get('/centrocostos', [CentroCostosController::class, 'index']); 
     
-    // Estados civiles
+    // Area
     Route::get('/area', [AreaController::class, 'index']); 
     
-    // Estados civiles
+    // Centro de trabajo
     Route::get('/centrotrabajo', [CentroTrabajoController::class, 'index']); 
+    Route::get('/centrotrabajo/{texto}', [CentroTrabajoController::class, 'search']); 
     
-    // Estados civiles
+    // Cuenta gastos local
     Route::get('/cuentagastosl', [CuentaGastosLController::class, 'index']); 
     
-    // Estados civiles
+    // Cargo
     Route::get('/cargo', [CargoController::class, 'index']); 
     
-    // Estados civiles
+    // Modo liquidación
     Route::get('/modoliquidacion', [ModoLiquidacionController::class, 'index']); 
     
-    // Estados civiles
+    // Clase salario
     Route::get('/clasesalario', [ClaseSalarioController::class, 'index']);
     
-    // Estados civiles
+    // Tipo cotizante
     Route::get('/tipocotizante', [TipoCotizanteController::class, 'index']);
     
-    // Estados civiles
+    // Subtipo cotizante
     Route::get('/subtipocotizante', [SubTipoCotizanteController::class, 'index']);
     
-    // Estados civiles
+    // Tipo medida Dian
     Route::get('/tipomedidadian', [TipoMedidaDianController::class, 'index']);
 
-    // Estados civiles
+    // fondo salud, pensión, caja compensación, riesgo laboral, fondo cesantias
     Route::get('/fondosalud', [FondoSPController::class, 'fondosalud']);
     Route::get('/fondopension', [FondoSPController::class, 'fondopension']);
     Route::get('/cajaCompensacion', [FondoSPController::class, 'cajaCompensacion']);

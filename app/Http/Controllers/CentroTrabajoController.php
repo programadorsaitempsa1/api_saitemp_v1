@@ -9,13 +9,36 @@ class CentroTrabajoController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http \Response
      */
     public function index()
     {
-        $result = CentroTrabajo::select()
+        $result = CentroTrabajo::select(
+            'cod_CT',
+            'descripcion'
+        )
         ->orderby('cod_CT')
         ->paginate(12);
+        return response()->json($result);
+    }
+
+    public function search($texto)
+    {
+        $texto;
+        $result = CentroTrabajo::select(
+            'cod_CT',
+            'descripcion'
+        )
+            ->where('cod_CT', 'like', '%' . $texto . '%')
+            ->paginate(12);
+        if (count($result) == 0) {
+            $result = CentroTrabajo::select(
+                'cod_CT',
+                'descripcion'
+            )
+                ->where('descripcion', 'like', '%' . $texto . '%')
+                ->paginate(12);
+        }
         return response()->json($result);
     }
 

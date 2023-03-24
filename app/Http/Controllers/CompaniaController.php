@@ -17,6 +17,7 @@ class CompaniaController extends Controller
         ->get();
         return response()->json($result);
     }
+    
 
     /**
      * Show the form for creating a new resource.
