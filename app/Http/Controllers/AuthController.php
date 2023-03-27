@@ -30,6 +30,32 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+     
+        $ldapconn = ldap_connect('saitempsa.local');
+        ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
+        
+        try{
+            if ($ldapconn) {
+                try{
+                    $ldapbind = ldap_bind($ldapconn, $request->email . '@saitempsa.local', $request->password);
+                    if ($ldapbind) {
+                        ldap_close($ldapconn);
+                        return 'usuario logueado con exito';
+                    } 
+                    // else {
+                    //     ldap_close($ldapconn);
+                    //     return 'Credenciales incorrectas.';
+                    // }
+                }catch(\Exception $e){
+                    ldap_close($ldapconn);
+                    return 'Credenciales incorrectas.';
+                }
+            }
+        }catch(\Exception $e){
+            return response()->json(['status'=>'error','message'=>'No se pudo establecer la conexión con el servidor LDAP.']);
+        }
+
+
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|string|min:6',

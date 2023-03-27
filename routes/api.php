@@ -53,6 +53,7 @@ use App\Http\Controllers\FondoSPController;
 use App\Http\Controllers\TipoCotizanteController;
 use App\Http\Controllers\SubTipoCotizanteController;
 use App\Http\Controllers\TipoMedidaDianController;
+use App\Http\Controllers\LDAPUsersController;
 
 /*
 |--------------------------------------------------------------------------
@@ -178,6 +179,9 @@ Route::group([
     
     // Tipo medida Dian
     Route::get('/tipomedidadian', [TipoMedidaDianController::class, 'index']);
+    
+    // Tipo medida Dian
+    Route::get('/ldapusers', [LDAPUsersController::class, 'index']);
 
     // fondo salud, pensión, caja compensación, riesgo laboral, fondo cesantias
     Route::get('/fondosalud', [FondoSPController::class, 'fondosalud']);
