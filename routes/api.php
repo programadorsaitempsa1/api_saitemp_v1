@@ -181,7 +181,8 @@ Route::group([
     Route::get('/tipomedidadian', [TipoMedidaDianController::class, 'index']);
     
     // Tipo medida Dian
-    Route::get('/ldapusers', [LDAPUsersController::class, 'index']);
+    Route::get('/ldapusers/{cantidad}', [LDAPUsersController::class, 'index']);
+    Route::post('/ldapusers', [LDAPUsersController::class, 'create']);
 
     // fondo salud, pensión, caja compensación, riesgo laboral, fondo cesantias
     Route::get('/fondosalud', [FondoSPController::class, 'fondosalud']);

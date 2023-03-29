@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+use App\Models\User;
+
 
 class LDAPUsersController extends Controller
 {
@@ -11,7 +15,7 @@ class LDAPUsersController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($cantidad)
     {
         // Configuración de conexión
         $ldap_server = "saitempsa.local";  // URL del servidor LDAP
@@ -41,12 +45,28 @@ class LDAPUsersController extends Controller
         $usuario = [];
         foreach ($users as $user) {
             if (is_array($user) && isset($user["samaccountname"])) {
-                $usuario['Nombre'] = $user["cn"][0];
-                $usuario['Usuario'] = $user["samaccountname"][0];
+                $usuario['nombre'] = $user["cn"][0];
+                $usuario['usuario'] = $user["samaccountname"][0];
                 array_push($usuarios, $usuario);
             }
         }
-        return response()->json($usuarios);
+
+        $collection = new Collection($usuarios);
+
+        $perPage = $cantidad;
+        $page = request('page', 1);
+        
+        $paginatedData = $collection->slice(($page - 1) * $perPage, $perPage)->all();
+        
+        $paginated = new LengthAwarePaginator(
+            $paginatedData,
+            $collection->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+        
+        return $paginated;
     }
 
     /**
@@ -54,9 +74,28 @@ class LDAPUsersController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        // return $request;
+        // for ($i = 0; $i < count($request); $i++){
+        //     return $valor; 
+        // }
+
+
+        // $user = new User;
+        // $user->nombres = $request->nombres;
+        // $user->apellidos = $request->apellidos;
+        // $user->documento_identidad = $request->documento_identidad;
+        // $user->email = $request->email;
+        // $user->password = bcrypt($request->password);
+        // $user->rol_id = $request->rol_id == '' ? 3 : $request->rol_id;
+        // if ($user->save()) {
+        //     return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
+        // } else {
+        //     return response()->json(['status' => 'error', 'message' => 'Ha ocurrido un error al guardar los datos de usuario']);
+        // }
+
+       
     }
 
     /**
