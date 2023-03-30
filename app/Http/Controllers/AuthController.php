@@ -49,6 +49,7 @@ class AuthController extends Controller
                 try {
                     $ldapbind = ldap_bind($ldapconn, $user . '@saitempsa.local',  $request->password);
                     if ($ldapbind) {
+                       
                         ldap_close($ldapconn);
                         // return 'usuario logueado con exito';
                         $user = User::where('email', $request->email)->first();
@@ -68,7 +69,6 @@ class AuthController extends Controller
                     }
                 } catch (\Exception $e) {
                     ldap_close($ldapconn);
-                    // return 'Credenciales incorrectas.';
                     $validator = Validator::make($request->all(), [
                         'email' => 'required|email',
                         'password' => 'required|string|min:6',

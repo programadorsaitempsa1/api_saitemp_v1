@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\User;
-
+use Mockery\Undefined;
 
 class LDAPUsersController extends Controller
 {
@@ -55,9 +55,9 @@ class LDAPUsersController extends Controller
 
         $perPage = $cantidad;
         $page = request('page', 1);
-        
+
         $paginatedData = $collection->slice(($page - 1) * $perPage, $perPage)->all();
-        
+
         $paginated = new LengthAwarePaginator(
             $paginatedData,
             $collection->count(),
@@ -65,7 +65,7 @@ class LDAPUsersController extends Controller
             $page,
             ['path' => request()->url(), 'query' => request()->query()]
         );
-        
+
         return $paginated;
     }
 
@@ -76,26 +76,84 @@ class LDAPUsersController extends Controller
      */
     public function create(Request $request)
     {
-        // return $request;
-        // for ($i = 0; $i < count($request); $i++){
-        //     return $valor; 
-        // }
+        $rol = $request[0]['rol'];
+        $array = $request->all();
+        $errors = 'Los usuarios ';
+        $swich = false;
+        for ($i = 1; $i < count($array); $i++) {
+            try {
+                $user = new User;
+                $user->nombres = $array[$i]['nombre'];
+                $user->apellidos = $request->apellidos;
+                $user->documento_identidad = $request->documento_identidad;
+                $user->email = $array[$i]['usuario'];
+                $user->password = '';
+                $user->rol_id = $rol == '' ? 3 : $rol;
+                $user->save();
+            } catch (\Exception $e) {
+                $errors .= $array[$i]['nombre'] . ', ';
+                $swich = true;
+            }
+        }
+        if ($swich) {
+            return response()->json(['status' => 'error', 'message' => $errors . ' ya se encuentran registrados']);
+        } else {
+            return response()->json(['status' => 'success', 'message' => 'Usuarios guardados de manera exitosa']);
+        }
+    }
 
-
-        // $user = new User;
-        // $user->nombres = $request->nombres;
-        // $user->apellidos = $request->apellidos;
-        // $user->documento_identidad = $request->documento_identidad;
-        // $user->email = $request->email;
-        // $user->password = bcrypt($request->password);
-        // $user->rol_id = $request->rol_id == '' ? 3 : $request->rol_id;
-        // if ($user->save()) {
-        //     return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
-        // } else {
-        //     return response()->json(['status' => 'error', 'message' => 'Ha ocurrido un error al guardar los datos de usuario']);
-        // }
-
+    public function userById($user)
+    {
+        // return $user;
+        $ldap_server = "saitempsa.local";
+        // Autenticación en el Directorio Activo
+        $ldaprdn = "programador1@saitempsa.local"; // usuario de administración del Directorio Activo
+        $ldappass = "Micro123*#"; // contraseña del usuario de administración del Directorio Activo
        
+        $ldap = ldap_connect($ldap_server) or die("No se pudo conectar al servidor de Directorio Activo.");
+
+        ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+        ldap_set_option($ldap, LDAP_OPT_REFERRALS, 0);
+        $ldapbind = ldap_bind($ldap, $ldaprdn, $ldappass);
+
+        if ($ldapbind) {
+            // Búsqueda de usuarios por nombre o usuario
+            $filter = "(&(objectClass=user)(|(sAMAccountName=*$user*)(cn=*$user*)))";
+            $result = ldap_search($ldap, "dc=saitempsa,dc=local", $filter);
+            $entries = ldap_get_entries($ldap, $result);
+
+            $usuarios = [];
+            $usuario = [];
+            foreach ($entries as $user) {
+                if (is_array($user) && isset($user["samaccountname"])) {
+                    $usuario['nombre'] = $user["cn"][0];
+                    $usuario['usuario'] = $user["samaccountname"][0];
+                    array_push($usuarios, $usuario);
+                }
+            }
+    
+            $collection = new Collection($usuarios);
+    
+            $perPage = 12;
+            $page = request('page', 1);
+    
+            $paginatedData = $collection->slice(($page - 1) * $perPage, $perPage)->all();
+    
+            $paginated = new LengthAwarePaginator(
+                $paginatedData,
+                $collection->count(),
+                $perPage,
+                $page,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
+    
+            return $paginated;
+        } else {
+            return "No se pudo autenticar en el servidor de Directorio Activo.";
+        }
+
+        // Cierre de la conexión al servidor de Directorio Activo
+        ldap_close($ldap);
     }
 
     /**
