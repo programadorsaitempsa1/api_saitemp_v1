@@ -29,6 +29,14 @@ class UsuarioController extends Controller
         return response()->json($users);
     }
 
+    public function userslist(){
+        $result = user::select(
+            'email'
+        )
+        ->get();
+        return response()->json($result);
+    }
+
 
     public function userlogued()
     {

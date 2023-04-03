@@ -54,6 +54,7 @@ use App\Http\Controllers\TipoCotizanteController;
 use App\Http\Controllers\SubTipoCotizanteController;
 use App\Http\Controllers\TipoMedidaDianController;
 use App\Http\Controllers\LDAPUsersController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -82,6 +83,7 @@ Route::group([
     
     // Usuarios
     Route::get('/users/{cantidad}', [UsuarioController::class, 'index']); 
+    Route::get('/userslist', [UsuarioController::class, 'userslist']); 
     Route::get('/userlogued', [UsuarioController::class, 'userlogued']); 
     Route::get('/userbyid/{id}', [UsuarioController::class, 'userById']); 
     Route::delete('/user/{id}', [UsuarioController::class, 'destroy']); 
@@ -116,6 +118,14 @@ Route::group([
     // Género
     Route::get('/genero', [GeneroController::class, 'index']);  
     
+    // Dahsboard
+    Route::get('/empleadosactivos', [DashboardController::class, 'empleadosactivos']); 
+    Route::get('/empleadosplanta', [DashboardController::class, 'empleadosplanta']); 
+    Route::get('/ingresosmescurso', [DashboardController::class, 'ingresosmescurso']);  
+    Route::get('/retirosmescurso', [DashboardController::class, 'retirosmescurso']); 
+    Route::get('/ingresosmesanterior', [DashboardController::class, 'ingresosmesanterior']); 
+    Route::get('/retirosmesantrior', [DashboardController::class, 'retirosmesantrior']); 
+
     // Estado civil
     Route::get('/estadocivil', [EstadoCivilController::class, 'index']);  
     
