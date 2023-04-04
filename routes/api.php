@@ -125,6 +125,7 @@ Route::group([
     Route::get('/retirosmescurso', [DashboardController::class, 'retirosmescurso']); 
     Route::get('/ingresosmesanterior', [DashboardController::class, 'ingresosmesanterior']); 
     Route::get('/retirosmesantrior', [DashboardController::class, 'retirosmesantrior']); 
+    Route::get('/historicoempleado/{cedula}', [DashboardController::class, 'historicoempleado']); 
 
     // Estado civil
     Route::get('/estadocivil', [EstadoCivilController::class, 'index']);  
