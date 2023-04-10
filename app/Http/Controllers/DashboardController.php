@@ -80,7 +80,7 @@ class DashboardController extends Controller
 
     function historicoempleado($cedula)
     {
-            $result = DB::table('rhh_hislab as hl')
+        $result = DB::table('rhh_hislab as hl')
             ->join('rhh_emplea as e', 'e.cod_emp', '=', 'hl.cod_emp')
             ->join('gen_terceros as t', 't.ter_nit', '=', 'e.num_ide')
             ->join('rhh_cargos as c', 'c.cod_car', '=', 'hl.cod_car')
@@ -99,20 +99,30 @@ class DashboardController extends Controller
                 $join->on('ct.cod_emp', '=', 'hl.cod_emp')
                     ->on('ct.cod_con', '=', 'hl.cod_con');
             })
-            ->select(
-                DB::raw("FORMAT(hl.fec_ini,'dd/MM/yyyy') AS fec_ini"),
-                DB::raw("FORMAT(hl.fec_ret,'dd/MM/yyyy') AS fec_ret"),
-                'r.nom_ret AS nom_ret',
-                'c.nom_car AS nom_car',
-                'cv.nom_conv AS nom_conv',
-                'hl.sal_bas AS sal_bas',
-                'tc.nom_con',
-                'Ct.not_con',
-                // 'hl.cod_con',
-                // 'ec.cod_conv',
-                // 'hl.cod_emp',
-            )
-            ->where('t.ter_nit', '=', $cedula)
+            ->when(is_numeric($cedula), function ($query) {
+                return $query->select(
+                    DB::raw("FORMAT(hl.fec_ini,'dd/MM/yyyy') AS fec_ini"),
+                    DB::raw("FORMAT(hl.fec_ret,'dd/MM/yyyy') AS fec_ret"),
+                    'r.nom_ret AS nom_ret',
+                    'c.nom_car AS nom_car',
+                    'cv.nom_conv AS nom_conv',
+                    'hl.sal_bas AS sal_bas',
+                    'tc.nom_con',
+                    'Ct.not_con',
+                );
+            })
+            ->when(!is_numeric($cedula), function ($query) {
+                return $query->select(
+                    't.ter_nit',
+                    't.ter_nombre'
+                );
+            })
+            ->when(is_numeric($cedula), function ($query) use ($cedula) {
+                return $query->where('t.ter_nit', $cedula);
+            })
+            ->when(!is_numeric($cedula), function ($query) use ($cedula) {
+                return $query->where('t.ter_nombre', 'like', '%' . $cedula . '%');
+            })
             ->orderBy('hl.fec_ini', 'asc')
             ->paginate(12);
 
