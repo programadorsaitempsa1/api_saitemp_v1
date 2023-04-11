@@ -129,6 +129,27 @@ class DashboardController extends Controller
         return response()->json($result);
     }
 
+    public function datosEmpleado($cedula)
+    {
+        $resultado = DB::table('rhh_emplea as e')
+            ->select('e.dir_res', 'e.barrio', DB::raw("FORMAT(e.fec_nac, 'dd/MM/yyyy') as fec_nac"), 'c.nom_ciu', 'd.nom_dep', 'sal_bas', 'num_ide', 'ti.des_tip', DB::raw("FORMAT(e.fec_expdoc, 'dd/MM/yyyy') as fec_expdoc"), DB::raw("CONCAT(ap1_emp, ' ', ap2_emp, ' ', nom_emp) as nombre"), DB::raw("CASE WHEN sex_emp=2 THEN 'Hombre' ELSE 'Mujer' END as sexo"), 'e_mail', 'tel_cel', 'tel_res', 'avi_emp', 'nom_fdo as salud')
+            ->join('rhh_tbfondos as fs', 'fs.cod_fdo', '=', 'e.fdo_sal')
+            ->join('gen_tipide as ti', 'ti.cod_tip', '=', 'e.tip_ide')
+            ->join('gen_paises as p', 'p.cod_pai', '=', 'e.pai_res')
+            ->join('gen_deptos as d', function ($join) {
+                $join->on('d.cod_dep', '=', 'e.dpt_res')
+                    ->on('d.cod_pai', '=', 'e.pai_res');
+            })
+            ->join('gen_ciudad as c', function ($join) {
+                $join->on('c.cod_ciu', '=', 'e.ciu_res')
+                    ->on('c.cod_dep', '=', 'e.dpt_res')
+                    ->on('c.cod_pai', '=', 'e.pai_res');
+            })
+            ->where('num_ide', '=', $cedula)
+            ->first();
+        return response()->json($resultado);
+    }
+
     /**
      * Show the form for creating a new resource.
      *
