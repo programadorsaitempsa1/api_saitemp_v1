@@ -55,6 +55,9 @@ use App\Http\Controllers\SubTipoCotizanteController;
 use App\Http\Controllers\TipoMedidaDianController;
 use App\Http\Controllers\LDAPUsersController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\CategoriaReporteController;
+use App\Http\Controllers\SubcategoriaReporteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -125,7 +128,7 @@ Route::group([
     Route::get('/retirosmescurso', [DashboardController::class, 'retirosmescurso']); 
     Route::get('/ingresosmesanterior', [DashboardController::class, 'ingresosmesanterior']); 
     Route::get('/retirosmesantrior', [DashboardController::class, 'retirosmesantrior']); 
-    Route::get('/historicoempleado/{cedula}', [DashboardController::class, 'historicoempleado']); 
+    Route::get('/historicoempleado/{cedula}/{cantidad}', [DashboardController::class, 'historicoempleado']); 
     Route::get('/datosempleado/{cedula}', [DashboardController::class, 'datosempleado']); 
 
     // Estado civil
@@ -192,6 +195,16 @@ Route::group([
     // Tipo medida Dian
     Route::get('/tipomedidadian', [TipoMedidaDianController::class, 'index']);
     
+    // Reporte
+    Route::get('/reportes/{cantidad}', [ReporteController::class, 'index']);
+    Route::get('/reportes/{aplicacion}/{categoria}/{cantidad}', [ReporteController::class, 'filtrado']);
+    
+    // Categoria reporte
+    Route::get('/categoriasreporte', [CategoriaReporteController::class, 'index']);
+    
+    // Categoria reporte
+    Route::get('/subcategoriasreporte/{codigo}', [SubcategoriaReporteController::class, 'index']);
+
     // Tipo medida Dian
     Route::get('/ldapusers/{cantidad}', [LDAPUsersController::class, 'index']);
     Route::post('/ldapusers', [LDAPUsersController::class, 'create']);

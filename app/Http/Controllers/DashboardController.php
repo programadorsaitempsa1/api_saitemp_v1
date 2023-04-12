@@ -78,7 +78,7 @@ class DashboardController extends Controller
         return response()->json($result);
     }
 
-    function historicoempleado($cedula)
+    function historicoempleado($cedula, $cantidad)
     {
         $result = DB::table('rhh_hislab as hl')
             ->join('rhh_emplea as e', 'e.cod_emp', '=', 'hl.cod_emp')
@@ -124,7 +124,7 @@ class DashboardController extends Controller
                 return $query->where('t.ter_nombre', 'like', '%' . $cedula . '%');
             })
             ->orderBy('hl.fec_ini', 'asc')
-            ->paginate(12);
+            ->paginate($cantidad);
 
         return response()->json($result);
     }
