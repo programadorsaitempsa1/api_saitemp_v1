@@ -2,46 +2,34 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Reporte;
+use App\Models\ListaTrump;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
-
-class ReporteController extends Controller
+class ListaTrumpController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index($cantidad)
+    public function index($codigo)
     {
-        $result = Reporte::select(
-            'cod_rep',
-            'nom_rep',
+        $result = ListaTrump::select(
+            'cod_emp',
+            'nombre',
+            'observacion',
+            'fecha',
+            'bloqueado',
         )
-            ->paginate($cantidad);
+            ->where('cod_emp', '=', $codigo)
+            ->paginate(10);
 
         $result->transform(function ($item) {
-            unset($item->row_num);
-            return $item;
-        });
-
-        return response()->json($result);
-    }
-
-    public function filtrado($aplicacion, $categoria, $cantidad)
-    {
-        $result = Reporte::select(
-            'cod_rep',
-            'nom_rep',
-        )
-        ->where('cod_apl','=',$aplicacion)
-        ->where('cod_cat','=',$categoria)
-            ->paginate($cantidad);
-
-        $result->transform(function ($item) {
-            unset($item->row_num);
+            if ($item->bloqueado == 1) {
+                $item->bloqueado = 'Si';
+            } else {
+                $item->bloqueado = 'No';
+            }
             return $item;
         });
 

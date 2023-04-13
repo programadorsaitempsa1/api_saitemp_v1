@@ -1,50 +1,24 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use App\Models\Reporte;
+use App\Models\ProcesosEspeciales;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
-
-class ReporteController extends Controller
+class ProcesosEspecialesController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index($cantidad)
+    public function index()
     {
-        $result = Reporte::select(
-            'cod_rep',
-            'nom_rep',
+        $result = ProcesosEspeciales::select(
+            'cod_proc',
+            'nom_proc',
+            'nom_sp',
         )
-            ->paginate($cantidad);
-
-        $result->transform(function ($item) {
-            unset($item->row_num);
-            return $item;
-        });
-
-        return response()->json($result);
-    }
-
-    public function filtrado($aplicacion, $categoria, $cantidad)
-    {
-        $result = Reporte::select(
-            'cod_rep',
-            'nom_rep',
-        )
-        ->where('cod_apl','=',$aplicacion)
-        ->where('cod_cat','=',$categoria)
-            ->paginate($cantidad);
-
-        $result->transform(function ($item) {
-            unset($item->row_num);
-            return $item;
-        });
-
+        ->get();
         return response()->json($result);
     }
 

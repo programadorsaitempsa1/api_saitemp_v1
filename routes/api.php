@@ -58,6 +58,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\CategoriaReporteController;
 use App\Http\Controllers\SubcategoriaReporteController;
+use App\Http\Controllers\ListaTrumpController;
+use App\Http\Controllers\ProcesosEspecialesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -204,6 +206,12 @@ Route::group([
     
     // Categoria reporte
     Route::get('/subcategoriasreporte/{codigo}', [SubcategoriaReporteController::class, 'index']);
+    
+    // Lista trump
+    Route::get('/listatrump/{codigo}', [ListaTrumpController::class, 'index']);
+    
+    // Procesos especiales
+    Route::get('/procesosespeciales', [ProcesosEspecialesController::class, 'index']);
 
     // Tipo medida Dian
     Route::get('/ldapusers/{cantidad}', [LDAPUsersController::class, 'index']);
