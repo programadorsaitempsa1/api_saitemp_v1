@@ -212,6 +212,9 @@ Route::group([
     
     // Procesos especiales
     Route::get('/procesosespeciales', [ProcesosEspecialesController::class, 'index']);
+    Route::get('/formprocesosespeciales/{codigo}', [ProcesosEspecialesController::class, 'form']);
+    Route::get('/listasprocesosespeciales/{codigo}/{codigo1}/{codigo2}', [ProcesosEspecialesController::class, 'listasprocesosespeciales']);
+    Route::get('/filtroprocesosespeciales/{codigo}/{search}/{codigo1}/{codigo2}', [ProcesosEspecialesController::class, 'filtroprocesosespeciales']);
 
     // Tipo medida Dian
     Route::get('/ldapusers/{cantidad}', [LDAPUsersController::class, 'index']);
