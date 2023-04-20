@@ -215,6 +215,9 @@ Route::group([
     Route::get('/formprocesosespeciales/{codigo}', [ProcesosEspecialesController::class, 'form']);
     Route::get('/listasprocesosespeciales/{codigo}/{codigo1}/{codigo2}', [ProcesosEspecialesController::class, 'listasprocesosespeciales']);
     Route::get('/filtroprocesosespeciales/{codigo}/{search}/{codigo1}/{codigo2}', [ProcesosEspecialesController::class, 'filtroprocesosespeciales']);
+    Route::get('/ejecutaprocesosespeciales', [ProcesosEspecialesController::class, 'ejecutaprocesosespeciales']);
+    Route::get('/procesosespecialesexport/{filtro}', [ProcesosEspecialesController::class, 'procesosespecialesexport']);
+    // Route::get('/ejecutaprocesosespeciales/{request}', [ProcesosEspecialesController::class, 'ejecutaprocesosespeciales2']);
 
     // Tipo medida Dian
     Route::get('/ldapusers/{cantidad}', [LDAPUsersController::class, 'index']);

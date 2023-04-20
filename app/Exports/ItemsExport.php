@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\SigItem;
+// use App\Models\SigItem;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
