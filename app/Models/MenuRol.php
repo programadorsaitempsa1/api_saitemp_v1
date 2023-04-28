@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 class MenuRol extends Model
 {
     use HasFactory;
-    protected $table = 'menus_roles';
+    protected $table = 'usr_app_menus_roles';
 
     public function fromDateTime($value)
     {

@@ -17,21 +17,21 @@ class RolController extends Controller
         $user = auth()->user();
         if ($user->rol_id == 1) {
             $result = Rol::select(
-                'roles.id',
-                'roles.nombre',
-                'roles.descripcion',
+                'usr_app_roles.id',
+                'usr_app_roles.nombre',
+                'usr_app_roles.descripcion',
             )
-                ->orderby('roles.id', 'DESC')
+                ->orderby('usr_app_roles.id', 'DESC')
                 ->paginate($cantidad);
             return response()->json($result);
         } else {
-            $result = Rol::where('roles.id', '!=', 1)
+            $result = Rol::where('usr_app_roles.id', '!=', 1)
                 ->select(
-                    'roles.id',
-                    'roles.nombre',
-                    'roles.descripcion',
+                    'usr_app_roles.id',
+                    'usr_app_roles.nombre',
+                    'usr_app_roles.descripcion',
                 )
-                ->orderby('roles.id', 'DESC')
+                ->orderby('usr_app_roles.id', 'DESC')
                 ->paginate($cantidad);
             return response()->json($result);
         }
@@ -42,21 +42,21 @@ class RolController extends Controller
         $user = auth()->user();
         if ($user->rol_id == 1) {
             $result = Rol::select(
-                'roles.id',
-                'roles.nombre',
-                'roles.descripcion',
+                'usr_app_roles.id',
+                'usr_app_roles.nombre',
+                'usr_app_roles.descripcion',
             )
-                ->orderby('roles.id', 'DESC')
+                ->orderby('usr_app_roles.id', 'DESC')
                 ->get();
             return response()->json($result);
         } else {
-            $result = Rol::where('roles.id', '!=', 1)
+            $result = Rol::where('usr_app_roles.id', '!=', 1)
                 ->select(
-                    'roles.id',
-                    'roles.nombre',
-                    'roles.descripcion',
+                    'usr_app_roles.id',
+                    'usr_app_roles.nombre',
+                    'usr_app_roles.descripcion',
                 )
-                ->orderby('roles.id', 'DESC')
+                ->orderby('usr_app_roles.id', 'DESC')
                 ->get();
             return response()->json($result);
         }

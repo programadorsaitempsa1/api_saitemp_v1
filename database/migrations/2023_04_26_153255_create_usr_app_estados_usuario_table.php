@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSigTipoDocumentoIdentidaTable extends Migration
+class CreateUsrAppEstadosUsuarioTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,9 @@ class CreateSigTipoDocumentoIdentidaTable extends Migration
      */
     public function up()
     {
-        Schema::create('sig_tipos_documento_identidad', function (Blueprint $table) {
+        Schema::create('usr_app_estados_usuario', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre', 200)->unique();
+            $table->string('nombre', 30)->unique();
             $table->string('descripcion', 300)->nullable();
             $table->timestamps();
         });
@@ -28,6 +28,6 @@ class CreateSigTipoDocumentoIdentidaTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('sig_tipos_documento_identidad');
+        Schema::dropIfExists('usr_app_estados_usuario');
     }
 }

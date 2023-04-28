@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 class Rol extends Model
 {
     use HasFactory;
-    protected $table = 'roles';
+    protected $table = 'usr_app_roles';
 
     public function fromDateTime($value)
     {

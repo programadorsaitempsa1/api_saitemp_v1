@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMenuTable extends Migration
+class CreateUsrAppCategoriasMenuTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,10 @@ class CreateMenuTable extends Migration
      */
     public function up()
     {
-        Schema::create('menus', function (Blueprint $table) {
+        Schema::create('usr_app_categorias_menu', function (Blueprint $table) {
             $table->id();
             $table->string('nombre', 50)->nullable()->default('');
-            $table->string('url', 200)->nullable()->default('');
             $table->string('icon', 100)->nullable()->default('');
-            $table->boolean('urlExterna')->nullable()->default(0);
             $table->integer('posicion')->nullable();
             $table->boolean('oculto')->nullable()->default(0);
             $table->timestamps();
@@ -32,6 +30,6 @@ class CreateMenuTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('menus');
+        Schema::dropIfExists('usr_app_categorias_menu');
     }
 }

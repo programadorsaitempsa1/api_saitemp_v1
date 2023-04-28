@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateEstadoUsuarioTable extends Migration
+class CreateUsrAppRolesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,11 @@ class CreateEstadoUsuarioTable extends Migration
      */
     public function up()
     {
-        Schema::create('estado_usuarios', function (Blueprint $table) {
+        Schema::create('usr_app_roles', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre', 30)->unique();
+            $table->string('nombre', 100)->unique();
             $table->string('descripcion', 300)->nullable();
+            $table->boolean('oculto')->nullable()->default(0);
             $table->timestamps();
         });
     }
@@ -28,6 +29,6 @@ class CreateEstadoUsuarioTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('estado_usuarios');
+        Schema::dropIfExists('usr_app_roles');
     }
 }

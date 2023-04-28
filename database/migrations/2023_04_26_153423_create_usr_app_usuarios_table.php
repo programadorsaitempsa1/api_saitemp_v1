@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsuariosTable extends Migration
+class CreateUsrAppUsuariosTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class CreateUsuariosTable extends Migration
      */
     public function up()
     {
-        Schema::create('usuarios', function (Blueprint $table) {
+        Schema::create('usr_app_usuarios', function (Blueprint $table) {
             $table->id();
             $table->string('nombres', 100)->nullable();
             $table->string('apellidos', 100)->nullable();
@@ -23,8 +23,8 @@ class CreateUsuariosTable extends Migration
             $table->unsignedBigInteger('estado_id')->default(1);
             $table->unsignedBigInteger('rol_id')->default(3);
             $table->boolean('oculto')->nullable()->default(0);
-            $table->foreign('estado_id')->references('id')->on('estado_usuarios')->onDelete('cascade');
-            $table->foreign('rol_id')->references('id')->on('roles')->onDelete('cascade');
+            $table->foreign('estado_id')->references('id')->on('usr_app_estados_usuario')->onDelete('cascade');
+            $table->foreign('rol_id')->references('id')->on('usr_app_roles')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -36,6 +36,6 @@ class CreateUsuariosTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usuarios');
+        Schema::dropIfExists('usr_app_usuarios');
     }
 }

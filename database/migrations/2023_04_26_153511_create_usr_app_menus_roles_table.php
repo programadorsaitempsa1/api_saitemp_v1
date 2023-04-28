@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMenusRolTable extends Migration
+class CreateUsrAppMenusRolesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,13 @@ class CreateMenusRolTable extends Migration
      */
     public function up()
     {
-        Schema::create('menus_roles', function (Blueprint $table) {
+        Schema::create('usr_app_menus_roles', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('rol_id');
             $table->unsignedBigInteger('menu_id');
             $table->string('descripcion', 300)->nullable();
-            $table->foreign('rol_id')->references('id')->on('roles')->onDelete('cascade')->onUpdate('cascade');
-            $table->foreign('menu_id')->references('id')->on('menus')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('rol_id')->references('id')->on('usr_app_roles')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('menu_id')->references('id')->on('usr_app_menus')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
     }
@@ -31,6 +31,6 @@ class CreateMenusRolTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('menus_roles');
+        Schema::dropIfExists('usr_app_menus_roles');
     }
 }

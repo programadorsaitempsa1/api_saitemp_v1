@@ -17,6 +17,7 @@ class CategoriaReporteController extends Controller
             'cod_apl',
             'nom_mod'
         )
+        ->where('ind_ins','=',1)
         ->get();
         return response()->json($result);
     }

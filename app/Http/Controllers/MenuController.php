@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Menu;
+use App\Models\categoriaMenu;
 use Illuminate\Http\Request;
 
 class MenuController extends Controller
@@ -18,24 +19,109 @@ class MenuController extends Controller
         return response()->json($result);
     }
 
-    public function menubyRole($id)
+    public function menubyRole()
     {
-        $users = menu::join("menus_roles", "menus_roles.menu_id", "=", "menus.id")
-            ->join('roles', 'roles.id', '=', 'menus_roles.rol_id')
-            ->where('roles.id', '=', $id)
-            ->where('menus.oculto', '=', 0)
-            ->orderBy('menus.posicion')
+        $user = auth()->user();
+        $users = menu::join("usr_app_menus_roles", "usr_app_menus_roles.menu_id", "=", "usr_app_menus.id")
+            ->join('usr_app_roles', 'usr_app_roles.id', '=', 'usr_app_menus_roles.rol_id')
+            ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
+            ->where('usr_app_roles.id', '=', $user->rol_id)
+            ->where('usr_app_menus.oculto', '=', 0)
+            ->orderBy('usr_app_menus.posicion')
             ->select(
 
-                "roles.id as rol",
-                "menus.nombre",
-                "menus.url",
-                "menus.icon",
-                "menus.urlExterna",
-                "menus.oculto",
+                "usr_app_roles.id as rol",
+                "usr_app_menus.nombre",
+                "usr_app_menus.id",
+                "usr_app_menus.url",
+                "usr_app_menus.icon",
+                "usr_app_menus.urlExterna",
+                "usr_app_menus.oculto",
+                "usr_app_categorias_menu.nombre as categoria",
+                "usr_app_menus.powerbi"
             )
             ->get();
         return response()->json($users);
+
+        // $users = menu::leftJoin('usr_app_menus_roles', 'usr_app_menus_roles.menu_id', '=', 'usr_app_menus.id')
+        //     ->leftJoin('usr_app_roles', 'usr_app_roles.id', '=', 'usr_app_menus_roles.rol_id')
+        //     ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
+        //     ->where('usr_app_menus.oculto', '=', 0)
+        //     ->where('usr_app_roles.id', '=', $user->rol_id)
+        //     ->orderBy('usr_app_menus.posicion')
+        //     ->select(
+        //         "usr_app_roles.id as rol",
+        //         "usr_app_menus.nombre",
+        //         "usr_app_menus.id",
+        //         "usr_app_menus.url",
+        //         "usr_app_menus.icon",
+        //         "usr_app_menus.urlExterna",
+        //         "usr_app_menus.oculto",
+        //         "usr_app_categorias_menu.nombre as categoria"
+        //     )
+        //     ->get();
+
+        // return response()->json($users);
+        // $users = menu::leftJoin('usr_app_menus_roles', 'usr_app_menus_roles.menu_id', '=', 'usr_app_menus.id')
+        //     ->leftJoin('usr_app_roles', 'usr_app_roles.id', '=', 'usr_app_menus_roles.rol_id')
+        //     ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
+        //     ->where('usr_app_menus.oculto', '=', 0)
+        //     ->when($user->rol_id != 1, function ($query) use ($user) {
+        //         return $query->where('usr_app_roles.id', '=', $user->rol_id);
+        //     })
+        //     ->orderBy('usr_app_menus.posicion')
+        //     ->select(
+        //         "usr_app_roles.id as rol",
+        //         "usr_app_menus.nombre",
+        //         "usr_app_menus.id",
+        //         "usr_app_menus.url",
+        //         "usr_app_menus.icon",
+        //         "usr_app_menus.urlExterna",
+        //         "usr_app_menus.oculto",
+        //         "usr_app_categorias_menu.nombre as categoria"
+        //     )
+        //     ->get();
+
+        // return response()->json($users);
+
+    }
+
+
+    public function categoriaMenu()
+    {
+        $menus = $this->menubyRole();
+        $user = auth()->user();
+        $result = categoriaMenu::select(
+            'usr_app_categorias_menu.nombre as categoria',
+            'usr_app_categorias_menu.icon',
+        )
+            ->orderBy('usr_app_categorias_menu.posicion')
+            ->get();
+        $menu = [];
+        foreach ($result as $key => $item) {
+            $menuCategoria = ['categoria' => $item->categoria, 'icon' => $item->icon, 'opciones' => []];
+            foreach ($menus->original as $item2) {
+                if ($item2->categoria == $item->categoria) {
+                    $opcion = [
+                        'nombre' => $item2->nombre,
+                        'rol' => $item2->rol,
+                        'url' => $item2->url,
+                        'urlExterna' => $item2->urlExterna,
+                        'oculto' => $item2->oculto,
+                        'icon' => $item2->icon,
+                        'powerbi' => $item2->powerbi,
+                    ];
+                    array_push($menuCategoria['opciones'], $opcion);
+                }
+            }
+            if ($key > 0 && empty($menuCategoria['opciones'])) {
+                unset($menu[$key]);
+            } else {
+                $menu[] = $menuCategoria;
+            }
+        }
+
+        return response()->json($menu);
     }
 
     /**
@@ -125,7 +211,7 @@ class MenuController extends Controller
     public function destroy($id)
     {
         $datosmenu = Menu::find($id);
-            if ($datosmenu->delete()) {
+        if ($datosmenu->delete()) {
             return response()->json("registro borrado Con Exito");
         } else {
             return response()->json("Error al borrar registro");

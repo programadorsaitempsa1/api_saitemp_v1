@@ -22,20 +22,20 @@ class MenuRolController extends Controller
     {
         $user = auth()->user();
         if ($user->rol_id == 1) {
-            $roles = MenuRol::join("menus", "menus.id", "=", "menus_roles.menu_id")
-                ->join("roles", "roles.id", "=", "menus_roles.rol_id")
+            $roles = MenuRol::join("usr_app_menus", "usr_app_menus.id", "=", "usr_app_menus_roles.menu_id")
+                ->join("usr_app_roles", "usr_app_roles.id", "=", "usr_app_menus_roles.rol_id")
                 ->select(
-                    "roles.nombre as rol",
+                    "usr_app_roles.nombre as rol",
                 )
                 ->distinct()
                 // ->orderby('roles.id', 'ASC')
                 ->get();
         } else {
-            $roles = MenuRol::join("menus", "menus.id", "=", "menus_roles.menu_id")
-                ->join("roles", "roles.id", "=", "menus_roles.rol_id")
-                ->where("menus_roles.rol_id", "!=", 1)
+            $roles = MenuRol::join("usr_app_menus", "usr_app_menus.id", "=", "usr_app_menus_roles.menu_id")
+                ->join("usr_app_roles", "usr_app_roles.id", "=", "usr_app_menus_roles.rol_id")
+                ->where("usr_app_menus_roles.rol_id", "!=", 1)
                 ->select(
-                    "roles.nombre as rol",
+                    "usr_app_roles.nombre as rol",
                 )
                 ->distinct()
                 // ->orderby('roles.id', 'desc')
@@ -49,27 +49,27 @@ class MenuRolController extends Controller
     {
         $user = auth()->user();
         if ($user->rol_id == 1) {
-            $roles = MenuRol::join("menus", "menus.id", "=", "menus_roles.menu_id")
-                ->join("roles", "roles.id", "=", "menus_roles.rol_id")
+            $roles = MenuRol::join("usr_app_menus", "usr_app_menus.id", "=", "usr_app_menus_roles.menu_id")
+                ->join("usr_app_roles", "usr_app_roles.id", "=", "usr_app_menus_roles.rol_id")
                 ->select(
 
-                    "menus_roles.id",
-                    "roles.nombre as rol",
-                    "menus.nombre as menu",
+                    "usr_app_menus_roles.id",
+                    "usr_app_roles.nombre as rol",
+                    "usr_app_menus.nombre as menu",
                 )
-                ->orderby('menus_roles.id', 'DESC')
+                ->orderby('usr_app_menus_roles.id', 'DESC')
                 ->paginate($cantidad);
         } else {
-            $roles = MenuRol::join("menus", "menus.id", "=", "menus_roles.menu_id")
-                ->join("roles", "roles.id", "=", "menus_roles.rol_id")
-                ->where("menus_roles.rol_id", "!=", 1)
+            $roles = MenuRol::join("usr_app_menus", "usr_app_menus.id", "=", "usr_app_menus_roles.menu_id")
+                ->join("usr_app_roles", "usr_app_roles.id", "=", "usr_app_menus_roles.rol_id")
+                ->where("usr_app_menus_roles.rol_id", "!=", 1)
                 ->select(
 
-                    "menus_roles.id",
-                    "roles.nombre as rol",
-                    "menus.nombre as menu",
+                    "usr_app_menus_roles.id",
+                    "usr_app_roles.nombre as rol",
+                    "usr_app_menus.nombre as menu",
                 )
-                ->orderby('menus_roles.id', 'DESC')
+                ->orderby('usr_app_menus_roles.id', 'DESC')
                 ->paginate($cantidad);
         }
         return response()->json($roles);
@@ -77,13 +77,13 @@ class MenuRolController extends Controller
 
     public function rolesMenusbyid($id)
     {
-        $roles = MenuRol::join("menus", "menus.id", "=", "menus_roles.menu_id")
-            ->join("roles", "roles.id", "=", "menus_roles.rol_id")
-            ->where('menus_roles.rol_id', '=', $id)
+        $roles = MenuRol::join("usr_app_menus", "usr_app_menus.id", "=", "usr_app_menus_roles.menu_id")
+            ->join("usr_app_roles", "usr_app_roles.id", "=", "usr_app_menus_roles.rol_id")
+            ->where('usr_app_menus_roles.rol_id', '=', $id)
             ->select(
-                "menus_roles.id",
-                "roles.nombre as rol",
-                "menus.nombre as menu",
+                "usr_app_menus_roles.id",
+                "usr_app_roles.nombre as rol",
+                "usr_app_menus.nombre as menu",
 
             )
             // ->get();
