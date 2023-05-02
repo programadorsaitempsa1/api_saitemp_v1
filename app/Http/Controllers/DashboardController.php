@@ -128,6 +128,7 @@ class DashboardController extends Controller
             ->when(!is_numeric($cedula), function ($query) use ($cedula) {
                 return $query->where('t.ter_nombre', 'like', '%' . $cedula . '%');
             })
+            ->whereNotIn('ec.cod_conv', ['0001-00Q'])
             ->orderBy('hl.fec_ini', 'asc');
 
         $result = $query->paginate($cantidad);
@@ -190,14 +191,15 @@ class DashboardController extends Controller
         return (new EmpleadosExport($data))->download('exportData.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
-    public function username($cedula){
+    public function username($cedula)
+    {
         $result = DB::table('rhh_emplea')
-        ->select(
-            DB::raw("CONCAT(nom_emp, ' ', ap1_emp , ' ', ap2_emp) AS nombre"),
-            'cod_emp'
-        )
-        ->where('cod_emp','=',$cedula)
-        ->first();
+            ->select(
+                DB::raw("CONCAT(nom_emp, ' ', ap1_emp , ' ', ap2_emp) AS nombre"),
+                'cod_emp'
+            )
+            ->where('cod_emp', '=', $cedula)
+            ->first();
         return response()->json($result);
     }
 
