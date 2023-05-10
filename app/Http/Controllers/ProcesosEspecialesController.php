@@ -187,7 +187,10 @@ class ProcesosEspecialesController extends Controller
             $exportData[] = $rowData;
         }
         $data = collect($exportData);
-        return (new ProcesosEspecialesExport($data))->download('exportData.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        
+        return (new ProcesosEspecialesExport($data))->download('exportData.xlsx', \Maatwebsite\Excel\Excel::XLSX,[
+            'chunk' => 1000 // Define el tamaño del bloque en registros
+        ]);
     }
 
     /**
