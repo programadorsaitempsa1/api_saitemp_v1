@@ -113,7 +113,7 @@ class DashboardController extends Controller
                     'hl.sal_bas AS sal_bas',
                     'tc.nom_con',
                     'Ct.not_con',
-                    DB::raw("CONCAT(a.nombre,'-',ca.cod_analista)  AS analista")
+                    'a.nombre as analista',
                 );
             })
             ->when(!is_numeric($cedula), function ($query) {
@@ -133,19 +133,6 @@ class DashboardController extends Controller
 
         $result = $query->paginate($cantidad);
 
-        return response()->json($result);
-    }
-
-    public function analista($id){
-        $result = DB::table('usr_analista')
-        ->where('cod_analista','=',$id)
-        ->select(
-            'Nombre',
-            'Telefono',
-            'Correo',
-            'Ext',
-        )
-        ->paginate();
         return response()->json($result);
     }
 

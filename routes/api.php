@@ -132,7 +132,6 @@ Route::group([
     Route::get('/ingresosmesanterior', [DashboardController::class, 'ingresosmesanterior']); 
     Route::get('/retirosmesantrior', [DashboardController::class, 'retirosmesantrior']); 
     Route::get('/historicoempleado/{cedula}/{cantidad}', [DashboardController::class, 'historicoempleado']); 
-    Route::get('/analista/{id}', [DashboardController::class, 'analista']); 
     Route::get('/historicoempleadoexport/{filtro}', [DashboardController::class, 'historicoempleadoexport']); 
     Route::get('/datosempleado/{cedula}', [DashboardController::class, 'datosempleado']); 
     Route::get('/username/{cedula}', [DashboardController::class, 'username']); 
