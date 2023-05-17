@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsrAppPolExpTable extends Migration
+class CreateUsrAppRotacionesPersonalTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,10 @@ class CreateUsrAppPolExpTable extends Migration
      */
     public function up()
     {
-        Schema::create('usr_app_pol_exp', function (Blueprint $table) {
+        Schema::create('usr_app_rotaciones_personal', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_cli');
-            $table->string('nom_pe',145);
-            $table->integer('id_tip_ide');
-            $table->string('num_ide',45);
-            $table->string('parent',45);
+            $table->string('nombre',50);
+            $table->string('descripcion',150);
             $table->timestamps();
         });
     }
@@ -31,6 +28,6 @@ class CreateUsrAppPolExpTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usr_app_pol_exp');
+        Schema::dropIfExists('usr_app_rotaciones_personal');
     }
 }

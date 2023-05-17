@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsrAppRefComTable extends Migration
+class CreateUsrAppTipoOperacionesInternacionalesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,10 @@ class CreateUsrAppRefComTable extends Migration
      */
     public function up()
     {
-        Schema::create('usr_app_ref_com', function (Blueprint $table) {
+        Schema::create('usr_app_tipo_operaciones_internacionales', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_cli');
-            $table->string('nom_ref',145);
-            $table->string('nom_cont',145);
-            $table->string('tel',45);
+            $table->string('nombre',100);
+            $table->string('descripcion',150);
             $table->timestamps();
         });
     }
@@ -30,6 +28,6 @@ class CreateUsrAppRefComTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usr_app_ref_com');
+        Schema::dropIfExists('usr_app_tipo_operaciones_internacionales');
     }
 }

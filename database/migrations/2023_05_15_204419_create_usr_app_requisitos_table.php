@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsrAppExamenTable extends Migration
+class CreateUsrAppRequisitosTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,11 @@ class CreateUsrAppExamenTable extends Migration
      */
     public function up()
     {
-        Schema::create('usr_app_examen', function (Blueprint $table) {
+        Schema::create('usr_app_requisitos', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre',145);
-            $table->integer('tipo');
+            $table->string('nombre',100);
+            $table->string('descripcion',150);
+            $table->timestamps();
         });
     }
 
@@ -27,6 +28,6 @@ class CreateUsrAppExamenTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usr_app_examen');
+        Schema::dropIfExists('usr_app_requisitos');
     }
 }

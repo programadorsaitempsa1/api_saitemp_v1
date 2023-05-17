@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsrAppCarCliTable extends Migration
+class CreateUsrAppTiposCuentaBancoTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,10 @@ class CreateUsrAppCarCliTable extends Migration
      */
     public function up()
     {
-        Schema::create('usr_app_car_cli', function (Blueprint $table) {
+        Schema::create('usr_app_tipos_cuenta_banco', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_cli');
-            $table->string('cargo',100);
-            $table->string('riesgo',145);
+            $table->string('nombre',100);
+            $table->string('descripcion',150);
             $table->timestamps();
         });
     }
@@ -29,6 +28,6 @@ class CreateUsrAppCarCliTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usr_app_car_cli');
+        Schema::dropIfExists('usr_app_tipos_cuenta_banco');
     }
 }

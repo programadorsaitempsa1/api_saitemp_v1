@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsrAppExamCarTable extends Migration
+class CreateUsrAppTiposOrigenFondosTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,10 @@ class CreateUsrAppExamCarTable extends Migration
      */
     public function up()
     {
-        Schema::create('usr_app_exam_car', function (Blueprint $table) {
+        Schema::create('usr_app_tipos_origen_fondos', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_car');
-            $table->unsignedBigInteger('id_exam');
-            $table->unsignedBigInteger('tipo');
+            $table->string('nombre',100);
+            $table->string('descripcion',150);
             $table->timestamps();
         });
     }
@@ -29,6 +28,6 @@ class CreateUsrAppExamCarTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usr_app_exam_car');
+        Schema::dropIfExists('usr_app_tipos_origen_fondos');
     }
 }

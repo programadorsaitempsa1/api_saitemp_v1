@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsrAppExamCliTable extends Migration
+class CreateUsrAppTiposPersonaTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,10 @@ class CreateUsrAppExamCliTable extends Migration
      */
     public function up()
     {
-        Schema::create('usr_app_exam_cli', function (Blueprint $table) {
+        Schema::create('usr_app_tipos_persona', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_cli');
-            $table->string('cargo',200);
-            $table->integer('tipo');
+            $table->string('nombre',100);
+            $table->string('descripcion',150);
             $table->timestamps();
         });
     }
@@ -29,6 +28,6 @@ class CreateUsrAppExamCliTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usr_app_exam_cli');
+        Schema::dropIfExists('usr_app_tipos_persona');
     }
 }

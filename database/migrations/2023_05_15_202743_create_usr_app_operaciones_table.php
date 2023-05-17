@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsrAppSocioTable extends Migration
+class CreateUsrAppOperacionesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,10 @@ class CreateUsrAppSocioTable extends Migration
      */
     public function up()
     {
-        Schema::create('usr_app_socio', function (Blueprint $table) {
+        Schema::create('usr_app_operaciones', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_cli');
-            $table->string('nom_socio',145);
-            $table->integer('id_tip_ide');
-            $table->string('num_ide',145);
-            $table->string('porcentaje',45);
+            $table->string('nombre',100);
+            $table->string('descripcion',150);
             $table->timestamps();
         });
     }
@@ -31,6 +28,6 @@ class CreateUsrAppSocioTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usr_app_socio');
+        Schema::dropIfExists('usr_app_operaciones');
     }
 }

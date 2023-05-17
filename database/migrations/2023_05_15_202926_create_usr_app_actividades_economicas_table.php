@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsrAppDocsTable extends Migration
+class CreateUsrAppActividadesEconomicasTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,10 @@ class CreateUsrAppDocsTable extends Migration
      */
     public function up()
     {
-        Schema::create('usr_app_docs', function (Blueprint $table) {
+        Schema::create('usr_app_actividades_economicas', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_cli');
-            $table->string('documento',100);
-            $table->string('descr',45);
-            $table->string('tip_doc',45);
-            $table->string('descr_emp',100);
+            $table->string('nombre',100);
+            $table->string('descripcion',150);
             $table->timestamps();
         });
     }
@@ -31,6 +28,6 @@ class CreateUsrAppDocsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usr_app_docs');
+        Schema::dropIfExists('usr_app_actividades_economicas');
     }
 }

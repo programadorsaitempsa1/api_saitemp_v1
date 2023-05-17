@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsrAppJdTable extends Migration
+class CreateUsrAppRiesgosLaboralesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,10 @@ class CreateUsrAppJdTable extends Migration
      */
     public function up()
     {
-        Schema::create('usr_app_jd', function (Blueprint $table) {
+        Schema::create('usr_app_riesgos_laborales', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_cli');
-            $table->string('nom_junta',145);
-            $table->integer('id_tip_ide');
-            $table->string('num_ide',45);
+            $table->string('nombre',100);
+            $table->string('descripcion',150);
             $table->timestamps();
         });
     }
@@ -30,6 +28,6 @@ class CreateUsrAppJdTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usr_app_jd');
+        Schema::dropIfExists('usr_app_riesgos_laborales');
     }
 }
