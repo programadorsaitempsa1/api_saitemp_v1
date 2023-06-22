@@ -17,7 +17,7 @@ class CreateUsrAppActividadesCiiuTable extends Migration
             $table->id();
             $table->unsignedBigInteger('codigo_ciiu_id');
             $table->string('codigo_actividad',10);
-            $table->string('descripcion',2000);
+            $table->string('descripcion',2000)->nullable();
             $table->foreign('codigo_ciiu_id')->references('id')->on('usr_app_codigos_ciiu')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps('');
         });

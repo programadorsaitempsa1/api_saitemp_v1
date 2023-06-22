@@ -16,7 +16,6 @@ class CreateUsrAppCargosTable extends Migration
         Schema::create('usr_app_cargos', function (Blueprint $table) {
             $table->id();
             $table->string('nombre',100);
-            $table->string('descripcion',150);
             $table->unsignedBigInteger('cliente_id');
             $table->unsignedBigInteger('riesgo_laboral_id');
             $table->foreign('cliente_id')->references('id')->on('usr_app_clientes')->onDelete('cascade')->onUpdate('cascade');

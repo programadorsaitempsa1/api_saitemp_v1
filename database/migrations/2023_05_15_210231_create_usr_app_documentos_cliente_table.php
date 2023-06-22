@@ -17,7 +17,9 @@ class CreateUsrAppDocumentosClienteTable extends Migration
             $table->id();
             $table->unsignedBigInteger('tipo_documento_id');
             $table->string('ruta',100);
-            $table->string('descripcion',150);
+            $table->string('abreviacion',5)->nullable();
+            $table->string('tipo_archivo',10)->nullable();
+            $table->string('descripcion',150)->nullable();
             $table->unsignedBigInteger('cliente_id');
             $table->foreign('tipo_documento_id')->references('id')->on('usr_app_tipos_documento')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('cliente_id')->references('id')->on('usr_app_clientes')->onDelete('cascade')->onUpdate('cascade');

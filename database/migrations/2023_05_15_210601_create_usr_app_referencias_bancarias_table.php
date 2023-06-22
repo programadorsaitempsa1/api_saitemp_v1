@@ -18,9 +18,9 @@ class CreateUsrAppReferenciasBancariasTable extends Migration
             // $table->char('banco_id',2);
             $table->string('numero_cuenta',20);
             $table->unsignedBigInteger('tipo_cuenta_id');
-            $table->string('sucursal',100);
-            $table->string('telefono',20);
-            $table->string('contacto',100);
+            $table->string('sucursal',100)->nullable();
+            $table->string('telefono',20)->nullable();
+            $table->string('contacto',100)->nullable();
             $table->unsignedBigInteger('cliente_id');
             // $table->foreign('banco_id')->references('cod_ban')->on('gen_bancos')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('tipo_cuenta_id')->references('id')->on('usr_app_tipos_cuenta_banco')->onDelete('cascade')->onUpdate('cascade');

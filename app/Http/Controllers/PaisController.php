@@ -13,7 +13,9 @@ class PaisController extends Controller
      */
     public function index()
     {
-        $result = Paises::all();
+        $result = Paises::select()
+        ->where('activo','=',1)
+        ->get();
         return response()->json($result);
     }
 

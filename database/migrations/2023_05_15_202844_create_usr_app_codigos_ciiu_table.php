@@ -16,7 +16,7 @@ class CreateUsrAppCodigosCiiuTable extends Migration
         Schema::create('usr_app_codigos_ciiu', function (Blueprint $table) {
             $table->id();
             $table->string('codigo',6);
-            $table->string('descripcion',150);
+            $table->string('descripcion',150)->nullable();
             $table->timestamps();
         });
     }

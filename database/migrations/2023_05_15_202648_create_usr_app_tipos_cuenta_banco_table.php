@@ -16,7 +16,7 @@ class CreateUsrAppTiposCuentaBancoTable extends Migration
         Schema::create('usr_app_tipos_cuenta_banco', function (Blueprint $table) {
             $table->id();
             $table->string('nombre',100);
-            $table->string('descripcion',150);
+            $table->string('descripcion',150)->nullable();
             $table->timestamps();
         });
     }

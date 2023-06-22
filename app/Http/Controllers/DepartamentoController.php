@@ -14,13 +14,14 @@ class DepartamentoController extends Controller
      */
     public function index()
     {
-        $result = Departamento::all();
+        $result = Departamento::select()
+        ->get();
         return response()->json($result);
     }
 
     public function departamentopais($id)
     {
-        $result = Departamento::where('cod_pai', '=', $id)
+        $result = Departamento::where('pais_id', '=', $id)
             ->select()
             ->get();
         return response()->json($result);

@@ -18,7 +18,7 @@ class CreateUsrAppPersonasExpuestasPoliticaTable extends Migration
             $table->string('nombre',100);
             // $table->char('tipo_identificacion_id',2);
             $table->string('numero_identificacion',20);
-            $table->string('parentesco',50);
+            $table->string('parentesco',50)->nullable();
             $table->unsignedBigInteger('cliente_id');
             // $table->foreign('tipo_identificacion_id')->references('id')->on('cod_tip')->onDelete('gen_tipide')->onUpdate('cascade');
             $table->foreign('cliente_id')->references('id')->on('usr_app_clientes')->onDelete('cascade')->onUpdate('cascade');

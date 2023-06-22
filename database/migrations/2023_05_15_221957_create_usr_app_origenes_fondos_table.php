@@ -16,14 +16,15 @@ class CreateUsrAppOrigenesFondosTable extends Migration
         Schema::create('usr_app_origenes_fondos', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('tipo_origen_fondos_id');
-            $table->string('otro_origen',100);
+            $table->string('otro_origen',100)->nullable();
             $table->unsignedBigInteger('tipo_origen_medios_id');
-            $table->unsignedBigInteger('tipo_origen_medios2_id');
+            $table->unsignedBigInteger('tipo_origen_medios2_id')->nullable();
             $table->boolean('alto_manejo_efectivo');
             $table->unsignedBigInteger('cliente_id');
             $table->foreign('tipo_origen_fondos_id')->references('id')->on('usr_app_tipos_origen_fondos')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('tipo_origen_medios_id')->references('id')->on('usr_app_tipos_origen_medios')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('cliente_id')->references('id')->on('usr_app_clientes')->onDelete('cascade')->onUpdate('cascade');
+            $table->timestamps();
         });
     }
 

@@ -18,12 +18,12 @@ class CreateUsrAppRepresentantesLegalesTable extends Migration
             $table->string('nombre',100);
             // $table->char('tipo_identificacion_id',2);
             $table->string('identificacion',20);
-            $table->char('departamento_expedicion_id',2);
+            $table->unsignedBigInteger('municipio_expedicion_id');
             $table->string('correo_electronico',100);
             $table->string('telefono',20);
             $table->unsignedBigInteger('cliente_id');
             // $table->foreign('tipo_identificacion_id')->references('cod_tip')->on('gen_tipide')->onDelete('cascade')->onUpdate('cascade');
-            // $table->foreign('departamento_expedicion_id')->references('cod_dep')->on('gen_deptos')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('municipio_expedicion_id')->references('id')->on('usr_app_municipios')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('cliente_id')->references('id')->on('usr_app_clientes')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });

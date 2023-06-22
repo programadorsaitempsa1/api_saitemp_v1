@@ -8,5 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class Departamento extends Model
 {
     use HasFactory;
-    protected $table="gen_deptos";
+    protected $table="usr_app_departamentos";
 }

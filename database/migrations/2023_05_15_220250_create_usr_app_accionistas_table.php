@@ -18,7 +18,7 @@ class CreateUsrAppAccionistasTable extends Migration
             // $table->char('tipo_identificacion_id',2); 
             $table->string('identificacion',20);
             $table->string('accionista',100);
-            $table->string('participaccion',3);
+            $table->string('participacion',3)->nullable();
             $table->unsignedBigInteger('cliente_id');
             // $table->foreign('tipo_identificacion_id')->references('cod_tip')->on('gen_tipide')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('cliente_id')->references('id')->on('usr_app_clientes')->onDelete('cascade')->onUpdate('cascade');

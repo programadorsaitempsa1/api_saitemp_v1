@@ -14,13 +14,14 @@ class MunicipioController extends Controller
      */
     public function index()
     {
-        $result = Municipios::all();
+        $result = Municipios::select()
+        ->get();
         return response()->json($result);
     }
 
     public function municipiodepartamento($id)
     {
-        $municipios = Municipios::where('cod_dep', '=', $id)
+        $municipios = Municipios::where('departamento_id', '=', $id)
             ->select()
             ->get();
         return response()->json($municipios);

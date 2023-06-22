@@ -8,5 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class Municipios extends Model
 {
     use HasFactory;
-    protected $table = "gen_ciudad";
+    protected $table = "usr_app_municipios";
 }

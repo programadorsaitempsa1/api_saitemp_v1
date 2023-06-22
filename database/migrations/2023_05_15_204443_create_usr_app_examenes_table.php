@@ -16,7 +16,7 @@ class CreateUsrAppExamenesTable extends Migration
         Schema::create('usr_app_examenes', function (Blueprint $table) {
             $table->id();
             $table->string('nombre',100);
-            $table->string('descripcion',150);
+            $table->string('descripcion',150)->nullable();
             $table->timestamps();
         });
     }

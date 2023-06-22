@@ -16,7 +16,7 @@ class CreateUsrAppRotacionesPersonalTable extends Migration
         Schema::create('usr_app_rotaciones_personal', function (Blueprint $table) {
             $table->id();
             $table->string('nombre',50);
-            $table->string('descripcion',150);
+            $table->string('descripcion',150)->nullable();
             $table->timestamps();
         });
     }

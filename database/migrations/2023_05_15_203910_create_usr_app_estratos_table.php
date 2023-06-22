@@ -16,7 +16,7 @@ class CreateUsrAppEstratosTable extends Migration
         Schema::create('usr_app_estratos', function (Blueprint $table) {
             $table->id();
             $table->string('nombre',2);
-            $table->string('descripcion');
+            $table->string('descripcion')->nullable();
             $table->timestamps();
         });
     }
