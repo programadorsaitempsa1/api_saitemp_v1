@@ -9,27 +9,13 @@ use App\Http\Controllers\RolController;
 use App\Http\Controllers\PermisoController;
 use App\Http\Controllers\SigContratoController;
 use App\Http\Controllers\DepartamentoController;
-use App\Http\Controllers\SigEstadoEmpleadoController;
 use App\Http\Controllers\SigTipoDocumentoIdentidadController;
-use App\Http\Controllers\SigCargoController;
-use App\Http\Controllers\SigOrdenTrabajoController;
-use App\Http\Controllers\SigEstadoOrdenTrabajoController;
-use App\Http\Controllers\SigFormularioController;
 use App\Http\Controllers\AuthUsuarioController;
 use App\Http\Controllers\UsuarioController;
-use App\Http\Controllers\SigEstadoContratoController;
 use App\Http\Controllers\MenuRolController;
 use App\Http\Controllers\SigPermisoRolController;
 use App\Http\Controllers\MunicipioController;
-use App\Http\Controllers\SigZonaController;
-use App\Http\Controllers\SigEmpleadoController;
-use App\Http\Controllers\SigContratoEmpleadoController;
-use App\Http\Controllers\SigOrdenTrabajoEmpleadoController;
-use App\Http\Controllers\SigFormularioOrdenTrabajoController;
-use App\Http\Controllers\CostoController;
 use App\Http\Controllers\UnidadMedidaController;
-use App\Http\Controllers\CodigoItemController;
-use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PaisController;
 use App\Http\Controllers\GeneroController;
 use App\Http\Controllers\EstadoCivilController;
@@ -72,7 +58,6 @@ use App\Http\Controllers\RotacionPersonalController;
 use App\Http\Controllers\RiesgoLaboralController;
 use App\Http\Controllers\ExamenController;
 use App\Http\Controllers\RequisitoController;
-// use App\Http\Controllers\ActividadEconomicaController;
 use App\Http\Controllers\PeriodicidadLiquidacionController;
 use App\Http\Controllers\TipoCuentaBancoController;
 use App\Http\Controllers\OperacionInternacionalController;
@@ -414,24 +399,6 @@ Route::group([
     Route::get('/clientesactivos', [formularioDebidaDiligenciaController::class, 'clientesactivos']);
     
     Route::get('/contrato/{id}', [ContratoController::class, 'index']);
-    // Zonas
-    // Route::get('/zonas/{cantidad}', [SigZonaController::class, 'index']);
-    // Route::post('/zonas', [SigZonaController::class, 'create']);
-    // Route::post('/zonas/{id}', [SigZonaController::class, 'update']);
-    // Route::delete('/zonas/{id}', [SigZonaController::class, 'destroy']);
-    // Route::get('/zonaslista', [SigZonaController::class, 'lista']);
-    // Route::get('/zonasfiltro/{cadena}', [SigZonaController::class, 'filtro']);
-    // Route::post('/zonasborradomasivo', [SigZonaController::class, 'borradomasivo']);
-    // Route::post('/zonasactualizacionmasiva', [SigZonaController::class, 'actualizacionmasiva']);
-
-    // Route::get('/municipios/{id}', [SigZonaController::class, 'municipiodepartamento']);
-    // Route::get('/estadoempleados/{cantidad}', [SigEstadoEmpleadoController::class, 'index']);
-    // Route::post('/estadoempleados', [SigEstadoEmpleadoController::class, 'create']);
-    // Route::post('/estadoempleados/{id}', [SigEstadoEmpleadoController::class, 'update']);
-    // Route::delete('/estadoempleados/{id}', [SigEstadoEmpleadoController::class, 'destroy']);
-    // Route::get('/estadoempleadoslista', [SigEstadoEmpleadoController::class, 'lista']);
-    // Route::post('/estadoempleadosborradomasivo', [SigEstadoEmpleadoController::class, 'borradomasivo']);
-    // Route::post('/estadoempleadosactualizacionmasiva', [SigEstadoEmpleadoController::class, 'actualizacionmasiva']);
     
     // Tipos de documento de identidad
     Route::get('/tipodocumento/{cantidad}', [SigTipoDocumentoIdentidadController::class, 'index']);
@@ -442,123 +409,6 @@ Route::group([
     Route::post('/tipodocumentoborradomasivo', [SigTipoDocumentoIdentidadController::class, 'borradomasivo']);
     Route::post('/tipodocumentoactualizacionmasiva', [SigTipoDocumentoIdentidadController::class, 'actualizacionmasiva']);
 
-    // Cargos
-    // Route::get('/cargos/{cantidad}', [SigCargoController::class, 'index']);
-    // Route::post('/cargos', [SigCargoController::class, 'create']);
-    // Route::post('/cargos/{id}', [SigCargoController::class, 'update']);
-    // Route::delete('/cargos/{id}', [SigCargoController::class, 'destroy']);
-    // Route::get('/cargoslista', [SigCargoController::class, 'lista']);
-    // Route::post('/cargosborradomasivo', [SigCargoController::class, 'borradomasivo']);
-    // Route::post('/cargosactualizacionmasiva', [SigCargoController::class, 'actualizacionmasiva']);
-
-    // Ordenes de trabajo
-    // Route::get('/ordenestrabajo/{cantidad}', [SigOrdenTrabajoController::class, 'index']);
-    // Route::post('/ordenestrabajo', [SigOrdenTrabajoController::class, 'create']);
-    // Route::post('/ordenestrabajo/{id}', [SigOrdenTrabajoController::class, 'update']);
-    // Route::delete('/ordenestrabajo/{id}', [SigOrdenTrabajoController::class, 'destroy']);
-    // Route::get('/ordenestrabajo/{id}', [SigOrdenTrabajoController::class, 'otporcontrato']);
-    // Route::get('/ordenestrabajoasignadas/{cantidad}', [SigOrdenTrabajoController::class, 'asignadas']);
-    // Route::post('/ordenestrabajomasivo', [SigOrdenTrabajoController::class, 'cargaMasiva']);
-    // Route::post('/otsactualizacionmasiva', [SigOrdenTrabajoController::class, 'otsactualizacionmasiva']);
-    // Route::post('/otseliminacionmasiva', [SigOrdenTrabajoController::class, 'otseliminacionmasiva']);
-    
-    // Estados ordenes de trabajo
-    // Route::get('/estadoordenestrabajo/{cantidad}', [SigEstadoOrdenTrabajoController::class, 'index']);
-    // Route::post('/estadoordenestrabajo', [SigEstadoOrdenTrabajoController::class, 'create']);
-    // Route::post('/estadoordenestrabajo/{id}', [SigEstadoOrdenTrabajoController::class, 'update']);
-    // Route::get('/estadoordenestrabajolista', [SigEstadoOrdenTrabajoController::class, 'lista']);
-    // Route::delete('/estadoordenestrabajo/{id}', [SigEstadoOrdenTrabajoController::class, 'destroy']);
-    // Route::post('/estadoordenestrabajoborradomasivo', [SigEstadoOrdenTrabajoController::class, 'borradomasivo']);
-    // Route::post('/estadoordenestrabajoactualizacionmasiva', [SigEstadoOrdenTrabajoController::class, 'actualizacionmasiva']);
-    
-    // Formulario
-    // Route::get('/formulario', [SigFormularioController::class, 'index']);
-    // Route::post('/formulario', [SigFormularioController::class, 'create']);
-    // Route::post('/formulario/{id}', [SigFormularioController::class, 'update']);
-    // Route::delete('/formulario/{id}', [SigFormularioController::class, 'destroy']);
-    // Route::get('/formulario/{id}', [SigFormularioController::class, 'getbyid']);
-    
-    // Estados de los contratos
-    // Route::get('/estadocontrato/{cantidad}', [SigEstadoContratoController::class, 'index']);
-    // Route::post('/estadocontrato', [SigEstadoContratoController::class, 'create']);
-    // Route::post('/estadocontrato/{id}', [SigEstadoContratoController::class, 'update']);
-    // Route::delete('/estadocontrato/{id}', [SigEstadoContratoController::class, 'destroy']);
-    // Route::get('/estadocontratolista', [SigEstadoContratoController::class, 'lista']);
-    // Route::post('/estadocontratoborradomasivo', [SigEstadoContratoController::class, 'borradomasivo']);
-    // Route::post('/estadocontratoactualizacionmasiva', [SigEstadoContratoController::class, 'actualizacionmasiva']);
-    
-    // Empleados
-    // Route::get('/sigempleados/{cantidad}', [SigEmpleadoController::class, 'index']);
-    // Route::post('/sigempleados', [SigEmpleadoController::class, 'create']);
-    // Route::post('/sigempleados/{id}', [SigEmpleadoController::class, 'update']);
-    // Route::delete('/sigempleados/{id}', [SigEmpleadoController::class, 'destroy']);
-    // Route::get('/sigempleadosbyid/{id}', [SigEmpleadoController::class, 'empleadoById']);
-    // Route::get('/sigempleadosst', [SigEmpleadoController::class, 'getEmpleadosSST']);
-    // Route::get('/getEmpleadoEncargado', [SigEmpleadoController::class, 'getEmpleadoEncargado']);
-    // Route::get('/sigempleadoslista', [SigEmpleadoController::class, 'sigempleadoslista']);
-    // Route::get('/sigempleadosfiltro/{cadena}', [SigEmpleadoController::class, 'filtro']);
-    // Route::post('/sigempleadosborradomasivo', [SigEmpleadoController::class, 'borradomasivo']);
-    // Route::post('/sigempleadosactualizacionmasiva', [SigEmpleadoController::class, 'actualizacionmasiva']);
-
-    // Contrato empleados
-    // Route::get('/contratoempleado/{cantidad}', [SigContratoEmpleadoController::class, 'index']);
-    // Route::post('/contratoempleado', [SigContratoEmpleadoController::class, 'create']);
-    // Route::post('/contratoempleado/{id}', [SigContratoEmpleadoController::class, 'update']);
-    // Route::delete('/contratoempleado/{id}', [SigContratoEmpleadoController::class, 'destroy']);
-    // Route::get('/contratoempleadofiltro/{cadena}', [SigContratoEmpleadoController::class, 'filtro']);
-    // Route::post('/contratoempleadoborradomasivo', [SigContratoEmpleadoController::class, 'borradomasivo']);
-    // Route::post('/contratoempleadoactualizacionmasiva', [SigContratoEmpleadoController::class, 'actualizacionmasiva']);
-
-    // Ordenes de trabajo empleados
-    // Route::get('/ordentrabajoempleado', [SigOrdenTrabajoEmpleadoController::class, 'index']);
-    // Route::post('/ordentrabajoempleado', [SigOrdenTrabajoEmpleadoController::class, 'create']);
-    // Route::post('/ordentrabajoempleado/{id}', [SigOrdenTrabajoEmpleadoController::class, 'update']);
-    // Route::delete('/ordentrabajoempleado/{id}', [SigOrdenTrabajoEmpleadoController::class, 'destroy']);
-    
-    // Relación entre formularios y ots
-    // Route::get('/formularioordentrabajo', [SigFormularioOrdenTrabajoController::class, 'index']);
-    // Route::post('/formularioordentrabajo', [SigFormularioOrdenTrabajoController::class, 'create']);
-    // Route::post('/formularioordentrabajo/{id}', [SigFormularioOrdenTrabajoController::class, 'update']);
-    // Route::delete('/formularioordentrabajo/{id}', [SigFormularioOrdenTrabajoController::class, 'destroy']);
-    // Route::get('/formularioordentrabajo/{id}', [SigFormularioOrdenTrabajoController::class, 'findById']);
-
-    // Costos de los items de ordenes de trabajo
-    // Route::get('/costoitem/{cantidad}', [CostoController::class, 'index']);
-    // Route::post('/costoitem', [CostoController::class, 'create']);
-    // Route::post('/costoitem/{id}', [CostoController::class, 'update']);
-    // Route::delete('/costoitem/{id}', [CostoController::class, 'destroy']);
-    // Route::get('/costoitemcategoria/{categoria}', [CostoController::class, 'costoitemcategoria']);
-    // Route::get('/costoitemfiltro/{cadena}', [CostoController::class, 'filtro']);
-    // Route::post('/costoitemborradomasivo', [CostoController::class, 'borradomasivo']);
-    // Route::post('/costoitemactualizacionmasiva', [CostoController::class, 'actualizacionmasiva']);
-    // Route::post('/costoitemmasivo', [CostoController::class, 'cargaMasiva']);
-    // Route::get('/costoitem/{id}', [CostoController::class, 'findById']);
-
-
-    // Categoría items ordenes de trabajo
-    // Route::get('/codigoitem/{cantidad}', [CodigoItemController::class, 'index']);
-    // Route::get('/listacodigoitem', [CodigoItemController::class, 'lista']);
-    // Route::post('/codigoitem', [CodigoItemController::class, 'create']);
-    // Route::post('/codigoitem/{id}', [CodigoItemController::class, 'update']);
-    // Route::delete('/codigoitem/{id}', [CodigoItemController::class, 'destroy']);
-    // Route::get('/codigoitem/{id}', [CodigoItemController::class, 'findById']);
-    // Route::post('/codigoitemborradomasivo', [CodigoItemController::class, 'borradomasivo']);
-    // Route::post('/codigoitemactualizacionmasiva', [CodigoItemController::class, 'actualizacionmasiva']);
-
-    // Unidades de medida
-    // Route::get('/unidadmedida/{cantidad}', [UnidadMedidaController::class, 'index']);
-    // Route::get('/listaunidadmedida', [UnidadMedidaController::class, 'lista']);
-    // Route::post('/unidadmedida', [UnidadMedidaController::class, 'create']);
-    // Route::post('/unidadmedida/{id}', [UnidadMedidaController::class, 'update']);
-    // Route::delete('/unidadmedida/{id}', [UnidadMedidaController::class, 'destroy']);
-    // Route::get('/unidadmedida/{id}', [UnidadMedidaController::class, 'findById']);
-    // Route::get('/unidadmedida/{id}', [UnidadMedidaController::class, 'findById']);
-    // Route::post('/unidadmedidaborradomasivo', [UnidadMedidaController::class, 'borradomasivo']);
-    // Route::post('/unidadmedidaactualizacionmasiva', [UnidadMedidaController::class, 'actualizacionmasiva']);
-    
-    // Items
-    // Route::get('/itemsexport/{cadena}', [ItemController::class, 'export']);
-    // Route::get('/items/{cantidad}', [ItemController::class, 'index']);
-    // Route::get('/itemsfiltro/{cadena}', [ItemController::class, 'filtro']);
+   
 
 });
