@@ -18,6 +18,8 @@ class CreateUsrAppTiposDocumentoTable extends Migration
             $table->string('nombre',300);
             $table->string('abreviacion',3)->nullable();
             $table->string('tipo_archivo',10)->nullable();
+            $table->unsignedBigInteger('tipo_proveedor_id');
+            $table->foreign('tipo_proveedor_id')->references('id')->on('usr_app_tipo_proveedor')->onDelete('NO ACTION')->onUpdate('NO ACTION');
             $table->timestamps('');
         });
     }

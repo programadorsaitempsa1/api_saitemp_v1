@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsrAppTipoOperacionesInternacionalesTable extends Migration
+class CreateUsrAppTiposClienteTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,10 @@ class CreateUsrAppTipoOperacionesInternacionalesTable extends Migration
      */
     public function up()
     {
-        Schema::create('usr_app_tipo_operaciones_internacionales', function (Blueprint $table) {
+        Schema::create('usr_app_tipos_cliente', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre',100)->nullable();
-            $table->string('descripcion',150)->nullable();
+            $table->string('nombre');
+            $table->string('descripcion');
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ class CreateUsrAppTipoOperacionesInternacionalesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usr_app_tipo_operaciones_internacionales');
+        Schema::dropIfExists('usr_app_tipos_cliente');
     }
 }

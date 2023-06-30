@@ -66,6 +66,9 @@ use App\Http\Controllers\TipoOrigenFondoController;
 use App\Http\Controllers\TiposOrigenMediosController;
 use App\Http\Controllers\formularioDebidaDiligenciaController;
 use App\Http\Controllers\ContratoController;
+use App\Http\Controllers\TipoClienteController;
+use App\Http\Controllers\TipoProveedorController;
+use App\Http\Controllers\TipoDocumentoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -262,8 +265,19 @@ Route::group([
 
     
     // Permisos
-    Route::get('/permisos', [PermisoController::class, 'index']);    
+    Route::get('/permisos', [PermisoController::class, 'index']); 
     
+    
+    // Tipo de cliente
+    Route::get('/tipocliente', [TipoClienteController::class, 'index']);    
+    
+    // Tipo de proveedor
+    Route::get('/tipoproveedor', [TipoProveedorController::class, 'index']);    
+
+    // Tipo de cliente
+    Route::get('/tipoarchivo', [TipoDocumentoController::class, 'index']);    
+    Route::get('/tipoarchivo/{id}', [TipoDocumentoController::class, 'byid']);    
+
     // Contratos
     Route::get('/contratos/{cantidad}', [SigContratoController::class, 'index']);    
     Route::get('/contratosactivos', [SigContratoController::class, 'contratosactivos']);    
@@ -296,26 +310,31 @@ Route::group([
     Route::delete('/municipios/{id}', [MunicipioController::class, 'destroy']);
     Route::get('/municipios/{id}', [MunicipioController::class, 'municipiodepartamento']);
     
+    // Tipos de operación
     Route::get('/operacion', [OperacionController::class, 'index']);
     Route::post('/operacion', [OperacionController::class, 'create']);
     Route::post('/operacion/{id}', [OperacionController::class, 'update']);
     Route::delete('/operacion/{id}', [OperacionController::class, 'destroy']);
     
+     // Tipos de persona
     Route::get('/tipopersona', [TipoPersonaController::class, 'index']);
     Route::post('/tipopersona', [TipoPersonaController::class, 'create']);
     Route::post('/tipopersona/{id}', [TipoPersonaController::class, 'update']);
     Route::delete('/tipopersona/{id}', [TipoPersonaController::class, 'destroy']);
     
+     // Estartos socioeconómicos
     Route::get('/estrato', [EstratoController::class, 'index']);
     Route::post('/estrato', [EstratoController::class, 'create']);
     Route::post('/estrato/{id}', [EstratoController::class, 'update']);
     Route::delete('/estrato/{id}', [EstratoController::class, 'destroy']);
     
+     // Codigos ciiu
     Route::get('/codigociiu', [CodigoCiiuController::class, 'index']);
     Route::post('/codigociiu', [CodigoCiiuController::class, 'create']);
     Route::post('/codigociiu/{id}', [CodigoCiiuController::class, 'update']);
     Route::delete('/codigociiu/{id}', [CodigoCiiuController::class, 'destroy']);
     
+     // Actividades ciiu
     Route::get('/actividadciiu', [ActividadCiiuController::class, 'index']);
     Route::get('/actividadciiu/{id}', [ActividadCiiuController::class, 'activityBycode']);
     Route::post('/actividadciiu', [ActividadCiiuController::class, 'create']);
@@ -323,78 +342,92 @@ Route::group([
     Route::delete('/actividadciiu/{id}', [ActividadCiiuController::class, 'destroy']);
     Route::get('/actividadciiu/filetr/{id}', [ActividadCiiuController::class, 'filter']);
     
+     // Tipos de operación
     Route::get('/sociedadcomercial', [SociedadComercialController::class, 'index']);
     Route::post('/sociedadcomercial', [SociedadComercialController::class, 'create']);
     Route::post('/sociedadcomercial/{id}', [SociedadComercialController::class, 'update']);
     Route::delete('/sociedadcomercial/{id}', [SociedadComercialController::class, 'destroy']);
     
+     // Ejecutivos comerciales
     Route::get('/ejecutivocomercial', [VendedorController::class, 'index']);
     Route::post('/ejecutivocomercial', [VendedorController::class, 'create']);
     Route::post('/ejecutivocomercial/{id}', [VendedorController::class, 'update']);
     Route::delete('/ejecutivocomercial/{id}', [VendedorController::class, 'destroy']);
     
+     // Jornadas laborales
     Route::get('/jornadalaboral', [JornadaLaoralController::class, 'index']);
     Route::post('/jornadalaboral', [JornadaLaoralController::class, 'create']);
     Route::post('/jornadalaboral/{id}', [JornadaLaoralController::class, 'update']);
     Route::delete('/jornadalaboral/{id}', [JornadaLaoralController::class, 'destroy']);
     
+     // Rotaciones de personal
     Route::get('/rotacionpersonal', [RotacionPersonalController::class, 'index']);
     Route::post('/rotacionpersonal', [RotacionPersonalController::class, 'create']);
     Route::post('/rotacionpersonal/{id}', [RotacionPersonalController::class, 'update']);
     Route::delete('/rotacionpersonal/{id}', [RotacionPersonalController::class, 'destroy']);
     
+     // Riesgos laborales
     Route::get('/riesgolaboral', [RiesgoLaboralController::class, 'index']);
     Route::post('/riesgolaboral', [RiesgoLaboralController::class, 'create']);
     Route::post('/riesgolaboral/{id}', [RiesgoLaboralController::class, 'update']);
     Route::delete('/riesgolaboral/{id}', [RiesgoLaboralController::class, 'destroy']);
     
+     // Exámenes médicos del cargo
     Route::get('/examen', [ExamenController::class, 'index']);
     Route::post('/examen', [ExamenController::class, 'create']);
     Route::post('/examen/{id}', [ExamenController::class, 'update']);
     Route::delete('/examen/{id}', [ExamenController::class, 'destroy']);
     
+     // Requisitos del cargo
     Route::get('/requisito', [RequisitoController::class, 'index']);
     Route::post('/requisito', [RequisitoController::class, 'create']);
     Route::post('/requisito/{id}', [RequisitoController::class, 'update']);
     Route::delete('/requisito/{id}', [RequisitoController::class, 'destroy']);
     
+     // Periodicidades para liquidación
     Route::get('/periodicidadliquidacion', [PeriodicidadLiquidacionController::class, 'index']);
     Route::post('/periodicidadliquidacion', [PeriodicidadLiquidacionController::class, 'create']);
     Route::post('/periodicidadliquidacion/{id}', [PeriodicidadLiquidacionController::class, 'update']);
     Route::delete('/periodicidadliquidacion/{id}', [PeriodicidadLiquidacionController::class, 'destroy']);
     
+     // Tipos de cuenta bancaria
     Route::get('/tipocuentabanco', [TipoCuentaBancoController::class, 'index']);
     Route::post('/tipocuentabanco', [TipoCuentaBancoController::class, 'create']);
     Route::post('/tipocuentabanco/{id}', [TipoCuentaBancoController::class, 'update']);
     Route::delete('/tipocuentabanco/{id}', [TipoCuentaBancoController::class, 'destroy']);
     
+     // Tipos de operaciones internacionales
     Route::get('/operacioninternacional', [OperacionInternacionalController::class, 'index']);
     Route::post('/operacioninternacional', [OperacionInternacionalController::class, 'create']);
     Route::post('/operacioninternacional/{id}', [OperacionInternacionalController::class, 'update']);
     Route::delete('/operacioninternacional/{id}', [OperacionInternacionalController::class, 'destroy']);
     
+     // Operaciones internacionales
     Route::get('/tipooperacioninternacional', [TipoOperacionInternacionalController::class, 'index']);
     Route::post('/tipooperacioninternacional', [TipoOperacionInternacionalController::class, 'create']);
     Route::post('/tipooperacioninternacional/{id}', [TipoOperacionInternacionalController::class, 'update']);
     Route::delete('/tipooperacioninternacional/{id}', [TipoOperacionInternacionalController::class, 'destroy']);
     
+     // Tipos de origen de fondo
     Route::get('/tipoorigenfondo', [TipoOrigenFondoController::class, 'index']);
     Route::post('/tipoorigenfondo', [TipoOrigenFondoController::class, 'create']);
     Route::post('/tipoorigenfondo/{id}', [TipoOrigenFondoController::class, 'update']);
     Route::delete('/tipoorigenfondo/{id}', [TipoOrigenFondoController::class, 'destroy']);
     
+     // Tipos de origen de medio
     Route::get('/tipoorigenmedio', [TiposOrigenMediosController::class, 'index']);
     Route::post('/tipoorigenmedio', [TiposOrigenMediosController::class, 'create']);
     Route::post('/tipoorigenmedio/{id}', [TiposOrigenMediosController::class, 'update']);
     Route::delete('/tipoorigenmedio/{id}', [TiposOrigenMediosController::class, 'destroy']);
     
+     // Formularios registro clientes
     Route::get('/formulariocliente', [formularioDebidaDiligenciaController::class, 'index']);
     Route::get('/formulariocliente/{id}', [formularioDebidaDiligenciaController::class, 'getbyid']);
     Route::post('/formulariocliente', [formularioDebidaDiligenciaController::class, 'create']);
     Route::post('/formulariocliente/doc/{id}', [formularioDebidaDiligenciaController::class, 'store']);
     Route::post('/formulariocliente/{id}', [formularioDebidaDiligenciaController::class, 'update']);
     Route::delete('/formulariocliente/{id}', [formularioDebidaDiligenciaController::class, 'destroy']);
-    
+
     Route::get('/consultaformulariocliente/{cantidad}', [formularioDebidaDiligenciaController::class, 'consultacliente']);
     Route::get('/clientesactivos', [formularioDebidaDiligenciaController::class, 'clientesactivos']);
     
@@ -408,7 +441,5 @@ Route::group([
     Route::get('/tipodocumentolista', [SigTipoDocumentoIdentidadController::class, 'lista']);
     Route::post('/tipodocumentoborradomasivo', [SigTipoDocumentoIdentidadController::class, 'borradomasivo']);
     Route::post('/tipodocumentoactualizacionmasiva', [SigTipoDocumentoIdentidadController::class, 'actualizacionmasiva']);
-
-   
 
 });

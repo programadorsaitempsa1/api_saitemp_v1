@@ -16,7 +16,7 @@ class CreateUsrAppMunicipiosTable extends Migration
         Schema::create('usr_app_municipios', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->string('codigo_dane');
+            $table->string('codigo_dane')->nullable();
             $table->unsignedBigInteger('departamento_id');
             $table->foreign('departamento_id')->references('id')->on('usr_app_departamentos')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();

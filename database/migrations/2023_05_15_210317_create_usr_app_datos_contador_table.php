@@ -15,9 +15,9 @@ class CreateUsrAppDatosContadorTable extends Migration
     {
         Schema::create('usr_app_datos_contador', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre',100);
+            $table->string('nombre',100)->nullable();
             // $table->char('tipo_identificacion_id',2);
-            $table->string('identificacion',20);
+            $table->string('identificacion',20)->nullable();
             $table->string('telefono',20)->nullable();
             $table->unsignedBigInteger('cliente_id');
             // $table->foreign('tipo_identificacion_id')->references('cod_tip')->on('gen_tipide')->onDelete('cascade')->onUpdate('cascade');

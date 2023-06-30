@@ -16,8 +16,8 @@ class CreateUsrAppAccionistasTable extends Migration
         Schema::create('usr_app_accionistas', function (Blueprint $table) {
             $table->id();
             // $table->char('tipo_identificacion_id',2); 
-            $table->string('identificacion',20);
-            $table->string('accionista',100);
+            $table->string('identificacion',20)->nullable();
+            $table->string('accionista',100)->nullable();
             $table->string('participacion',3)->nullable();
             $table->unsignedBigInteger('cliente_id');
             // $table->foreign('tipo_identificacion_id')->references('cod_tip')->on('gen_tipide')->onDelete('cascade')->onUpdate('cascade');

@@ -72,8 +72,11 @@ class formularioDebidaDiligenciaController extends Controller
             ->join('gen_tipide as ti', 'ti.cod_tip', '=', 'usr_app_clientes.tipo_identificacion_id')
             ->join('usr_app_estratos as est', 'est.id', '=', 'usr_app_clientes.estrato_id')
             ->join('usr_app_municipios as mun1', 'mun1.id', '=', 'usr_app_clientes.municipio_id')
+            ->join('usr_app_municipios as mun2', 'mun2.id', '=', 'usr_app_clientes.municipio_prestacion_servicio_id')
             ->join('usr_app_departamentos as dep1', 'dep1.id', '=', 'mun1.departamento_id')
+            ->join('usr_app_departamentos as dep2', 'dep2.id', '=', 'mun2.departamento_id')
             ->join('usr_app_paises as pais', 'pais.id', '=', 'dep1.pais_id')
+            ->join('usr_app_paises as pais2', 'pais2.id', '=', 'dep2.pais_id')
             ->join('usr_app_sociedades_comerciales as sc', 'sc.id', '=', 'usr_app_clientes.sociedad_comercial_id')
             ->join('usr_app_jornadas_laborales as jl', 'jl.id', '=', 'usr_app_clientes.jornada_laboral_id')
             ->join('usr_app_rotaciones_personal as rp', 'rp.id', '=', 'usr_app_clientes.rotacion_personal_id')
@@ -86,6 +89,8 @@ class formularioDebidaDiligenciaController extends Controller
             ->join('usr_app_datos_financieros as fin', 'fin.cliente_id', '=', 'usr_app_clientes.id')
             ->join('usr_app_operaciones_internacionales as opi', 'opi.cliente_id', '=', 'usr_app_clientes.id')
             ->join('usr_app_tipo_operaciones_internacionales as topi', 'topi.id', '=', 'opi.tipo_operaciones_id')
+            ->join('usr_app_tipo_proveedor as tpro', 'tpro.id', '=', 'usr_app_clientes.tipo_proveedor_id')
+            ->join('usr_app_tipo_cliente as tcli', 'tcli.id', '=', 'usr_app_clientes.tipo_cliente_id')
             ->select(
                 'ac.codigo_actividad as codigo_actividad_ciiu',
                 'ac.id as codigo_actividad_ciiu_id',
@@ -111,10 +116,16 @@ class formularioDebidaDiligenciaController extends Controller
                 'est.id as estrato_id',
                 'mun1.nombre as municipio',
                 'mun1.id as municipio_id',
+                'mun2.nombre as municipio_prestacion_servicio',
+                'mun2.id as municipio_prestacion_servicio_id',
                 'dep1.nombre as departamento',
                 'dep1.id as departamento_id',
+                'dep2.nombre as departamento_prestacion_servicio',
+                'dep2.id as departamento_prestacion_servicio_id',
                 'pais.nombre as pais',
                 'pais.id as pais_id',
+                'pais2.nombre as pais_prestacion_servicio',
+                'pais2.id as pais_prestacion_servicio_id',
                 'usr_app_clientes.direccion_empresa',
                 'usr_app_clientes.contacto_empresa',
                 'usr_app_clientes.correo_empresa',
@@ -163,6 +174,10 @@ class formularioDebidaDiligenciaController extends Controller
                 'fin.patrimonio as patrimonio',
                 'opi.tipo_operaciones_id as tipo_operacion_internacional_id',
                 'topi.nombre as tipo_operacion_internacional',
+                'tpro.nombre as tipo_proveedor',
+                'usr_app_clientes.tipo_proveedor_id as tipo_proveedor_id',
+                'tcli.nombre as tipo_cliente',
+                'usr_app_clientes.tipo_cliente_id as tipo_cliente_id',
             )
             ->where('usr_app_clientes.id', '=', $id)
             ->first();
@@ -388,27 +403,25 @@ class formularioDebidaDiligenciaController extends Controller
      */
     public function create(Request $request)
     {
-            DB::beginTransaction();
+
+        DB::beginTransaction();
 
         try {
-            $request = $request[0];
+            // $request = $request[0];
             $actividad_ciiu = $this->actividades_ciiu($request['actividad_ciiu']);
             $cliente = new cliente;
-            $cliente->operacion_id = $request['operacion'];
+            $cliente->operacion_id = $request['operacion'] == '' ? 1:$request['operacion'];
             $cliente->tipo_persona_id = $request['tipo_persona'];
-            $cliente->tipo_identificacion_id = $request['tipo_identificacion'];
-            $cliente->numero_identificacion = $request['numero_identificacion'];
-            $cliente->fecha_exp_documento = $request['fecha_expedicion'];
             $cliente->digito_verificacion = $request['digito_verificacion'];
             $cliente->razon_social = $request['razon_social'];
             $cliente->periodicidad_liquidacion_id = $request['periodicidad_liquidacion_id'];
-            try {
-                $cliente->contratacion_directa = $request['contratacion_directa'];
-                $cliente->atraccion_seleccion = $request['atraccion_seleccion'];
-                $cliente->nit = $request['nit'];
-                $cliente->fecha_constitucion = $request['fecha_constitucion'];
-            } catch (\Throwable $th) {
-            }
+            $cliente->tipo_identificacion_id = $request['tipo_identificacion'] == '' ? 0: $request['tipo_identificacion'];
+            $cliente->numero_identificacion = $request['numero_identificacion'];
+            $cliente->fecha_exp_documento = $request['fecha_expedicion'];
+            $cliente->contratacion_directa = $request['contratacion_directa'];
+            $cliente->atraccion_seleccion = $request['atraccion_seleccion'];
+            $cliente->nit = $request['nit'];
+            $cliente->fecha_constitucion = $request['fecha_constitucion'];
             $cliente->actividad_ciiu_id = $actividad_ciiu->id;
             $cliente->estrato_id = $request['estrato'];
             $cliente->municipio_id = $request['municipio'];
@@ -418,25 +431,25 @@ class formularioDebidaDiligenciaController extends Controller
             $cliente->telefono_empresa = $request['telefono_empresa'];
             $cliente->celular_empresa = $request['numero_celular'];
             $cliente->sociedad_comercial_id = $request['sociedad_comercial'];
-            try {
-                $cliente->otra = $request['otra_cual'];
-                $cliente->acuerdo_comercial = $request['observaciones'];
-            } catch (\Throwable $th) {
-            }
-            $cliente->aiu_negociado = $request['aiu_negocio'];
+            $cliente->otra = $request['otra_cual'];
+            $cliente->acuerdo_comercial = $request['acuerdo_comercial'];
+            $cliente->aiu_negociado = $request['aiu_negociado'];
             $cliente->plazo_pago = $request['plazo_pago'];
-            $cliente->vendedor_id = $request['vendedor'];
+            $cliente->vendedor_id = $request['vendedor'] == '' ? 1:$request['vendedor'];
             $cliente->numero_empleados = $request['empleados_empresa'];
-            $cliente->jornada_laboral_id = $request['jornada_laboral'];
-            $cliente->rotacion_personal_id = $request['rotacion_personal'];
-            $cliente->riesgo_cliente_id = $request['riesgo_laboral'];
+            $cliente->jornada_laboral_id = $request['jornada_laboral'] == '' ? 1:$request['jornada_laboral'];
+            $cliente->rotacion_personal_id = $request['rotacion_personal'] == '' ? 1:$request['rotacion_personal'];
+            $cliente->riesgo_cliente_id = $request['riesgo_cliente'];
             $cliente->junta_directiva = $request['junta_directiva'];
-            $cliente->responsable_inpuesto_ventas = $request['responsable_impuesto_ventas'];
+            $cliente->responsable_inpuesto_ventas = $request['responsable_inpuesto_ventas'];
             $cliente->correo_facturacion_electronica = $request['correo_factura_electronica'];
-            $cliente->sucursal_facturacion_id = $request['sucursal'];
+            $cliente->sucursal_facturacion_id = $request['sucursal_facturacion'];
             $cliente->declaraciones_autirizaciones = $request['declaraciones_autorizaciones'];
-            $cliente->tratamiento_datos_personales = $request['tratamiento_datos'];
-            $cliente->operaciones_internacionales = $request['operaciones_modena_extranjera'];
+            $cliente->tratamiento_datos_personales = $request['tratamiento_datos_personales'];
+            $cliente->operaciones_internacionales = $request['operaciones_internacionales'];
+            $cliente->tipo_cliente_id = $request['tipo_cliente_id'];
+            $cliente->tipo_proveedor_id = $request['tipo_proveedor_id'] == '' ? 1:$request['tipo_proveedor_id'];
+            $cliente->municipio_prestacion_servicio_id = $request['municipio_prestacion_servicio'];
             $cliente->save();
 
             $contador = 0;
@@ -561,10 +574,7 @@ class formularioDebidaDiligenciaController extends Controller
 
             $origenFondo = new OrigenFondo();
             $origenFondo->tipo_origen_fondos_id = $request['tipo_origen_fondo'];
-            try {
-                $origenFondo->otro_origen = $request['otro_tipo_origen_fondos'];
-            } catch (\Throwable $th) {
-            }
+            $origenFondo->otro_origen = $request['otro_tipo_origen_fondos'];
             $origenFondo->tipo_origen_medios_id = $request['tipo_origen_medios'];
             $origenFondo->tipo_origen_medios2_id = $request['otro_tipo_origen_medios'];
             $origenFondo->alto_manejo_efectivo = $request['alto_manejo_efectivo'];
@@ -693,8 +703,8 @@ class formularioDebidaDiligenciaController extends Controller
             return response()->json(['status' => 'success', 'message' => 'Formulario guardado exitosamente']);
         } catch (\Throwable $th) {
             //throw $th;
-            $cliente = cliente::find($id_cliente);
-            $cliente->delete();
+            // $cliente = cliente::find($id_cliente);
+            // $cliente->delete();
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intente nuevamente, si el problema persiste por favor contacte al administrador del sitio']);
         }
     }
@@ -734,7 +744,6 @@ class formularioDebidaDiligenciaController extends Controller
             ->select()
             ->first();
         try {
-            $request = $request[0];
             $actividad_ciiu = $this->actividades_ciiu($request['actividad_ciiu']);
             $cliente->operacion_id = $request['operacion'];
             $cliente->contratacion_directa = $request['contratacion_directa'];
@@ -759,20 +768,23 @@ class formularioDebidaDiligenciaController extends Controller
             $cliente->sociedad_comercial_id = $request['sociedad_comercial'];
             $cliente->otra = $request['otra_cual'];
             $cliente->acuerdo_comercial = $request['observaciones'];
-            $cliente->aiu_negociado = $request['aiu_negocio'];
+            $cliente->aiu_negociado = $request['aiu_negociado'];
             $cliente->plazo_pago = $request['plazo_pago'];
             $cliente->vendedor_id = $request['vendedor'];
             $cliente->numero_empleados = $request['empleados_empresa'];
             $cliente->jornada_laboral_id = $request['jornada_laboral'];
             $cliente->rotacion_personal_id = $request['rotacion_personal'];
-            $cliente->riesgo_cliente_id = $request['riesgo_laboral'];
+            $cliente->riesgo_cliente_id = $request['riesgo_cliente'];
             $cliente->junta_directiva = $request['junta_directiva'];
-            $cliente->responsable_inpuesto_ventas = $request['responsable_impuesto_ventas'];
+            $cliente->responsable_inpuesto_ventas = $request['responsable_inpuesto_ventas'];
             $cliente->correo_facturacion_electronica = $request['correo_factura_electronica'];
-            $cliente->sucursal_facturacion_id = $request['sucursal'];
+            $cliente->sucursal_facturacion_id = $request['sucursal_facturacion'];
             $cliente->declaraciones_autirizaciones = $request['declaraciones_autorizaciones'];
-            $cliente->tratamiento_datos_personales = $request['tratamiento_datos'];
-            $cliente->operaciones_internacionales = $request['operaciones_modena_extranjera'];
+            $cliente->tratamiento_datos_personales = $request['tratamiento_datos_personales'];
+            $cliente->operaciones_internacionales = $request['operaciones_internacionales'];
+            $cliente->tipo_cliente_id = $request['tipo_cliente_id'];
+            $cliente->tipo_proveedor_id = $request['tipo_proveedor_id'];
+            $cliente->municipio_prestacion_servicio_id = $request['municipio_prestacion_servicio'];
             $cliente->save();
 
             $cargo = Cargos::where('cliente_id', '=', $id)
@@ -1034,7 +1046,7 @@ class formularioDebidaDiligenciaController extends Controller
         } catch (\Exception $e) {
             // Revertir la transacción si se produce alguna excepción
             DB::rollback();
-            return $e;
+            // return $e;
             return response()->json(['status' => 'error', 'message' => 'Error al guardar formulario, por favor intente nuevamente']);
         }
     }

@@ -15,9 +15,9 @@ class CreateUsrAppJuntasDirectivasTable extends Migration
     {
         Schema::create('usr_app_juntas_directivas', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre',150);
+            $table->string('nombre',150)->nullable();
             // $table->char('tipo_identificacion_id',2);
-            $table->string('identificacion',20);
+            $table->string('identificacion',20)->nullable();
             $table->unsignedBigInteger('cliente_id');
             // $table->foreign('tipo_identificacion_id')->references('cod_tip')->on('gen_tipide')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('cliente_id')->references('id')->on('usr_app_clientes')->onDelete('cascade')->onUpdate('cascade');

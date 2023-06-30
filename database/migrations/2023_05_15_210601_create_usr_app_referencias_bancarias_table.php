@@ -16,7 +16,7 @@ class CreateUsrAppReferenciasBancariasTable extends Migration
         Schema::create('usr_app_referencias_bancarias', function (Blueprint $table) {
             $table->id();
             // $table->char('banco_id',2);
-            $table->string('numero_cuenta',20);
+            $table->string('numero_cuenta',20)->nullable();
             $table->unsignedBigInteger('tipo_cuenta_id');
             $table->string('sucursal',100)->nullable();
             $table->string('telefono',20)->nullable();

@@ -15,7 +15,7 @@ class CreateUsrAppDatosTesoreriaTable extends Migration
     {
         Schema::create('usr_app_datos_tesoreria', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre',100);
+            $table->string('nombre',100)->nullable();
             $table->string('telefono',20)->nullable();
             $table->string('correo',200)->nullable();
             $table->unsignedBigInteger('cliente_id');

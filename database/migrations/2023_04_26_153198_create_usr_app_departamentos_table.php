@@ -16,8 +16,8 @@ class CreateUsrAppDepartamentosTable extends Migration
         Schema::create('usr_app_departamentos', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->string('codigo_dane');
-            $table->string('indicativo_tel');
+            $table->string('codigo_dane')->nullable();
+            $table->string('indicativo_tel')->nullable();
             $table->unsignedBigInteger('pais_id');
             $table->foreign('pais_id')->references('id')->on('usr_app_paises')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();

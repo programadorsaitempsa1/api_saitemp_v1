@@ -36,14 +36,14 @@ class CreateUsrAppClientesTable extends Migration
             $table->string('telefono_empresa',20);
             $table->string('celular_empresa',20);
             // $table->string('numero_matricula',50);
-            // $table->unsignedBigInteger('municipio_matricula_id');
+            $table->unsignedBigInteger('municipio_prestacion_servicio_id');
             $table->unsignedBigInteger('periodicidad_liquidacion_id')->nullable();
             $table->unsignedBigInteger('sociedad_comercial_id')->nullable();
             $table->string('otra',150)->nullable();
-            $table->string('aiu_negociado',50);
+            $table->string('aiu_negociado',50)->nullable();
             $table->string('plazo_pago',50);
             $table->string('acuerdo_comercial',200)->nullable();
-            $table->integer('numero_empleados');
+            $table->integer('numero_empleados')->nullable();
             $table->unsignedBigInteger('jornada_laboral_id');
             $table->unsignedBigInteger('rotacion_personal_id');
             $table->unsignedBigInteger('riesgo_cliente_id');
@@ -56,6 +56,10 @@ class CreateUsrAppClientesTable extends Migration
             // $table->boolean('transparencia_etica');
             $table->boolean('tratamiento_datos_personales');
             $table->boolean('operaciones_internacionales');
+            $table->unsignedBigInteger('tipo_cliente_id');
+            $table->unsignedBigInteger('tipo_proveedor_id')->nullable();
+            $table->foreign('tipo_cliente_id')->references('id')->on('usr_app_tipo_cliente')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('tipo_proveedor_id')->references('id')->on('usr_app_tipo_proveedor')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('operacion_id')->references('id')->on('usr_app_operaciones')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('tipo_persona_id')->references('id')->on('usr_app_tipos_persona')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('riesgo_cliente_id')->references('id')->on('usr_app_riesgos_laborales')->onDelete('cascade')->onUpdate('cascade');
@@ -65,7 +69,7 @@ class CreateUsrAppClientesTable extends Migration
             $table->foreign('sociedad_comercial_id')->references('id')->on('usr_app_sociedades_comerciales')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('jornada_laboral_id')->references('id')->on('usr_app_jornadas_laborales')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('rotacion_personal_id')->references('id')->on('usr_app_rotaciones_personal')->onDelete('cascade')->onUpdate('cascade');
-            // $table->foreign('municipio_matricula_id')->references('id')->on('usr_app_municipios')->onDelete('NO ACTION')->onUpdate('NO ACTION');
+            $table->foreign('municipio_prestacion_servicio_id')->references('id')->on('usr_app_municipios')->onDelete('NO ACTION')->onUpdate('NO ACTION');
             $table->foreign('municipio_id')->references('id')->on('usr_app_municipios')->onDelete('NO ACTION')->onUpdate('NO ACTION');
             $table->timestamps();
         });
