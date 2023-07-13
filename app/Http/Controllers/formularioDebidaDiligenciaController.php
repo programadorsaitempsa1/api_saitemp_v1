@@ -46,13 +46,15 @@ class formularioDebidaDiligenciaController extends Controller
         $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
             ->select(
                 'usr_app_clientes.id',
-                'usr_app_clientes.razon_social as nombre',
+                'usr_app_clientes.razon_social',
                 'usr_app_clientes.numero_identificacion',
+                'usr_app_clientes.nit',
                 'ven.nom_ven as vendedor',
                 'usr_app_clientes.telefono_empresa',
                 'usr_app_clientes.created_at'
             )
-            ->paginate();
+            ->orderby('id', 'DESC')
+            ->paginate($cantidad);
         return response()->json($result);
     }
 
@@ -62,6 +64,26 @@ class formularioDebidaDiligenciaController extends Controller
             ->get();
         return response()->json(count($result));
     }
+
+    public function existbyid($id, $tipo_id){
+        if($tipo_id == 1){
+            $result = Cliente::where('usr_app_clientes.numero_identificacion','=',$id)
+            ->select(
+                'numero_identificacion'
+            )
+            ->first();
+            return $result;
+        }else if($tipo_id == 2){
+            $result = Cliente::where('usr_app_clientes.nit','=',$id)
+            ->select(
+                'nit',
+            )
+            ->first();
+            return $result;
+
+        }
+    }
+
 
     public function getbyid($id)
     {
@@ -85,6 +107,7 @@ class formularioDebidaDiligenciaController extends Controller
             ->join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
             ->join('usr_app_periodicidad_liquidacion_nominas as pl', 'pl.id', '=', 'usr_app_clientes.periodicidad_liquidacion_id')
             ->join('usr_app_datos_contador as con', 'con.cliente_id', '=', 'usr_app_clientes.id')
+            ->join('gen_tipide as ti2', 'ti2.cod_tip', '=', 'con.tipo_identificacion_id')
             ->join('usr_app_datos_tesoreria as tes', 'tes.cliente_id', '=', 'usr_app_clientes.id')
             ->join('usr_app_datos_financieros as fin', 'fin.cliente_id', '=', 'usr_app_clientes.id')
             ->join('usr_app_operaciones_internacionales as opi', 'opi.cliente_id', '=', 'usr_app_clientes.id')
@@ -160,6 +183,7 @@ class formularioDebidaDiligenciaController extends Controller
                 'con.identificacion as identificacion_contador',
                 'con.telefono as telefono_contador',
                 'con.tipo_identificacion_id as tipo_identificacion_id_contador',
+                'ti2.des_tip as tipo_identificacion_contador',
                 'tes.nombre as nombre_tesorero',
                 'tes.telefono as telefono_tesorero',
                 'tes.correo as correo_tesorero',
@@ -396,6 +420,84 @@ class formularioDebidaDiligenciaController extends Controller
         return response()->json($result);
     }
 
+    public function filtro($cadena)
+    {
+        $consulta = base64_decode($cadena);
+        $valores = explode("/", $consulta);
+        $campo = $valores[0];
+        $operador = $valores[1];
+        $valor = $valores[2];
+        $valor2 = $valores[3];
+        // return $campo . '' . $operador . '' . $valor.''.$valor2;
+        if ($operador == 'Contiene') {
+            $operador = 'like';
+            $valor = '%' . $valor . '%';
+        } else if ($operador == 'Igual a') {
+            $operador = '=';
+        } else if ($operador == 'Igual a fecha') {
+            $operador = '=';
+            $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
+                ->whereDate('usr_app_clientes.' . $campo, $operador, $valor)
+                ->select(
+                    'usr_app_clientes.id',
+                    'usr_app_clientes.razon_social as nombre',
+                    'usr_app_clientes.numero_identificacion',
+                    'usr_app_clientes.nit',
+                    'ven.nom_ven as vendedor',
+                    'usr_app_clientes.telefono_empresa',
+                    'usr_app_clientes.created_at'
+                )
+                ->orderby('id', 'DESC')
+                ->paginate();
+            return response()->json($result);
+        } else if ($operador == 'Entre') {
+            $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
+                ->whereBetween('usr_app_clientes.' . $campo, [$valor, $valor2])
+                ->select(
+                    'usr_app_clientes.id',
+                    'usr_app_clientes.razon_social as nombre',
+                    'usr_app_clientes.numero_identificacion',
+                    'usr_app_clientes.nit',
+                    'ven.nom_ven as vendedor',
+                    'usr_app_clientes.telefono_empresa',
+                    'usr_app_clientes.created_at'
+                )
+                ->orderby('usr_app_clientes.id', 'DESC')
+                ->paginate();
+            return response()->json($result);
+        }
+        if ($campo == 'vendedor') {
+            $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
+                ->where('ven.nom_ven', $operador, $valor2)
+                ->select(
+                    'usr_app_clientes.id',
+                    'usr_app_clientes.razon_social as nombre',
+                    'usr_app_clientes.numero_identificacion',
+                    'usr_app_clientes.nit',
+                    'ven.nom_ven as vendedor',
+                    'usr_app_clientes.telefono_empresa',
+                    'usr_app_clientes.created_at'
+                )
+                ->orderby('id', 'DESC')
+                ->paginate();
+            return response()->json($result);
+        }
+        $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
+            ->where('usr_app_clientes.' . $campo, $operador, $valor)
+            ->select(
+                'usr_app_clientes.id',
+                'usr_app_clientes.razon_social as nombre',
+                'usr_app_clientes.numero_identificacion',
+                'usr_app_clientes.nit',
+                'ven.nom_ven as vendedor',
+                'usr_app_clientes.telefono_empresa',
+                'usr_app_clientes.created_at'
+            )
+            ->orderby('id', 'DESC')
+            ->paginate();
+        return response()->json($result);
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -410,12 +512,12 @@ class formularioDebidaDiligenciaController extends Controller
             // $request = $request[0];
             $actividad_ciiu = $this->actividades_ciiu($request['actividad_ciiu']);
             $cliente = new cliente;
-            $cliente->operacion_id = $request['operacion'] == '' ? 1:$request['operacion'];
+            $cliente->operacion_id = $request['operacion'] == '' ? 1 : $request['operacion'];
             $cliente->tipo_persona_id = $request['tipo_persona'];
             $cliente->digito_verificacion = $request['digito_verificacion'];
             $cliente->razon_social = $request['razon_social'];
             $cliente->periodicidad_liquidacion_id = $request['periodicidad_liquidacion_id'];
-            $cliente->tipo_identificacion_id = $request['tipo_identificacion'] == '' ? 0: $request['tipo_identificacion'];
+            $cliente->tipo_identificacion_id = $request['tipo_identificacion'] == '' ? 0 : $request['tipo_identificacion'];
             $cliente->numero_identificacion = $request['numero_identificacion'];
             $cliente->fecha_exp_documento = $request['fecha_expedicion'];
             $cliente->contratacion_directa = $request['contratacion_directa'];
@@ -435,20 +537,20 @@ class formularioDebidaDiligenciaController extends Controller
             $cliente->acuerdo_comercial = $request['acuerdo_comercial'];
             $cliente->aiu_negociado = $request['aiu_negociado'];
             $cliente->plazo_pago = $request['plazo_pago'];
-            $cliente->vendedor_id = $request['vendedor'] == '' ? 1:$request['vendedor'];
+            $cliente->vendedor_id = $request['vendedor'] == '' ? 1 : $request['vendedor'];
             $cliente->numero_empleados = $request['empleados_empresa'];
-            $cliente->jornada_laboral_id = $request['jornada_laboral'] == '' ? 1:$request['jornada_laboral'];
-            $cliente->rotacion_personal_id = $request['rotacion_personal'] == '' ? 1:$request['rotacion_personal'];
+            $cliente->jornada_laboral_id = $request['jornada_laboral'] == '' ? 1 : $request['jornada_laboral'];
+            $cliente->rotacion_personal_id = $request['rotacion_personal'] == '' ? 1 : $request['rotacion_personal'];
             $cliente->riesgo_cliente_id = $request['riesgo_cliente'];
             $cliente->junta_directiva = $request['junta_directiva'];
             $cliente->responsable_inpuesto_ventas = $request['responsable_inpuesto_ventas'];
             $cliente->correo_facturacion_electronica = $request['correo_factura_electronica'];
-            $cliente->sucursal_facturacion_id = $request['sucursal_facturacion'];
+            $cliente->sucursal_facturacion_id = $request['sucursal_facturacion'] == '' ? '0':$request['sucursal_facturacion'];
             $cliente->declaraciones_autirizaciones = $request['declaraciones_autorizaciones'];
             $cliente->tratamiento_datos_personales = $request['tratamiento_datos_personales'];
             $cliente->operaciones_internacionales = $request['operaciones_internacionales'];
             $cliente->tipo_cliente_id = $request['tipo_cliente_id'];
-            $cliente->tipo_proveedor_id = $request['tipo_proveedor_id'] == '' ? 1:$request['tipo_proveedor_id'];
+            $cliente->tipo_proveedor_id = $request['tipo_proveedor_id'] == '' ? 1 : $request['tipo_proveedor_id'];
             $cliente->municipio_prestacion_servicio_id = $request['municipio_prestacion_servicio'];
             $cliente->save();
 
@@ -486,15 +588,15 @@ class formularioDebidaDiligenciaController extends Controller
 
 
             foreach ($request['accionistas'] as $item) {
-                if ($item['socio'] != '' || $item['tipo_identificacion'] != '' || $item['identificacion'] != '' || $item['participacion'] != '') {
-                    $accionista = new Accionista;
-                    $accionista->accionista = $item['socio'];
-                    $accionista->tipo_identificacion_id = $item['tipo_identificacion_id'];
-                    $accionista->identificacion = $item['identificacion'];
-                    $accionista->participacion = $item['participacion'];
-                    $accionista->cliente_id = $cliente->id;
-                    $accionista->save();
-                }
+                // if ($item['socio'] != '' || $item['tipo_identificacion'] != '' || $item['identificacion'] != '' || $item['participacion'] != '') {
+                $accionista = new Accionista;
+                $accionista->accionista = $item['socio'];
+                $accionista->tipo_identificacion_id = $item['tipo_identificacion_id'];
+                $accionista->identificacion = $item['identificacion'];
+                $accionista->participacion = $item['participacion'];
+                $accionista->cliente_id = $cliente->id;
+                $accionista->save();
+                // }
             }
 
             foreach ($request['representantes_legales'] as $item) {
@@ -512,7 +614,7 @@ class formularioDebidaDiligenciaController extends Controller
             }
 
             foreach ($request['miembros_Junta'] as $item) {
-                if ($item['nombre'] != '' || $item['tipo_identificacion'] != '' || $item['identificacion']) {
+                if ($item['nombre'] != '' || $item['tipo_identificacion_id'] != '' || $item['identificacion']) {
                     $MiembroJunta = new MiembroJunta;
                     $MiembroJunta->nombre = $item['nombre'];
                     $MiembroJunta->tipo_identificacion_id = $item['tipo_identificacion_id'];
@@ -537,24 +639,24 @@ class formularioDebidaDiligenciaController extends Controller
                 $CalidadTributaria->save();
             }
 
-            if ($request['nombre_completo_contador'] != '' || $request['tipo_identificacion_contador'] != '' || $request['identificacion_contador'] != '' || $request['telefono_contador'] != '') {
-                $Contador = new Contador;
-                $Contador->nombre = $request['nombre_completo_contador'];
-                $Contador->tipo_identificacion_id = $request['tipo_identificacion_contador'];
-                $Contador->identificacion = $request['identificacion_contador'];
-                $Contador->telefono = $request['telefono_contador'];
-                $Contador->cliente_id = $cliente->id;
-                $Contador->save();
-            }
+            // if ($request['nombre_completo_contador'] != '' || $request['tipo_identificacion_contador'] != '' || $request['identificacion_contador'] != '' || $request['telefono_contador'] != '') {
+            $Contador = new Contador;
+            $Contador->nombre = $request['nombre_completo_contador'];
+            $Contador->tipo_identificacion_id = $request['tipo_identificacion_contador'];
+            $Contador->identificacion = $request['identificacion_contador'];
+            $Contador->telefono = $request['telefono_contador'];
+            $Contador->cliente_id = $cliente->id;
+            $Contador->save();
+            // }
 
-            if ($request['nombre_completo_tesorero'] != '' || $request['telefono_tesorero'] != '' || $request['correo_tesorero'] != '') {
-                $Tesorero = new Tesorero;
-                $Tesorero->nombre = $request['nombre_completo_tesorero'];
-                $Tesorero->telefono = $request['telefono_tesorero'];
-                $Tesorero->correo = $request['correo_tesorero'];
-                $Tesorero->cliente_id = $cliente->id;
-                $Tesorero->save();
-            }
+            // if ($request['nombre_completo_tesorero'] != '' || $request['telefono_tesorero'] != '' || $request['correo_tesorero'] != '') {
+            $Tesorero = new Tesorero;
+            $Tesorero->nombre = $request['nombre_completo_tesorero'];
+            $Tesorero->telefono = $request['telefono_tesorero'];
+            $Tesorero->correo = $request['correo_tesorero'];
+            $Tesorero->cliente_id = $cliente->id;
+            $Tesorero->save();
+            // }
 
             if ($request['ingreso_mensual'] != '' || $request['otros_ingresos'] != '' || $request['total_ingresos'] != '' || $request['costos_gastos'] != '' || $request['detalle_otros_ingresos'] != '' || $request['reintegro_costos'] != '' || $request['activos'] != '' || $request['pasivos'] != '' || $request['patrimonio'] != '') {
                 $DatoFinanciero = new DatoFinanciero;
@@ -590,17 +692,17 @@ class formularioDebidaDiligenciaController extends Controller
             }
 
             foreach ($request['referencias_bancarias'] as $item) {
-                if ($item['numero_cuenta'] != '' || $item['tipo_cuenta'] != '' ||  $item['sucursal'] != '' || $item['telefono'] != '' || $item['contacto'] != '' || $item['banco'] != '') {
-                    $ReferenciaBancaria = new ReferenciaBancaria;
-                    $ReferenciaBancaria->numero_cuenta = $item['numero_cuenta'];
-                    $ReferenciaBancaria->tipo_cuenta_id = $item['tipo_cuenta'];
-                    $ReferenciaBancaria->sucursal = $item['sucursal'];
-                    $ReferenciaBancaria->telefono = $item['telefono'];
-                    $ReferenciaBancaria->contacto = $item['contacto'];
-                    $ReferenciaBancaria->banco_id = $item['banco_id'];
-                    $ReferenciaBancaria->cliente_id = $cliente->id;
-                    $ReferenciaBancaria->save();
-                }
+                // if ($item['numero_cuenta'] != '' || $item['tipo_cuenta'] != '' ||  $item['sucursal'] != '' || $item['telefono'] != '' || $item['contacto'] != '' || $item['banco'] != '') {
+                $ReferenciaBancaria = new ReferenciaBancaria;
+                $ReferenciaBancaria->numero_cuenta = $item['numero_cuenta'];
+                $ReferenciaBancaria->tipo_cuenta_id = $item['tipo_cuenta'];
+                $ReferenciaBancaria->sucursal = $item['sucursal'];
+                $ReferenciaBancaria->telefono = $item['telefono'];
+                $ReferenciaBancaria->contacto = $item['contacto'];
+                $ReferenciaBancaria->banco_id = $item['banco_id'];
+                $ReferenciaBancaria->cliente_id = $cliente->id;
+                $ReferenciaBancaria->save();
+                // }
             }
 
             foreach ($request['personas_expuestas'] as $item) {
@@ -614,14 +716,14 @@ class formularioDebidaDiligenciaController extends Controller
             }
 
             foreach ($request['referencias_comerciales'] as $item) {
-                if ($item['nombre'] != '' || $item['contacto'] != '' || $item['telefono'] != '') {
-                    $ReferenciaComercial = new ReferenciaComercial;
-                    $ReferenciaComercial->razon_social = $item['nombre'];
-                    $ReferenciaComercial->contacto = $item['contacto'];
-                    $ReferenciaComercial->telefono = $item['telefono'];
-                    $ReferenciaComercial->cliente_id = $cliente->id;
-                    $ReferenciaComercial->save();
-                }
+                // if ($item['nombre'] != '' || $item['contacto'] != '' || $item['telefono'] != '') {
+                $ReferenciaComercial = new ReferenciaComercial;
+                $ReferenciaComercial->razon_social = $item['nombre'];
+                $ReferenciaComercial->contacto = $item['contacto'];
+                $ReferenciaComercial->telefono = $item['telefono'];
+                $ReferenciaComercial->cliente_id = $cliente->id;
+                $ReferenciaComercial->save();
+                // }
             }
 
             DB::commit();
@@ -629,8 +731,8 @@ class formularioDebidaDiligenciaController extends Controller
         } catch (\Exception $e) {
             // Revertir la transacción si se produce alguna excepción
             DB::rollback();
-            // return $e;
-            return response()->json(['status' => 'error', 'message' => 'Error al guardar formulario, por favor verifique el llenado de todos los campos e intente nuevamente']);
+            return $e;
+            // return response()->json(['status' => 'error', 'message' => 'Error al guardar formulario, por favor verifique el llenado de todos los campos e intente nuevamente']);
         }
     }
 
@@ -664,7 +766,6 @@ class formularioDebidaDiligenciaController extends Controller
             $id = '';
             $ids = [];
             $rutas = [];
-
 
             $directorio = public_path('upload/');
             $archivos = glob($directorio . '*');
@@ -935,14 +1036,14 @@ class formularioDebidaDiligenciaController extends Controller
                 $item->delete();
             }
             $cont = 0;
-            if ($request['nombre_completo_tesorero'] != '' || $request['telefono_tesorero'] != '' || $request['correo_tesorero'] != '') {
+            // if ($request['nombre_completo_tesorero'] != '' || $request['telefono_tesorero'] != '' || $request['correo_tesorero'] != '') {
                 $Tesorero = new Tesorero;
                 $Tesorero->nombre = $request['nombre_completo_tesorero'];
                 $Tesorero->telefono = $request['telefono_tesorero'];
                 $Tesorero->correo = $request['correo_tesorero'];
                 $Tesorero->cliente_id = $id;
                 $Tesorero->save();
-            }
+            // }
 
             $DatoFinanciero = DatoFinanciero::where('cliente_id', '=', $id)
                 ->select()

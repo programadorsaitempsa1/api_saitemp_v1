@@ -69,6 +69,7 @@ use App\Http\Controllers\ContratoController;
 use App\Http\Controllers\TipoClienteController;
 use App\Http\Controllers\TipoProveedorController;
 use App\Http\Controllers\TipoDocumentoController;
+use App\Http\Controllers\FormularioDDExportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -145,6 +146,10 @@ Route::group([
     Route::get('/historicoempleadoexport/{filtro}', [DashboardController::class, 'historicoempleadoexport']); 
     Route::get('/datosempleado/{cedula}', [DashboardController::class, 'datosempleado']); 
     Route::get('/username/{cedula}', [DashboardController::class, 'username']); 
+    
+    // Exporte formulario debida diligencia
+    // Route::get('/formularioddexport/{id}', [FormularioDDExportController::class, 'export']); 
+    Route::get('/exportaformulariocliente/{cadena}', [FormularioDDExportController::class, 'export2']); 
 
     // Estado civil
     Route::get('/estadocivil', [EstadoCivilController::class, 'index']);  
@@ -350,6 +355,7 @@ Route::group([
     
      // Ejecutivos comerciales
     Route::get('/ejecutivocomercial', [VendedorController::class, 'index']);
+    Route::get('/ejecutivocomerciallista', [VendedorController::class, 'lista']);
     Route::post('/ejecutivocomercial', [VendedorController::class, 'create']);
     Route::post('/ejecutivocomercial/{id}', [VendedorController::class, 'update']);
     Route::delete('/ejecutivocomercial/{id}', [VendedorController::class, 'destroy']);
@@ -423,6 +429,7 @@ Route::group([
      // Formularios registro clientes
     Route::get('/formulariocliente', [formularioDebidaDiligenciaController::class, 'index']);
     Route::get('/formulariocliente/{id}', [formularioDebidaDiligenciaController::class, 'getbyid']);
+    Route::get('/clienteexist/{id}/{tipo_id}', [formularioDebidaDiligenciaController::class, 'existbyid']);
     Route::post('/formulariocliente', [formularioDebidaDiligenciaController::class, 'create']);
     Route::post('/formulariocliente/doc/{id}', [formularioDebidaDiligenciaController::class, 'store']);
     Route::post('/formulariocliente/{id}', [formularioDebidaDiligenciaController::class, 'update']);
@@ -430,6 +437,7 @@ Route::group([
 
     Route::get('/consultaformulariocliente/{cantidad}', [formularioDebidaDiligenciaController::class, 'consultacliente']);
     Route::get('/clientesactivos', [formularioDebidaDiligenciaController::class, 'clientesactivos']);
+    Route::get('/consultaformularioclientefiltro/{cadena}', [formularioDebidaDiligenciaController::class, 'filtro']);
     
     Route::get('/contrato/{id}', [ContratoController::class, 'index']);
     

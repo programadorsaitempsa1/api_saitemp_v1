@@ -89,8 +89,8 @@ class ProcesosEspecialesController extends Controller
 
     public function ejecutaprocesosespeciales(Request $request)
     {
-        $valoresParametros = $request->parametros;
         set_time_limit(0);
+        $valoresParametros = $request->parametros;
         $numParametros = count($valoresParametros) - 1; // Excluye el último elemento
         $parametros = [];
 
@@ -141,13 +141,14 @@ class ProcesosEspecialesController extends Controller
     public function procesosespecialesexport($request)
     {
 
+        set_time_limit(0);
+        ini_set('memory_limit', '2048M');
         $decoded = base64_decode($request);
         $separator = "*";
         $array = explode($separator, $decoded);
         // return $array[0];
         // $result = base64_decode($request);
         $valoresParametros = $array;
-        set_time_limit(0);
         $numParametros = count($valoresParametros) - 1; // Excluye el último elemento
         $parametros = [];
 
@@ -165,8 +166,6 @@ class ProcesosEspecialesController extends Controller
 
         // Ejecutamos la consulta SQL y obtenemos los resultados
         $items = DB::select($sql, $parametros);
-
-        // return $items;
 
         // return (new ProcesosEspecialesExport($items))->download('items.xlsx', \Maatwebsite\Excel\Excel::XLSX);
         // Obtén la colección de resultados

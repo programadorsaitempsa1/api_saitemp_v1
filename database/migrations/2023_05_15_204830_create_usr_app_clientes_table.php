@@ -20,9 +20,9 @@ class CreateUsrAppClientesTable extends Migration
             $table->boolean('atraccion_seleccion')->nullable();
             $table->unsignedBigInteger('tipo_persona_id');
             // $table->char('tipo_identificacion_id',2);
-            $table->string('numero_identificacion',20)->nullable();
+            $table->string('numero_identificacion',20)->nullable()->unique();
             $table->date('fecha_exp_documento')->nullable();
-            $table->string('nit')->nullable();
+            $table->string('nit')->nullable()->unique();
             $table->string('digito_verificacion',6);
             $table->string('razon_social',200);
             // $table->string('detalle_actividad_economica',800);

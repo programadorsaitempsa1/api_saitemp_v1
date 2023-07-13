@@ -16,9 +16,6 @@ class TipoProveedorController extends Controller
     {
         $result = TipoProveedor::select()
             ->get();
-        // $result = $result->reject(function ($item) {
-        //     return $item->nombre === 'Cliente';
-        // });
         return response()->json($result);
     }
 

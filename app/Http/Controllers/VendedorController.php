@@ -17,7 +17,17 @@ class VendedorController extends Controller
         ->get();
         return response()->json($result);
     }
-
+    
+    public function lista()
+    {
+        $result = Vendedor::select(
+            'nom_ven as nombre',
+            'cod_ven',
+        )
+        ->orderby('nom_ven','asc')
+        ->get();
+        return response()->json($result);
+    }
     /**
      * Show the form for creating a new resource.
      *
