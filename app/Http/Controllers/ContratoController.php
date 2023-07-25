@@ -39,6 +39,9 @@ class ContratoController extends Controller
                 'contacto_empresa as contacto',
                 'celular_empresa as celular',
                 'correo_empresa as correo',
+                'correo_facturacion_electronica',
+                'aiu_negociado',
+                'plazo_pago',
             )
             ->where('usr_app_clientes.id', '=', $id)
             ->first();

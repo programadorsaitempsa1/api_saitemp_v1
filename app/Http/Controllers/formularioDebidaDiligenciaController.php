@@ -65,22 +65,22 @@ class formularioDebidaDiligenciaController extends Controller
         return response()->json(count($result));
     }
 
-    public function existbyid($id, $tipo_id){
-        if($tipo_id == 1){
-            $result = Cliente::where('usr_app_clientes.numero_identificacion','=',$id)
-            ->select(
-                'numero_identificacion'
-            )
-            ->first();
+    public function existbyid($id, $tipo_id)
+    {
+        if ($tipo_id == 1) {
+            $result = Cliente::where('usr_app_clientes.numero_identificacion', '=', $id)
+                ->select(
+                    'numero_identificacion'
+                )
+                ->first();
             return $result;
-        }else if($tipo_id == 2){
-            $result = Cliente::where('usr_app_clientes.nit','=',$id)
-            ->select(
-                'nit',
-            )
-            ->first();
+        } else if ($tipo_id == 2) {
+            $result = Cliente::where('usr_app_clientes.nit', '=', $id)
+                ->select(
+                    'nit',
+                )
+                ->first();
             return $result;
-
         }
     }
 
@@ -452,7 +452,8 @@ class formularioDebidaDiligenciaController extends Controller
             return response()->json($result);
         } else if ($operador == 'Entre') {
             $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
-                ->whereBetween('usr_app_clientes.' . $campo, [$valor, $valor2])
+                ->whereDate('usr_app_clientes.' . $campo, '>=', $valor)
+                ->whereDate('usr_app_clientes.' . $campo, '<=', $valor2)
                 ->select(
                     'usr_app_clientes.id',
                     'usr_app_clientes.razon_social as nombre',
@@ -545,7 +546,7 @@ class formularioDebidaDiligenciaController extends Controller
             $cliente->junta_directiva = $request['junta_directiva'];
             $cliente->responsable_inpuesto_ventas = $request['responsable_inpuesto_ventas'];
             $cliente->correo_facturacion_electronica = $request['correo_factura_electronica'];
-            $cliente->sucursal_facturacion_id = $request['sucursal_facturacion'] == '' ? '0':$request['sucursal_facturacion'];
+            $cliente->sucursal_facturacion_id = $request['sucursal_facturacion'] == '' ? '0' : $request['sucursal_facturacion'];
             $cliente->declaraciones_autirizaciones = $request['declaraciones_autorizaciones'];
             $cliente->tratamiento_datos_personales = $request['tratamiento_datos_personales'];
             $cliente->operaciones_internacionales = $request['operaciones_internacionales'];
@@ -1037,12 +1038,12 @@ class formularioDebidaDiligenciaController extends Controller
             }
             $cont = 0;
             // if ($request['nombre_completo_tesorero'] != '' || $request['telefono_tesorero'] != '' || $request['correo_tesorero'] != '') {
-                $Tesorero = new Tesorero;
-                $Tesorero->nombre = $request['nombre_completo_tesorero'];
-                $Tesorero->telefono = $request['telefono_tesorero'];
-                $Tesorero->correo = $request['correo_tesorero'];
-                $Tesorero->cliente_id = $id;
-                $Tesorero->save();
+            $Tesorero = new Tesorero;
+            $Tesorero->nombre = $request['nombre_completo_tesorero'];
+            $Tesorero->telefono = $request['telefono_tesorero'];
+            $Tesorero->correo = $request['correo_tesorero'];
+            $Tesorero->cliente_id = $id;
+            $Tesorero->save();
             // }
 
             $DatoFinanciero = DatoFinanciero::where('cliente_id', '=', $id)

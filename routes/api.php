@@ -91,21 +91,22 @@ Route::group([
 
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/register2', [AuthUsuarioController::class, 'register']);
+    // Route::post('/register2', [AuthUsuarioController::class, 'register']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
     Route::get('/user-profile', [AuthController::class, 'userProfile']); 
     
     // Usuarios
     Route::get('/users/{cantidad}', [UsuarioController::class, 'index']); 
+    Route::get('/users/{filtro}/{cantidad}', [UsuarioController::class, 'filtro']); 
     Route::get('/userslist', [UsuarioController::class, 'userslist']); 
     Route::get('/userlogued', [UsuarioController::class, 'userlogued']); 
     Route::get('/userbyid/{id}', [UsuarioController::class, 'userById']); 
     Route::delete('/user/{id}', [UsuarioController::class, 'destroy']); 
     // Route::post('/user', [UsuarioController::class, 'create']); 
     Route::post('/user', [UsuarioController::class, 'update']); 
-    Route::get('/usuariosporcontrato', [UsuarioController::class, 'usuariosporcontrato']); 
-    Route::get('/usuariosporcontrato/{id}', [UsuarioController::class, 'usuariosporcontrato2']); 
+    // Route::get('/usuariosporcontrato', [UsuarioController::class, 'usuariosporcontrato']); 
+    // Route::get('/usuariosporcontrato/{id}', [UsuarioController::class, 'usuariosporcontrato2']); 
     
      // Opciones de menú
      Route::get('/menuslista', [MenuController::class, 'index']);    

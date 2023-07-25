@@ -29,11 +29,31 @@ class UsuarioController extends Controller
         return response()->json($users);
     }
 
-    public function userslist(){
+    public function filtro($filtro, $cantidad)
+    {
+        $users = user::join("usr_app_roles", "usr_app_roles.id", "=", "usr_app_usuarios.rol_id")
+            ->join("usr_app_estados_usuario ", "usr_app_estados_usuario .id", "=", "usr_app_usuarios.estado_id")
+            ->where('usr_app_usuarios.nombres','like', '%'.$filtro.'%')
+            ->orWhere('usr_app_usuarios.apellidos','like', '%'.$filtro.'%')
+            ->orWhere('usr_app_usuarios.email','like', '%'.$filtro.'%')
+            ->select(
+                "usr_app_roles.nombre as rol",
+                "usr_app_usuarios.nombres",
+                "usr_app_usuarios.apellidos",
+                "usr_app_usuarios.email",
+                "usr_app_usuarios.id as id_user",
+                "usr_app_estados_usuario .nombre as estado",
+            )
+            ->paginate($cantidad);
+        return response()->json($users);
+    }
+
+    public function userslist()
+    {
         $result = user::select(
             'email'
         )
-        ->get();
+            ->get();
         return response()->json($result);
     }
 
