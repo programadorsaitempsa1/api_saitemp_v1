@@ -1159,8 +1159,15 @@ class formularioDebidaDiligenciaController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($id, $error_carga_archivos = null)
     {
-        //
+        $result = Cliente::find($id);
+        if ($result->delete()) {
+            if($error_carga_archivos == null){        
+                return response()->json("registro borrado Con Exito");
+            }
+        } else {
+            return response()->json("Error al borrar registro");
+        }
     }
 }
