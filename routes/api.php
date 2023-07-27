@@ -70,6 +70,7 @@ use App\Http\Controllers\TipoClienteController;
 use App\Http\Controllers\TipoProveedorController;
 use App\Http\Controllers\TipoDocumentoController;
 use App\Http\Controllers\FormularioDDExportController;
+use App\Http\Controllers\EnvioCorreoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -135,6 +136,8 @@ Route::group([
     // Género
     Route::get('/genero', [GeneroController::class, 'index']);  
     
+    Route::post('/enviocorreo', [EnvioCorreoController::class, 'sendEmail']);  
+
     // Dahsboard
     Route::get('/empleadosactivos', [DashboardController::class, 'empleadosactivos']); 
     Route::get('/empleadosplanta', [DashboardController::class, 'empleadosplanta']); 
