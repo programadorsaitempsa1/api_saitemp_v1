@@ -538,11 +538,11 @@ class formularioDebidaDiligenciaController extends Controller
             $cliente->acuerdo_comercial = $request['acuerdo_comercial'];
             $cliente->aiu_negociado = $request['aiu_negociado'];
             $cliente->plazo_pago = $request['plazo_pago'];
-            $cliente->vendedor_id = $request['vendedor'] == '' ? 1 : $request['vendedor'];
+            $cliente->vendedor_id = $request['vendedor'] == '' ? "0  " : $request['vendedor'];
             $cliente->numero_empleados = $request['empleados_empresa'];
             $cliente->jornada_laboral_id = $request['jornada_laboral'] == '' ? 1 : $request['jornada_laboral'];
             $cliente->rotacion_personal_id = $request['rotacion_personal'] == '' ? 1 : $request['rotacion_personal'];
-            $cliente->riesgo_cliente_id = $request['riesgo_cliente'];
+            $cliente->riesgo_cliente_id = $request['riesgo_cliente'] == '' ? 1 : $request['riesgo_cliente'];
             $cliente->junta_directiva = $request['junta_directiva'];
             $cliente->responsable_inpuesto_ventas = $request['responsable_inpuesto_ventas'];
             $cliente->correo_facturacion_electronica = $request['correo_factura_electronica'];
