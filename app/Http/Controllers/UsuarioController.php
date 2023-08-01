@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 
 class UsuarioController extends Controller
 {
@@ -21,6 +22,7 @@ class UsuarioController extends Controller
                 "usr_app_roles.nombre as rol",
                 "usr_app_usuarios.nombres",
                 "usr_app_usuarios.apellidos",
+                "usr_app_usuarios.usuario",
                 "usr_app_usuarios.email",
                 "usr_app_usuarios.id as id_user",
                 "usr_app_estados_usuario .nombre as estado",
@@ -40,6 +42,7 @@ class UsuarioController extends Controller
                 "usr_app_roles.nombre as rol",
                 "usr_app_usuarios.nombres",
                 "usr_app_usuarios.apellidos",
+                "usr_app_usuarios.usuario",
                 "usr_app_usuarios.email",
                 "usr_app_usuarios.id as id_user",
                 "usr_app_estados_usuario .nombre as estado",
@@ -69,6 +72,7 @@ class UsuarioController extends Controller
                 "usr_app_usuarios.nombres",
                 "usr_app_usuarios.apellidos",
                 "usr_app_usuarios.documento_identidad",
+                "usr_app_usuarios.usuario",
                 "usr_app_usuarios.email",
                 "usr_app_roles.id",
                 'usr_app_usuarios.id as usuario_id',
@@ -82,6 +86,7 @@ class UsuarioController extends Controller
                 ->select(
                     "usr_app_usuarios.nombres",
                     "usr_app_usuarios.apellidos",
+                    "usr_app_usuarios.usuario",
                     "usr_app_usuarios.email",
                     "usr_app_usuarios.id as id_user",
                     "usr_app_roles.nombre as rol",
@@ -107,6 +112,7 @@ class UsuarioController extends Controller
                 "usr_app_usuarios.nombres",
                 "usr_app_usuarios.apellidos",
                 "usr_app_usuarios.documento_identidad",
+                "usr_app_usuarios.usuario",
                 "usr_app_usuarios.email",
                 "usr_app_usuarios.id as id_user",
                 "usr_app_roles.nombre as rol",
@@ -207,9 +213,11 @@ class UsuarioController extends Controller
             $user->nombres = $request->nombres;
             $user->apellidos = $request->apellidos;
             $user->documento_identidad = $request->documento_identidad;
+            $user->usuario = $request->usuario;
             $user->email = $request->email;
             $user->estado_id = $request->estado_id;
             $user->rol_id = $request->rol_id;
+            $user->contrasena_correo = Crypt::encryptString($request->contrasena_correo);
             if ($request->password != null || $request->password != "") {
                 $user->password = app('hash')->make($request->password);
             }

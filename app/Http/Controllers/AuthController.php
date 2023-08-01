@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Crypt;
 use Validator;
 
 class AuthController extends Controller
@@ -135,6 +136,8 @@ class AuthController extends Controller
         $user->nombres = $request->nombres;
         $user->apellidos = $request->apellidos;
         $user->documento_identidad = $request->documento_identidad;
+        $user->usuario = $request->usuario;
+        $user->contrasena_correo = Crypt::encryptString($request->contrasena_correo);
         $user->email = $request->email;
         $user->password = bcrypt($request->password);
         $user->rol_id = $request->rol_id == '' ? 3 : $request->rol_id;
