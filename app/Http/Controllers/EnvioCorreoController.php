@@ -11,8 +11,6 @@ use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-use Symfony\Component\Mime\Part\Attachment;
-use Symfony\Component\Mime\Part\InlinePart;
 
 
 
@@ -25,6 +23,8 @@ class EnvioCorreoController extends Controller
 
         $nombreArchivo1 = pathinfo($user->imagen_firma_1, PATHINFO_BASENAME);
         $nombreArchivo2 = pathinfo($user->imagen_firma_2, PATHINFO_BASENAME);
+        $rutaImagen1 = public_path($user->imagen_firma_1);
+        $rutaImagen2 = public_path($user->imagen_firma_2);
 
         $destinatarios = explode(',', $request->to);
         $cc = explode(',', $request->cc);
@@ -54,12 +54,19 @@ class EnvioCorreoController extends Controller
         $mailer = new Mailer($transport);
 
         $email = (new Email())
-            ->from(new Address($user->usuario, $user->nombres.' '.$user->apellidos))
+            ->from(new Address($user->usuario, $user->nombres . ' ' . $user->apellidos))
             ->subject($request->subject)
             ->html($request->body);
 
-            $email->attachFromPath(public_path($user->imagen_firma_1), $nombreArchivo1);
-            $email->attachFromPath(public_path($user->imagen_firma_2), $nombreArchivo2);
+        if (file_exists($rutaImagen1)) {
+            $email->attachFromPath($rutaImagen1, $nombreArchivo1);
+        } else {
+             return response()->json(['status' => 'error', 'message' => 'El correo electrónico no tiene configurada una firma.']);
+        }
+
+        if (file_exists($rutaImagen2)) {
+            $email->attachFromPath($rutaImagen2, $nombreArchivo2);
+        } 
 
         foreach ($destinatarios as $destinatario) {
             $email->addTo($destinatario);

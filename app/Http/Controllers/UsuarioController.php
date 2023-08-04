@@ -209,22 +209,22 @@ class UsuarioController extends Controller
     {
         $user = user::find($request->id_user);
 
-
-        if ($user->imagen_firma_1 != null) {
+        $archivos = $request->files->all();
+        
+        if ($user->imagen_firma_1 != null && count($archivos)>0) {
             $rutaArchivo1 = base_path('public') . $user->imagen_firma_1;
             if (file_exists($rutaArchivo1)) {
                 unlink($rutaArchivo1);
             }
         }
 
-        if ($user->imagen_firma_2 != null) {
+        if ($user->imagen_firma_2 != null && count($archivos)>1) {
             $rutaArchivo2 = base_path('public') . $user->imagen_firma_2;
             if (file_exists($rutaArchivo2)) {
                 unlink($rutaArchivo2);
             }
         }
 
-        $archivos = $request->files->all();
         $contador = 1;
         foreach ($archivos as $archivo) {
             if ($contador <= 2) {
