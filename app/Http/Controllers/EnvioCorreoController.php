@@ -3,21 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// use Illuminate\Support\Facades\Mail;
-// use Swift_SmtpTransport;
-// use App\Mail\EnvioCorreo;
-use Swift_SmtpTransport;
-use Swift_Mailer;
-use Swift_Message;
 use Illuminate\Support\Facades\Crypt;
 
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mime\Address;
-use Symfony\Component\Mime\Part\DataPart;
-use Symfony\Component\Mime\Part\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+
+use Symfony\Component\Mime\Part\Attachment;
+use Symfony\Component\Mime\Part\InlinePart;
+
 
 
 class EnvioCorreoController extends Controller
@@ -26,17 +22,22 @@ class EnvioCorreoController extends Controller
     {
 
         $user = auth()->user();
-    
+
+        $nombreArchivo1 = pathinfo($user->imagen_firma_1, PATHINFO_BASENAME);
+        $nombreArchivo2 = pathinfo($user->imagen_firma_2, PATHINFO_BASENAME);
+
         $destinatarios = explode(',', $request->to);
+        $cc = explode(',', $request->cc);
+        $cco = explode(',', $request->cco);
 
         $archivos = $request->files->all();
 
         if ($user->usuario == '' || $user->usuario == null) {
-            return 'Usuario no cuenta con correo electrónico';
+            return response()->json(['status' => 'error', 'message' => 'El usuario actual no cuenta con correo electrónico configurado']);
         }
 
         if ($user->contrasena_correo == '' || $user->contrasena_correo == null) {
-            return 'Usuario no cuenta con contraseña del correo';
+            return response()->json(['status' => 'error', 'message' => 'El usuario actual no cuenta con una contraseña para el correo electrónico configurado']);
         }
 
         $password = Crypt::decryptString($user->contrasena_correo);
@@ -53,17 +54,26 @@ class EnvioCorreoController extends Controller
         $mailer = new Mailer($transport);
 
         $email = (new Email())
-            ->from(new Address($user->usuario, $user->nombres))
+            ->from(new Address($user->usuario, $user->nombres.' '.$user->apellidos))
             ->subject($request->subject)
             ->html($request->body);
+
+            $email->attachFromPath(public_path($user->imagen_firma_1), $nombreArchivo1);
+            $email->attachFromPath(public_path($user->imagen_firma_2), $nombreArchivo2);
+
         foreach ($destinatarios as $destinatario) {
             $email->addTo($destinatario);
         }
-        if (!empty($request->cc)) {
-            $email->cc($request->cc);
+
+        if (count($cc) > 1) {
+            foreach ($cc as $ccs) {
+                $email->addCc($ccs);
+            }
         }
-        if (!empty($request->cco)) {
-            $email->bcc($request->cco);
+        if (count($cco) > 1) {
+            foreach ($cco as $ccos) {
+                $email->addCc($ccos);
+            }
         }
 
         foreach ($archivos as $archivo) {
@@ -74,9 +84,9 @@ class EnvioCorreoController extends Controller
 
         $mailer->send($email);
         if ($mailer) {
-            return 'El correo electrónico se ha enviado correctamente.';
+            return response()->json(['status' => 'success', 'message' => 'El correo electrónico se ha enviado correctamente.']);
         } else {
-            return 'Hubo un error al enviar el correo electrónico.';
+            return response()->json(['status' => 'error', 'message' => 'Hubo un error al enviar el correo electrónico.']);
         }
     }
 }
