@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Carbon;
 use Validator;
 
 class AuthController extends Controller
@@ -50,7 +51,7 @@ class AuthController extends Controller
                 try {
                     $ldapbind = ldap_bind($ldapconn, $user . '@saitempsa.local',  $request->password);
                     if ($ldapbind) {
-                       
+
                         ldap_close($ldapconn);
                         // return 'usuario logueado con exito';
                         $user = User::where('email', $request->email)->first();
@@ -141,6 +142,23 @@ class AuthController extends Controller
         $user->email = $request->email;
         $user->password = bcrypt($request->password);
         $user->rol_id = $request->rol_id == '' ? 3 : $request->rol_id;
+
+
+        $archivos = $request->files->all();
+        $contador = 1;
+        foreach ($archivos as $archivo) {
+            if ($contador <= 2) {
+
+                $nombreArchivoOriginal = ($archivo)->getClientOriginalName();
+                $nuevoNombre = Carbon::now()->timestamp . "_" . $nombreArchivoOriginal;
+
+                $carpetaDestino = './upload/';
+                ($archivo)->move($carpetaDestino, $nuevoNombre);
+                $user->{'imagen_firma_' . $contador} = ltrim($carpetaDestino, '.') . $nuevoNombre;
+                $contador++;
+            }
+        }
+
         if ($user->save()) {
             return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
         } else {

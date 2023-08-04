@@ -16,6 +16,8 @@ class AddUsuarioToUsrAppUsuariosTable extends Migration
         Schema::table('usr_app_usuarios', function (Blueprint $table) {
             $table->string("usuario")->nullable();
             $table->string("contrasena_correo")->nullable();
+            $table->string("imagen_firma_1")->nullable();
+            $table->string("imagen_firma_2")->nullable();
         });
     }
 
@@ -29,6 +31,8 @@ class AddUsuarioToUsrAppUsuariosTable extends Migration
         Schema::table('usr_app_usuarios', function (Blueprint $table) {
             $table->dropColumn('usuario');
             $table->dropColumn('contrasena_correo');
+            $table->dropColumn('imagen_firma_1');
+            $table->dropColumn('imagen_firma_2');
         });
     }
 }

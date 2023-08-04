@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Carbon;
 
 class UsuarioController extends Controller
 {
@@ -35,9 +36,9 @@ class UsuarioController extends Controller
     {
         $users = user::join("usr_app_roles", "usr_app_roles.id", "=", "usr_app_usuarios.rol_id")
             ->join("usr_app_estados_usuario ", "usr_app_estados_usuario .id", "=", "usr_app_usuarios.estado_id")
-            ->where('usr_app_usuarios.nombres','like', '%'.$filtro.'%')
-            ->orWhere('usr_app_usuarios.apellidos','like', '%'.$filtro.'%')
-            ->orWhere('usr_app_usuarios.email','like', '%'.$filtro.'%')
+            ->where('usr_app_usuarios.nombres', 'like', '%' . $filtro . '%')
+            ->orWhere('usr_app_usuarios.apellidos', 'like', '%' . $filtro . '%')
+            ->orWhere('usr_app_usuarios.email', 'like', '%' . $filtro . '%')
             ->select(
                 "usr_app_roles.nombre as rol",
                 "usr_app_usuarios.nombres",
@@ -206,8 +207,37 @@ class UsuarioController extends Controller
      */
     public function update(Request $request)
     {
-
         $user = user::find($request->id_user);
+
+
+        if ($user->imagen_firma_1 != null) {
+            $rutaArchivo1 = base_path('public') . $user->imagen_firma_1;
+            if (file_exists($rutaArchivo1)) {
+                unlink($rutaArchivo1);
+            }
+        }
+
+        if ($user->imagen_firma_2 != null) {
+            $rutaArchivo2 = base_path('public') . $user->imagen_firma_2;
+            if (file_exists($rutaArchivo2)) {
+                unlink($rutaArchivo2);
+            }
+        }
+
+        $archivos = $request->files->all();
+        $contador = 1;
+        foreach ($archivos as $archivo) {
+            if ($contador <= 2) {
+
+                $nombreArchivoOriginal = ($archivo)->getClientOriginalName();
+                $nuevoNombre = Carbon::now()->timestamp . "_" . $nombreArchivoOriginal;
+
+                $carpetaDestino = './upload/';
+                ($archivo)->move($carpetaDestino, $nuevoNombre);
+                $user->{'imagen_firma_' . $contador} = ltrim($carpetaDestino, '.') . $nuevoNombre;
+                $contador++;
+            }
+        }
 
         try {
             $user->nombres = $request->nombres;
@@ -217,7 +247,9 @@ class UsuarioController extends Controller
             $user->email = $request->email;
             $user->estado_id = $request->estado_id;
             $user->rol_id = $request->rol_id;
-            $user->contrasena_correo = Crypt::encryptString($request->contrasena_correo);
+            if ($request->contrasena_correo != '') {
+                $user->contrasena_correo = Crypt::encryptString($request->contrasena_correo);
+            }
             if ($request->password != null || $request->password != "") {
                 $user->password = app('hash')->make($request->password);
             }
