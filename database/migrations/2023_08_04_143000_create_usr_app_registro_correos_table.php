@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateEnvioCorreosTable extends Migration
+class CreateUsrAppRegistroCorreosTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,17 +13,17 @@ class CreateEnvioCorreosTable extends Migration
      */
     public function up()
     {
-        Schema::table('envio_correos', function (Blueprint $table) {
+        Schema::create('usr_app_registro_correos', function (Blueprint $table) {
             $table->id();
-            $table->string('modulo');
             $table->string('remitente');
             $table->string('destinatario');
-            $table->string('con_copia');
-            $table->string('con_copia_oculta');
+            $table->string('con_copia')->nullable();
+            $table->string('con_copia_oculta')->nullable();
             $table->string('asunto');
-            $table->string('mensaje');
-            $table->string('adjunto');
-            $table->string('campos');
+            $table->string('mensaje',1000);
+            $table->string('adjunto')->nullable();
+            $table->string('modulo')->nullable();
+            $table->string('area')->nullable();
             $table->timestamps();
         });
     }
@@ -35,8 +35,6 @@ class CreateEnvioCorreosTable extends Migration
      */
     public function down()
     {
-        Schema::table('envio_correos', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('usr_app_registro_correos');
     }
 }

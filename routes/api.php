@@ -71,6 +71,7 @@ use App\Http\Controllers\TipoProveedorController;
 use App\Http\Controllers\TipoDocumentoController;
 use App\Http\Controllers\FormularioDDExportController;
 use App\Http\Controllers\EnvioCorreoController;
+use App\Http\Controllers\RegistroCorreosController;
 use App\Http\Controllers\ConsultaCorreoController;
 
 /*
@@ -138,6 +139,10 @@ Route::group([
     Route::get('/genero', [GeneroController::class, 'index']);  
     
     Route::post('/enviocorreo', [EnvioCorreoController::class, 'sendEmail']);   
+
+    Route::get('/consultacorreo/{cantidad}', [RegistroCorreosController::class, 'index']);   
+    Route::post('/registrocorreo', [RegistroCorreosController::class, 'create']);   
+    Route::get('/consultacorreofiltro/{cadena}', [RegistroCorreosController::class, 'correosfiltro']);   
 
     // Dahsboard
     Route::get('/empleadosactivos', [DashboardController::class, 'empleadosactivos']); 
