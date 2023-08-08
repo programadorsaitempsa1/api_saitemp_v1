@@ -18,13 +18,14 @@ class EnvioCorreoController extends Controller
 {
     public function sendEmail(Request $request)
     {
-
         $user = auth()->user();
+
 
         $nombreArchivo1 = pathinfo($user->imagen_firma_1, PATHINFO_BASENAME);
         $nombreArchivo2 = pathinfo($user->imagen_firma_2, PATHINFO_BASENAME);
         $rutaImagen1 = public_path($user->imagen_firma_1);
         $rutaImagen2 = public_path($user->imagen_firma_2);
+        $adjuntos = [];
 
         $destinatarios = explode(',', $request->to);
         $cc = explode(',', $request->cc);
@@ -53,8 +54,10 @@ class EnvioCorreoController extends Controller
 
         $mailer = new Mailer($transport);
 
+        $nombres = $user->nombres != 'null' ? $user->nombres:'';
+        $apellidos = $user->apellidos != 'null' ? $user->apellidos:'';
         $email = (new Email())
-            ->from(new Address($user->usuario, $user->nombres . ' ' . $user->apellidos))
+            ->from(new Address($user->usuario,  $nombres . ' ' . $apellidos))
             ->subject($request->subject)
             ->html($request->body);
 
@@ -84,13 +87,24 @@ class EnvioCorreoController extends Controller
         }
 
         foreach ($archivos as $archivo) {
+         
             if ($archivo instanceof UploadedFile) {
+                array_push($adjuntos,$archivo->getClientOriginalName());
                 $email->attachFromPath($archivo->getPathname(), $archivo->getClientOriginalName(), $archivo->getClientMimeType());
             }
         }
 
         $mailer->send($email);
         if ($mailer) {
+            $registroCorreosController = new RegistroCorreosController;
+            $correo['remitente'] = $user->usuario;
+            $correo['destinatario'] = $destinatarios;
+            $correo['con_copia'] = $cc;
+            $correo['con_copia_oculta'] = $cco;
+            $correo['asunto'] = $request->subject;
+            $correo['mensaje'] = $request->body;
+            $correo['adjunto'] = $adjuntos;
+            $registroCorreosController->create($correo);
             return response()->json(['status' => 'success', 'message' => 'El correo electrónico se ha enviado correctamente.']);
         } else {
             return response()->json(['status' => 'error', 'message' => 'Hubo un error al enviar el correo electrónico.']);
