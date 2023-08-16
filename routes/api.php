@@ -73,6 +73,13 @@ use App\Http\Controllers\FormularioDDExportController;
 use App\Http\Controllers\EnvioCorreoController;
 use App\Http\Controllers\RegistroCorreosController;
 use App\Http\Controllers\ConsultaCorreoController;
+use App\Http\Controllers\CategoriaCargoController;
+use App\Http\Controllers\SubCategoriaCargoController;
+use App\Http\Controllers\ListaCargoController;
+use App\Http\Controllers\ListaExamenController;
+use App\Http\Controllers\CargoClienteController;
+use App\Http\Controllers\ListaRecomendacionController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -87,7 +94,7 @@ use App\Http\Controllers\ConsultaCorreoController;
 
 // TODO: Colocar los name a las rutas 
 Route::group([
-    'middleware' => 'api',
+    'middleware' => ['api', \Fruitcake\Cors\HandleCors::class],
     'prefix' => 'v1'
 
 ], function ($router) {
@@ -400,6 +407,12 @@ Route::group([
     Route::post('/requisito/{id}', [RequisitoController::class, 'update']);
     Route::delete('/requisito/{id}', [RequisitoController::class, 'destroy']);
     
+    // Requisitos del cargo
+   Route::get('/listarecomendaciones/{id}', [ListaRecomendacionController::class, 'index']);
+   Route::post('/listarecomendaciones', [ListaRecomendacionController::class, 'create']);
+   Route::post('/listarecomendaciones/{id}', [ListaRecomendacionController::class, 'update']);
+   Route::delete('/listarecomendaciones/{id}', [ListaRecomendacionController::class, 'destroy']);
+
      // Periodicidades para liquidación
     Route::get('/periodicidadliquidacion', [PeriodicidadLiquidacionController::class, 'index']);
     Route::post('/periodicidadliquidacion', [PeriodicidadLiquidacionController::class, 'create']);
@@ -411,6 +424,37 @@ Route::group([
     Route::post('/tipocuentabanco', [TipoCuentaBancoController::class, 'create']);
     Route::post('/tipocuentabanco/{id}', [TipoCuentaBancoController::class, 'update']);
     Route::delete('/tipocuentabanco/{id}', [TipoCuentaBancoController::class, 'destroy']);
+
+     // Categorias cargos
+    Route::get('/categoriacargo', [CategoriaCargoController::class, 'index']);
+    Route::post('/categoriacargo', [CategoriaCargoController::class, 'create']);
+    Route::post('/categoriacargo/{id}', [CategoriaCargoController::class, 'update']);
+    Route::delete('/categoriacargo/{id}', [CategoriaCargoController::class, 'destroy']);
+
+
+     // Subcategorias cargos
+    Route::get('/subcategoriacargo/{id}', [SubCategoriaCargoController::class, 'index']);
+    Route::post('/subcategoriacargo', [SubCategoriaCargoController::class, 'create']);
+    Route::post('/subcategoriacargo/{id}', [SubCategoriaCargoController::class, 'update']);
+    Route::delete('/subcategoriacargo/{id}', [SubCategoriaCargoController::class, 'destroy']);
+    
+     // lista cargos
+    Route::get('/listacargos/{id}', [ListaCargoController::class, 'index']);
+    Route::post('/listacargos', [ListaCargoController::class, 'create']);
+    Route::post('/listacargos/{id}', [ListaCargoController::class, 'update']);
+    Route::delete('/listacargos/{id}', [ListaCargoController::class, 'destroy']);
+    
+     // lista examenes
+    Route::get('/listaexamenes/{id}', [ListaExamenController::class, 'index']);
+    Route::post('/listaexamenes', [ListaExamenController::class, 'create']);
+    Route::post('/listaexamenes/{id}', [ListaExamenController::class, 'update']);
+    Route::delete('/listaexamenes/{id}', [ListaExamenController::class, 'destroy']);
+
+     // Cargos cliente
+    Route::get('/cargoscliente', [CargoClienteController::class, 'index']);
+    Route::post('/cargoscliente', [CargoClienteController::class, 'create']);
+    Route::post('/cargoscliente/{id}', [CargoClienteController::class, 'update']);
+    Route::delete('/cargoscliente/{id}', [CargoClienteController::class, 'destroy']);
     
      // Tipos de operaciones internacionales
     Route::get('/operacioninternacional', [OperacionInternacionalController::class, 'index']);
