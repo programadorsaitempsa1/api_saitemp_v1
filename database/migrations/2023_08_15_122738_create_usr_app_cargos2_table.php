@@ -18,7 +18,7 @@ class CreateUsrAppCargos2Table extends Migration
             $table->unsignedBigInteger('cargo_id');
             $table->unsignedBigInteger('riesgo_laboral_id');
             $table->unsignedBigInteger('cliente_id');
-            $table->longText('funcion_cargo');
+            $table->longText('funcion_cargo')->nullable();
             $table->foreign('cliente_id')->references('id')->on('usr_app_clientes')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('cargo_id')->references('id')->on('usr_app_lista_cargos')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('riesgo_laboral_id')->references('id')->on('usr_app_riesgos_laborales')->onDelete('NO ACTION')->onUpdate('NO ACTION');
