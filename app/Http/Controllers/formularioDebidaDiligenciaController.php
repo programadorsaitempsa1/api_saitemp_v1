@@ -652,9 +652,9 @@ class formularioDebidaDiligenciaController extends Controller
 
             $contador = 0;
             foreach ($request['cargos2'] as $item) {
-                if ($item['cargo'] != '' || $item['riesgo_laboral_id'] != '') {
+                if ($item['cargo_id'] != '' || $item['riesgo_laboral_id'] != '') {
                     $cargo = new cargo2;
-                    $cargo->cargo_id = $item['cargo'];
+                    $cargo->cargo_id = $item['cargo_id'];
                     $cargo->riesgo_laboral_id = $item['riesgo_laboral_id'];
                     $cargo->funcion_cargo = $item['funcion_cargo'];
                     $cargo->cliente_id = $cliente->id;
@@ -1006,9 +1006,9 @@ class formularioDebidaDiligenciaController extends Controller
             }
             $contador = 0;
             foreach ($request['cargos2'] as $item) {
-                if ($item['cargo'] != '' || $item['riesgo_laboral_id'] != '') {
+                if ($item['cargo_id'] != '' || $item['riesgo_laboral_id'] != '') {
                     $cargo = new cargo2;
-                    $cargo->cargo_id = intval($item['cargo']);
+                    $cargo->cargo_id = intval($item['cargo_id']);
                     $cargo->riesgo_laboral_id = $item['riesgo_laboral_id'];
                     $cargo->funcion_cargo = $item['funcion_cargo'];
                     $cargo->cliente_id = $cliente->id;
