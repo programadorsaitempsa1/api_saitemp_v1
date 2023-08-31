@@ -28,6 +28,7 @@ class ContratoController extends Controller
             ->join('usr_app_actividades_ciiu as ac', 'ac.id', '=', 'usr_app_clientes.actividad_ciiu_id')
             ->join('gen_tipide as doc', 'doc.cod_tip', '=', 'usr_app_clientes.tipo_identificacion_id')
             ->select(
+                'usr_app_clientes.id',
                 'razon_social',
                 'nit',
                 'rl.nombre as representante_legal',
