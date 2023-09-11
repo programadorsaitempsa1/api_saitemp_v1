@@ -31,6 +31,8 @@ class EnvioCorreoController extends Controller
         $cc = explode(',', $request->cc);
         $cco = explode(',', $request->cco);
 
+       
+
         $archivos = $request->files->all();
 
         if ($user->usuario == '' || $user->usuario == null) {
@@ -75,14 +77,14 @@ class EnvioCorreoController extends Controller
             $email->addTo($destinatario);
         }
 
-        if (count($cc) > 1) {
+        if ($cc[0] != '') {
             foreach ($cc as $ccs) {
                 $email->addCc($ccs);
             }
         }
-        if (count($cco) > 1) {
+        if ($cco[0] != '') {
             foreach ($cco as $ccos) {
-                $email->addCc($ccos);
+                $email->addBcc($ccos);
             }
         }
 
