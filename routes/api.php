@@ -79,6 +79,10 @@ use App\Http\Controllers\ListaCargoController;
 use App\Http\Controllers\ListaExamenController;
 use App\Http\Controllers\CargoClienteController;
 use App\Http\Controllers\ListaRecomendacionController;
+use App\Http\Controllers\ClientesAlInstanteController;
+use App\Http\Controllers\ListaConceptosFormularioSupController;
+use App\Http\Controllers\formularioSupervisionController;
+use App\Http\Controllers\EstadosConceptoFormularioSupController;
 
 
 /*
@@ -480,7 +484,7 @@ Route::group([
     Route::post('/tipoorigenmedio/{id}', [TiposOrigenMediosController::class, 'update']);
     Route::delete('/tipoorigenmedio/{id}', [TiposOrigenMediosController::class, 'destroy']);
     
-     // Formularios registro clientes
+    // Formularios registro clientes
     Route::get('/formulariocliente', [formularioDebidaDiligenciaController::class, 'index']);
     Route::get('/formulariocliente/{id}', [formularioDebidaDiligenciaController::class, 'getbyid']);
     Route::get('/clienteexist/{id}/{tipo_id}', [formularioDebidaDiligenciaController::class, 'existbyid']);
@@ -503,5 +507,31 @@ Route::group([
     Route::get('/tipodocumentolista', [SigTipoDocumentoIdentidadController::class, 'lista']);
     Route::post('/tipodocumentoborradomasivo', [SigTipoDocumentoIdentidadController::class, 'borradomasivo']);
     Route::post('/tipodocumentoactualizacionmasiva', [SigTipoDocumentoIdentidadController::class, 'actualizacionmasiva']);
+    
+    // Clientes al instante
+   Route::get('/clientesai', [ClientesAlInstanteController::class, 'index']);
+   Route::post('/clientesai', [ClientesAlInstanteController::class, 'create']);
+   Route::post('/clientesai/{id}', [ClientesAlInstanteController::class, 'update']);
+   Route::delete('/clientesai/{id}', [ClientesAlInstanteController::class, 'destroy']);
 
-});
+    // Clientes al instante
+   Route::get('/conceptosformulario', [ListaConceptosFormularioSupController::class, 'index']);
+   Route::post('/conceptosformulario', [ListaConceptosFormularioSupController::class, 'create']);
+   Route::post('/conceptosformulario/{id}', [ListaConceptosFormularioSupController::class, 'update']);
+   Route::delete('/conceptosformulario/{id}', [ListaConceptosFormularioSupController::class, 'destroy']);
+
+    // Clientes al instante
+   Route::get('/formulariosupervision', [formularioSupervisionController::class, 'index']);
+   Route::get('/formulariosupervision/{id}', [formularioSupervisionController::class, 'formById']);
+   Route::post('/formulariosupervision', [formularioSupervisionController::class, 'create']);
+   Route::post('/formulariosupervision/{id}', [formularioSupervisionController::class, 'update']);
+   Route::delete('/formulariosupervision/{id}', [formularioSupervisionController::class, 'destroy']);
+   
+   // Clientes al instante
+  Route::get('/estadosconceptoformulario', [EstadosConceptoFormularioSupController::class, 'index']);
+  Route::post('/estadosconceptoformulario', [EstadosConceptoFormularioSupController::class, 'create']);
+  Route::post('/estadosconceptoformulario/{id}', [EstadosConceptoFormularioSupController::class, 'update']);
+  Route::delete('/estadosconceptoformulario/{id}', [EstadosConceptoFormularioSupController::class, 'destroy']);
+
+  });
+  
