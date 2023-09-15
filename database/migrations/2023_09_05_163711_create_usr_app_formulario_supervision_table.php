@@ -21,6 +21,7 @@ class CreateUsrAppFormularioSupervisionTable extends Migration
             // $table->char('cliente_id',15); este campo se agregó desde sql
             $table->string('direccion');
             $table->string('municipio');
+            $table->longText('descripcion');
             $table->string('firma_supervisor');
             $table->string('firma_persona_contactada');
             $table->timestamps();

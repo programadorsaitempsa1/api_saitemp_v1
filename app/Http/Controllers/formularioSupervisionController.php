@@ -32,6 +32,7 @@ class formularioSupervisionController extends Controller
                 'usr_app_formulario_supervision.direccion',
                 'mun.nombre as municipio',
                 'dep.nombre as departamento',
+                'usr_app_formulario_supervision.descripcion',
                 'user.nombres as nombres_supervisor',
                 'user.apellidos as apellidos_supervisor',
             )
@@ -61,7 +62,8 @@ class formularioSupervisionController extends Controller
                 'usr_app_formulario_supervision.firma_supervisor',
                 'usr_app_formulario_supervision.firma_persona_contactada',
                 'cxc_cliente.cod_cli',
-                'cxc_cliente.nom_cli as nombre_cliente'
+                'cxc_cliente.nom_cli as nombre_cliente',
+                'usr_app_formulario_supervision.descripcion',
             )
             ->where('usr_app_formulario_supervision.id', '=', $id)
             ->get();
@@ -130,6 +132,9 @@ class formularioSupervisionController extends Controller
             $formulario->persona_contactada = $request->persona_contactada;
             $formulario->direccion = $request->direccion;
             $formulario->municipio = $request->ciudad;
+            $formulario->descripcion = $request->descripcion;
+            $formulario->firma_supervisor = $request->firma_supervisor;
+            $formulario->firma_persona_contactada = $request->firma_persona_contactada;
             $formulario->cliente_id = $request->cliente;
 
             if ($request->hasFile('firma_supervisor')) {
@@ -152,7 +157,9 @@ class formularioSupervisionController extends Controller
                 $formulario->firma_persona_contactada = ltrim($carpetaDestino, '.') . $nuevoNombre;
             }
 
+
             $formulario->save();
+         
 
             foreach ($request->concepto_estado as $item) {
                 $conceptos = new ConceptoFormularioSup;
@@ -181,9 +188,10 @@ class formularioSupervisionController extends Controller
             }
             DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Formulario guardado exitosamente']);
-        } catch (\Throwable $th) {
+        } catch (\Exception $e) {
             //throw $th;
             DB::rollback();
+            return $e;
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intenta nuevamente']);
         }
     }
