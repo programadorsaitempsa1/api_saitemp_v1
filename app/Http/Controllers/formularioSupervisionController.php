@@ -21,69 +21,95 @@ class formularioSupervisionController extends Controller
      */
     public function index()
     {
-        $result = FormularioSupervision::all();
+        $result = FormularioSupervision::join('cxc_cliente', 'cxc_cliente.cod_cli', '=', 'usr_app_formulario_supervision.cliente_id')
+            ->join('Saitemp_V3.dbo.usr_app_municipios as mun', 'mun.id', '=', 'usr_app_formulario_supervision.municipio')
+            ->join('Saitemp_V3.dbo.usr_app_departamentos as dep', 'dep.id', '=', 'mun.departamento_id')
+            ->join('Saitemp_V3.dbo.usr_app_usuarios as user', 'user.id', '=', 'usr_app_formulario_supervision.supervisor_id')
+            ->select(
+                'usr_app_formulario_supervision.id',
+                'cxc_cliente.nom_cli as nombre_cliente',
+                'cxc_cliente.nit_cli as nit',
+                'usr_app_formulario_supervision.direccion',
+                'mun.nombre as municipio',
+                'dep.nombre as departamento',
+                'usr_app_formulario_supervision.descripcion',
+                'user.nombres as nombres_supervisor',
+                'user.apellidos as apellidos_supervisor',
+            )
+            ->orderBy('usr_app_formulario_supervision.id', 'DESC')
+            ->paginate();
+
+        $result->transform(function ($item) {
+            $item->nombre_completo = $item->nombres_supervisor . ' ' . $item->apellidos_supervisor;
+            unset($item->nombres_supervisor);
+            unset($item->apellidos_supervisor);
+            return $item;
+        });
+
         return response()->json($result);
     }
 
-    public function formById($id){
-        $formulario = FormularioSupervision::join('cxc_cliente','cxc_cliente.cod_cli','=','usr_app_formulario_supervision.cliente_id')
-        ->select(
-            'usr_app_formulario_supervision.id',
-            'usr_app_formulario_supervision.fecha_hora',
-            'usr_app_formulario_supervision.supervisor_id',
-            'usr_app_formulario_supervision.persona_contactada',
-            'usr_app_formulario_supervision.direccion',
-            'usr_app_formulario_supervision.municipio',
-            'usr_app_formulario_supervision.firma_supervisor',
-            'usr_app_formulario_supervision.firma_persona_contactada',
-            'cxc_cliente.cod_cli',
-            'cxc_cliente.nom_cli as nombre_cliente'
-        )
-        ->where('usr_app_formulario_supervision.id','=',$id)
-        ->get();
+    public function formById($id)
+    {
+        $formulario = FormularioSupervision::join('cxc_cliente', 'cxc_cliente.cod_cli', '=', 'usr_app_formulario_supervision.cliente_id')
+            ->select(
+                'usr_app_formulario_supervision.id',
+                'usr_app_formulario_supervision.fecha_hora',
+                'usr_app_formulario_supervision.supervisor_id',
+                'usr_app_formulario_supervision.persona_contactada',
+                'usr_app_formulario_supervision.direccion',
+                'usr_app_formulario_supervision.municipio',
+                'usr_app_formulario_supervision.firma_supervisor',
+                'usr_app_formulario_supervision.firma_persona_contactada',
+                'cxc_cliente.cod_cli',
+                'cxc_cliente.nom_cli as nombre_cliente',
+                'usr_app_formulario_supervision.descripcion',
+            )
+            ->where('usr_app_formulario_supervision.id', '=', $id)
+            ->get();
 
         $conceptos = ConceptoFormularioSup::select(
             'concepto_id',
             'estado_concepto_id',
         )
-        ->where('formulario_id','=',$id)
-        ->get();
+            ->where('formulario_id', '=', $id)
+            ->get();
 
         $observaciones = ImagenObservacion::select(
             'imagen_observacion',
             'observacion',
         )
-        ->where('formulario_id','=',$id)
-        ->get();
+            ->where('formulario_id', '=', $id)
+            ->get();
 
-        $supervisor = User::select( 
+        $supervisor = User::select(
             'nombres',
             'apellidos',
         )
-        ->where('id','=',$formulario[0]->supervisor_id)
-        ->get();
+            ->where('id', '=', $formulario[0]->supervisor_id)
+            ->get();
 
         $ubicacion = Municipios::join('usr_app_departamentos as dep', 'dep.id', '=', 'usr_app_municipios.departamento_id')
-        ->join('usr_app_paises as pais', 'pais.id', '=', 'dep.pais_id')
-        ->select(
-            'usr_app_municipios.id as municipio_id',
-            'usr_app_municipios.nombre as municipio',
-            'dep.id as departamento_id',
-            'dep.nombre as departamento',
-            'pais.id as pais_id',
-            'pais.nombre as pais',
-        )
-        ->where('usr_app_municipios.id','=',$formulario[0]->municipio)
-        ->get();
-        
-        $formulario[0]['supervisor'] = $supervisor[0]->nombres.' '. $supervisor[0]->apellidos;
+            ->join('usr_app_paises as pais', 'pais.id', '=', 'dep.pais_id')
+            ->select(
+                'usr_app_municipios.id as municipio_id',
+                'usr_app_municipios.nombre as municipio',
+                'dep.id as departamento_id',
+                'dep.nombre as departamento',
+                'pais.id as pais_id',
+                'pais.nombre as pais',
+            )
+            ->where('usr_app_municipios.id', '=', $formulario[0]->municipio)
+            ->get();
+
+        $formulario[0]['supervisor'] = $supervisor[0]->nombres . ' ' . $supervisor[0]->apellidos;
         $formulario[0]['municipio_id'] = $ubicacion[0]->municipio_id;
         $formulario[0]['municipio'] = $ubicacion[0]->municipio;
         $formulario[0]['departamento_id'] = $ubicacion[0]->departamento_id;
         $formulario[0]['departamento'] = $ubicacion[0]->departamento;
         $formulario[0]['pais_id'] = $ubicacion[0]->pais_id;
         $formulario[0]['pais'] = $ubicacion[0]->pais;
-       
+
 
         $formulario[0]['conceptos'] = $conceptos;
         $formulario[0]['observaciones'] = $observaciones;
@@ -106,6 +132,9 @@ class formularioSupervisionController extends Controller
             $formulario->persona_contactada = $request->persona_contactada;
             $formulario->direccion = $request->direccion;
             $formulario->municipio = $request->ciudad;
+            $formulario->descripcion = $request->descripcion;
+            $formulario->firma_supervisor = $request->firma_supervisor;
+            $formulario->firma_persona_contactada = $request->firma_persona_contactada;
             $formulario->cliente_id = $request->cliente;
 
             if ($request->hasFile('firma_supervisor')) {
@@ -128,7 +157,9 @@ class formularioSupervisionController extends Controller
                 $formulario->firma_persona_contactada = ltrim($carpetaDestino, '.') . $nuevoNombre;
             }
 
+
             $formulario->save();
+         
 
             foreach ($request->concepto_estado as $item) {
                 $conceptos = new ConceptoFormularioSup;
@@ -157,9 +188,10 @@ class formularioSupervisionController extends Controller
             }
             DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Formulario guardado exitosamente']);
-        } catch (\Throwable $th) {
+        } catch (\Exception $e) {
             //throw $th;
             DB::rollback();
+            return $e;
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intenta nuevamente']);
         }
     }

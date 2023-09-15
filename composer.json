@@ -18,6 +18,7 @@
         "maatwebsite/excel": "^3.1",
         "symfony/mailer": "^6.1",
         "symfony/mime": "^5.4",
+        "tecnickcom/tcpdf": "^6.6",
         "tymon/jwt-auth": "^1.0"
     },
     "require-dev": {
