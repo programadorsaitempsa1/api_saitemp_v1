@@ -24,6 +24,7 @@ class RegistroCorreosController extends Controller
             'mensaje',
             'adjunto',
         )
+            ->orderby('id', 'DESC')
             ->paginate($cantidad);
         return $result;
     }

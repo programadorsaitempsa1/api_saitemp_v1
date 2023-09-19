@@ -124,33 +124,36 @@ class formularioSupervisionController extends Controller
     {
 
         $formulario = $this->formById($formulario_id)->getData();
-
-
+    
         $ListaConceptosFormularioSupController = new ListaConceptosFormularioSupController;
         $lista_conceptos = $ListaConceptosFormularioSupController->index()->getData();
-
-
-
+        
         $pdf = new TCPDF();
-
-        // $border_style = array('all' => array('width' => 2, 'cap' => 'square', 'join' => 'miter', 'dash' => 0, 'phase' => 0));
-
-
-        $pdf->SetTextColor(81, 90, 90);
-       
-
-        $pdf->SetCreator('Al isnstante');
-        $pdf->SetAuthor('Al isnstante');
-        $pdf->SetTitle('Formulario de supervisión');
-        $pdf->SetSubject('Formulario de supervisión');
-        $pdf->SetKeywords('formulario, supervision');
-
-
+        
         $pdf->AddPage();
-        $pdf->Ln(8);
-        $pdf->SetFont('helvetica', '', 11);
-        $pdf->Cell(0, 10, 'Formulario de supervisión', 0, 1, 'C');
+        $pdf->SetTextColor(52, 51, 51);
 
+        $image_file = 'C:\Users\aprendiz.sistemas\Desktop\Notas hojas de vida\imagenes/instante-removebg-preview.jpg';
+
+        $html = '<table cellpadding="2" cellspacing="0" border="1">
+        <tr>
+            <td style="width: 130px; text-align: center; vertical-align: middle;">
+                <img src="' . $image_file . '" width="70" height="auto" style="margin: 0 auto; display: block;">
+            </td>
+            <td style="font-size: 16pt; font-weight: bold; width: 280px; text-align: center; vertical-align: middle;">
+            <div style="position: relative; top: 50%; transform: translateY(-50%);">
+                    Formulario de supervisión
+                </div>
+            </td>
+            <td style="font-size: 12pt; width: 130px; text-align: center; vertical-align: middle;">
+            <p>Versión:1</p>
+        </td>
+        </tr>
+    </table>';
+
+        $pdf->writeHTML($html, true, false, true, false, '');
+
+        $pdf->SetFont('helvetica', '', 11);
         $texto_encargado = $formulario->supervisor;
         $texto_contactada = $formulario->persona_contactada;
         $texto_fecha = $formulario->fecha_hora;
@@ -158,134 +161,186 @@ class formularioSupervisionController extends Controller
         $texto_direccion = $formulario->direccion;
         $texto_departamento = $formulario->departamento;
         $texto_ciudad = $formulario->municipio;
-       
-        $pdf->Ln(5);
+        $texto_asunto = $formulario->descripcion;
+
+        $pdf->SetMargins(10, 10, 10, 10);
+
+        $anchoPagina = $pdf->getPageWidth();
+        $alturaPagina = $pdf->getPageHeight();
+
+        $pdf->Rect(10, 10, $anchoPagina - 20, $alturaPagina - 25);
+
+
+        if (strlen($texto_direccion) < 50) {
+            $pdf->SetFont('helvetica', 'B', 11);
+            $pdf->SetX(10);
+            $pdf->Cell(95, 10, 'Fecha y hora:', 0, 0, 'L');
+
+            $pdf->SetX(110);
+            $pdf->Cell(95, 10, 'Dirección:', 0, 1, 'L');
+            $pdf->SetFont('helvetica', '', 11);
+
+            $pdf->SetX(10);
+            $pdf->Cell(27, 1, $texto_fecha, 0, 0, 'L');
+
+            $pdf->SetX(110);
+
+            $pdf->Cell(30, 1, $texto_direccion, 0, 1, 'L');
+            $pdf->Ln(3);
+        } else {
+            $pdf->SetFont('helvetica', 'B', 11);
+            $pdf->SetX(10);
+            $pdf->Cell(95, 10, 'Fecha y hora:', 0, 0, 'L');
+            $pdf->SetFont('helvetica', '', 11);
+
+            $pdf->Ln(10);
+            $pdf->SetX(10);
+            $ancho_texto = $pdf->GetStringWidth($texto_fecha);
+
+            $altura_celda = 7;
+
+            $pdf->MultiCell($ancho_texto + 7, $altura_celda, $texto_fecha, 0, 'L');
+
+            $pdf->SetFont('helvetica', 'B', 11);
+            $pdf->SetX(10);
+            $pdf->Cell(95, 10, 'Dirección:', 0, 0, 'L');
+            $pdf->SetFont('helvetica', '', 11);
+            $pdf->Ln(10);
+            $pdf->SetX(10);
+            $ancho_texto = $pdf->GetStringWidth($texto_direccion);
+
+            $altura_celda = 7;
+
+            $pdf->MultiCell($ancho_texto + 7, $altura_celda, $texto_direccion, 0, 'L');
+        }
+
+        $pdf->SetFont('helvetica', 'B', 11);
         $pdf->SetX(10);
-        $pdf->Cell(95, 10, 'Fecha y hora:', 0, 0, 'L');
+        $pdf->Cell(95, 10, 'Asunto:', 0, 0, 'L');
+        $pdf->SetFont('helvetica', '', 11);
         $pdf->Ln(10);
-      
-
         $pdf->SetX(10);
-        $ancho_texto = $pdf->GetStringWidth($texto_fecha);
-        $margen_izquierdo = 10;
-        $altura_celda = 10;
+        $ancho_texto = $pdf->GetStringWidth($texto_asunto);
 
-        $margen_superior = $pdf->GetY();
-        $espacio_superior = 2;
-        $y_centro = $margen_superior + $espacio_superior + ($altura_celda / 2);
+        $altura_celda = 7;
 
-        $pdf->Rect($margen_izquierdo, $margen_superior, $ancho_texto + 10, $altura_celda);
-        $pdf->SetXY($margen_izquierdo, $y_centro - ($altura_celda / 2));
-        $pdf->MultiCell($ancho_texto + 10, $altura_celda, $texto_fecha, 0, 'C');
-        $pdf->SetY($y_centro + ($altura_celda / 2));
-
-
+        $pdf->MultiCell($ancho_texto + 7, $altura_celda, $texto_asunto, 0, 'L');
+        $pdf->Ln(1);
+        $pdf->SetFont('helvetica', 'B', 11);
         $pdf->SetX(10);
         $pdf->Cell(95, 10, 'Supervisor encargado:', 0, 0, 'L');
 
         $pdf->SetX(110);
-        $pdf->Cell(95, 10, 'Persona contactada: * :', 0, 1, 'L');
-
+        $pdf->Cell(95, 10, 'Persona contactada:', 0, 1, 'L');
+        $pdf->SetFont('helvetica', '', 11);
         $pdf->SetX(10);
-        $pdf->Rect(10, $pdf->GetY(), 95, 10);
-        $pdf->Cell(60, 10, $texto_encargado, 0, 0, 'C');
-
+        $pdf->Cell(10, 1, $texto_encargado, 0, 0, 'L');
         $pdf->SetX(110);
-        $pdf->Rect(110, $pdf->GetY(), 95, 10);
-        $pdf->Cell(65, 10, $texto_contactada, 0, 1, 'C');
+        $pdf->Cell(65, 1, $texto_contactada, 0, 1, 'L');
 
-        $pdf->Ln(8);
+        $pdf->Ln(2);
+
+        if (strlen($texto_departamento) < 20) {
+            $pdf->SetFont('helvetica', 'B', 11);
+            $pdf->SetX(10);
+            $pdf->Cell(95, 10, 'Departamento:', 0, 0, 'L');
+
+            $pdf->SetX(110);
+            $pdf->Cell(95, 10, 'Ciudad:', 0, 1, 'L');
+            $pdf->SetFont('helvetica', '', 11);
+
+            $pdf->SetX(10);
+            $pdf->Cell(27, 1, $texto_departamento, 0, 0, 'L');
+
+            $pdf->SetX(110);
+
+            $pdf->Cell(30, 1, $texto_ciudad, 0, 1, 'L');
+            $pdf->Ln(3);
+        } else {
+
+            $pdf->SetFont('helvetica', 'B', 11);
+            $pdf->SetX(10);
+            $pdf->Cell(95, 10, 'Departamento:', 0, 0, 'L');
+            $pdf->SetFont('helvetica', '', 11);
+            $pdf->Ln(10);
+            $pdf->SetX(10);
+            $ancho_texto = $pdf->GetStringWidth($texto_departamento);
+
+            $altura_celda = 7;
+
+            $pdf->MultiCell($ancho_texto + 7, $altura_celda, $texto_departamento, 0, 'L');
+
+            $pdf->SetFont('helvetica', 'B', 11);
+            $pdf->SetX(10);
+            $pdf->Cell(95, 10, 'Ciudad:', 0, 0, 'L');
+            $pdf->SetFont('helvetica', '', 11);
+
+            $pdf->Ln(10);
+            $pdf->SetX(10);
+            $ancho_texto = $pdf->GetStringWidth($texto_ciudad);
+
+            $altura_celda = 7;
+
+            $pdf->MultiCell($ancho_texto + 7, $altura_celda, $texto_ciudad, 0, 'L');
+        }
+        $pdf->SetFont('helvetica', 'B', 11);
+        $pdf->Rect(10, 10, $anchoPagina - 20, $alturaPagina - 25);
         $pdf->SetX(10);
-        $pdf->Cell(95, 10, 'Dirección:', 0, 0, 'L');
-
-        $pdf->Ln(10);
-        $pdf->SetX(10);
-        $ancho_texto = $pdf->GetStringWidth($texto_direccion);
-        $margen_izquierdo = 10;
-        $altura_celda = 10;
-
-
-        $margen_superior = $pdf->GetY();
-        $espacio_superior = 2;
-        $y_centro = $margen_superior + $espacio_superior + ($altura_celda / 2);
-
-        $pdf->Rect($margen_izquierdo, $margen_superior, $ancho_texto + 10, $altura_celda);
-        $pdf->SetXY($margen_izquierdo, $y_centro - ($altura_celda / 2));
-        $pdf->MultiCell($ancho_texto + 10, $altura_celda, $texto_direccion, 0, 'C');
-        $pdf->SetY($y_centro + ($altura_celda / 2));
-
-        $pdf->Ln(5);
-
-        $pdf->SetX(10);
-        $pdf->Cell(95, 10, 'Departamento *:', 0, 0, 'L');
-
-        $pdf->SetX(110);
-        $pdf->Cell(95, 10, 'Ciudad: *', 0, 1, 'L');
-
-        $pdf->SetX(10);
-        $pdf->Rect(10, $pdf->GetY(), 95, 10);
-        $pdf->Cell(27, 10, $texto_departamento, 0, 0, 'C');
-
-        $pdf->SetX(110);
-        $pdf->Rect(110, $pdf->GetY(), 95, 10);
-        $pdf->Cell(30, 10, $texto_ciudad, 0, 1, 'C');
-        $pdf->Ln(3);
-
-        $pdf->SetX(10);
-        $pdf->Cell(95, 10, 'Cliente: *:', 0, 0, 'L');
+        $pdf->Cell(95, 10, 'Cliente:', 0, 0, 'L');
+        $pdf->SetFont('helvetica', '', 11);
         $pdf->Ln(10);
 
         $pdf->SetX(10);
         $ancho_texto = $pdf->GetStringWidth($texto_cliente);
-        $margen_izquierdo = 10;
-        $altura_celda = 10;
+        $altura_celda = 7;
 
+        $pdf->MultiCell($ancho_texto + 7, $altura_celda, $texto_cliente, 0, 'L');
 
-        $margen_superior = $pdf->GetY();
-        $espacio_superior = 2;
-        $y_centro = $margen_superior + $espacio_superior + ($altura_celda / 2);
+        $pdf->Ln(3);
 
-        $pdf->Rect($margen_izquierdo, $margen_superior, $ancho_texto + 10, $altura_celda);
-        $pdf->SetXY($margen_izquierdo, $y_centro - ($altura_celda / 2));
-        $pdf->MultiCell($ancho_texto + 10, $altura_celda, $texto_cliente, 0, 'C');
-        $pdf->SetY($y_centro + ($altura_celda / 2));
-
-        $pdf->Ln(10);
-        $pdf->Cell(0, 10, 'Conceptos', 0, 1, 'C');
-        $pdf->Ln(10);
-
-        // Usar un ciclo for para generar una lista numerada
-        $html = '<table cellpadding="5" cellspacing="0" border="0.5">';
-        for ($i = 1; $i < count($lista_conceptos); $i++) {
-            for ($i = 1; $i < count($formulario->conceptos); $i++) {
-                $html .= '<tr>';
-                $html .= '<td>';
-                $pdf->Cell(35, 5, $lista_conceptos[$i]->nombre);
-                $pdf->RadioButton($lista_conceptos[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'Excelente', $formulario->conceptos[$i]->estado_concepto_id == '1' ? true : false);
-                $pdf->Cell(35, 5, 'Excelente');
-                $pdf->SetX(85);
-                $pdf->RadioButton($lista_conceptos[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'Bueno', $formulario->conceptos[$i]->estado_concepto_id == '2' ? true : false);
-                $pdf->Cell(35, 5, 'Bueno');
-                $pdf->SetX(120);
-                $pdf->RadioButton($lista_conceptos[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'Regular', $formulario->conceptos[$i]->estado_concepto_id == '3' ? true : false);
-                $pdf->Cell(35, 5, 'Regular');
-                $pdf->SetX(160);
-                $pdf->RadioButton($lista_conceptos[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'No_aplica', $formulario->conceptos[$i]->estado_concepto_id == '4' ? true : false);
-                $pdf->Cell(35, 5, 'No_aplica');
-                $pdf->Ln(15);
-                $html .= '</td>';
-                $html .= '</tr>';
-            }
-        }
-        $html .= '</table>';
+        $texto_Conceptos = 'Conceptos';
+        $html = '<table cellpadding="5" cellspacing="0" border="1">
+        <tr>
+        <td style="font-size: 12pt; font-weight: bold; width: 537; text-align: center;">' . $texto_Conceptos . '</td>
+        </tr>
+        </table>';
         $pdf->writeHTML($html, true, false, true, false, '');
 
-        $pdf->Ln(20);
-        $pdf->Cell(0, 10, 'Observaciones', 0, 1, 'C');
+        $texto_asunto = $formulario->descripcion;
 
+        for ($i = 1; $i < count($lista_conceptos); $i++) {
+            for ($i = 1; $i < count($formulario->conceptos); $i++) {
+                $pdf->SetFont('helvetica', 'B', 11);
+                $pdf->Cell(35, 5, $lista_conceptos[$i]->nombre);
+                $pdf->SetFont('helvetica', '', 11);
+                $pdf->SetX(55);
+                $pdf->RadioButton($lista_conceptos[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'Excelente', $formulario->conceptos[$i]->estado_concepto_id == '1' ? true : false);
+                $pdf->Cell(35, 5, 'Excelente');
+                $pdf->SetX(95);
+                $pdf->RadioButton($lista_conceptos[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'Bueno', $formulario->conceptos[$i]->estado_concepto_id == '2' ? true : false);
+                $pdf->Cell(35, 5, 'Bueno');
+                $pdf->SetX(130);
+                $pdf->RadioButton($lista_conceptos[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'Regular', $formulario->conceptos[$i]->estado_concepto_id == '3' ? true : false);
+                $pdf->Cell(35, 5, 'Regular');
+                $pdf->SetX(165);
+                $pdf->RadioButton($lista_conceptos[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'No_aplica', $formulario->conceptos[$i]->estado_concepto_id == '4' ? true : false);
+                $pdf->Cell(35, 5, 'No_aplica');
+                $pdf->Ln(12);
+            }
+        }
 
+        $pdf->Ln(2);
+        $pdf->SetMargins(10, 10, 10, 10);
+
+        $anchoPagina = $pdf->getPageWidth();
+        $alturaPagina = $pdf->getPageHeight();
+
+        $pdf->Rect(10, 10, $anchoPagina - 20, $alturaPagina - 25);
 
         $html = '<table cellpadding="5" cellspacing="0" border="0.5">';
+        $html .= '<tr>';
+        $html .= '<td style="margin-top: 0 !important; text-align: center; font-size: 12px;">Observaciones</td>';
+        $html .= '</tr>';
         foreach ($formulario->observaciones as $imagen) {
             $html .= '<tr>';
             $html .= '<td>';
@@ -293,53 +348,52 @@ class formularioSupervisionController extends Controller
             $html .= '</td>';
             $html .= '</tr>';
             $html .= '<tr>';
-            $html .= '<td colspan="2">' . $imagen->observacion . '</td>';
+            $html .= '<td colspan="2">Observacion: ' . $imagen->observacion . '</td>';
             $html .= '</tr>';
         }
-        $pdf->Ln(20);
+
+        $pdf->Ln(7);
 
         $html .= '</table>';
 
         $pdf->writeHTML($html, true, false, true, false, '');
 
-        $pdf->Ln(15);
+        $pdf->Ln(3);
 
-
-
-        $pdf->SetX(10);
-        $pdf->Cell(95, 10, 'Firma *:', 0, 0, 'L');
-
-        $pdf->SetX(110);
-        $pdf->Cell(95, 10, 'Firma *:', 0, 1, 'L');
-        $pdf->Ln(5);
-
-        $html = '<table cellpadding="5" cellspacing="0" border="0.5">';
+        $html = '<table border="0" style="border-collapse: collapse;">';
         $html .= '<tr>';
         $html .= '<td>';
-        $html .= '<img src="' . public_path($formulario->firma_supervisor) . '" width="350" /><br>';
+        $html .= '<img src="' . public_path($formulario->firma_supervisor) . '" width="120" /><br>';
         $html .= '</td>';
         $html .= '<td>';
-        $html .= '<img src="' . public_path($formulario->firma_persona_contactada) . '" width="350" /><br>';
+        $html .= '<img src="' . public_path($formulario->firma_persona_contactada) . '" width="120" /><br>';
         $html .= '</td>';
         $html .= '</tr>';
         $html .= '</table>';
 
         $pdf->writeHTML($html, true, false, true, false, '');
 
+        $anchoPagina = $pdf->getPageWidth();
+        $alturaPagina = $pdf->getPageHeight();
+        $pdf->Rect(10, 10, $anchoPagina - 20, $alturaPagina - 25);
+        $pdf->SetMargins(10, 10, 10, 10);
 
-        $pdf->SetX(2);
-        $pdf->Cell(95, 10, 'Nombre y firma supervisor encargado:', 0, 0, 'C');
+        $pdf->SetX(15);
+        $pdf->Cell(95, 1, 'Nombre y firma supervisor encargado:', 0, 0, 'L');
 
-        $pdf->SetX(97);
-        $pdf->Cell(95, 10, 'Nombre y firma persona contactada:', 0, 1, 'C');
+        $pdf->SetX(92);
+        $pdf->Cell(95, 1, 'Nombre y firma persona contactada:', 0, 1, 'C');
 
-        $pdf->SetX(10);
-        $pdf->Rect(10, $pdf->GetY(), 90, 10);
-        $pdf->Cell(60, 10, $texto_encargado, 0, 0, 'C');
+        $pdf->SetX(15);
+        $pdf->Cell(60, 1, $texto_encargado, 0, 0, 'L');
 
-        $pdf->SetX(110);
-        $pdf->Rect(110, $pdf->GetY(), 90, 10);
-        $pdf->Cell(65, 10, $texto_contactada, 0, 1, 'C');
+        if (strlen($texto_contactada)<19) {
+            $pdf->SetX(90);
+            $pdf->Cell(65, 1, $texto_contactada, 0, 1, 'C');
+        }else{
+            $pdf->SetX(94);
+            $pdf->Cell(65, 1, $texto_contactada, 0, 1, 'C');
+        }
 
         $pdfPath = storage_path('app/temp.pdf');
         $pdf->Output($pdfPath, 'F');
@@ -348,7 +402,7 @@ class formularioSupervisionController extends Controller
         $correo['subject'] = 'envio pdf';
         $correo['body'] = 'Esta es una prueba de creación y envio de pdf en php';
         $correo['formulario_supervision'] = $pdfPath;
-        $correo['to'] = 'andres.duque01@gmail.com';
+        $correo['to'] = 'pipiloko1020@gmail.com';
         $correo['cc'] = '';
         $correo['cco'] = '';
 
