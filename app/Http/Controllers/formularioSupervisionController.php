@@ -9,6 +9,7 @@ use App\Models\ImagenObservacion;
 use App\Models\Municipios;
 use App\Models\User;
 use App\Models\ListaConceptosFormularioSup;
+use App\Models\CorreoClienteFormularioSup;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -120,7 +121,7 @@ class formularioSupervisionController extends Controller
         return response()->json($formulario[0]);
     }
 
-    public function crearPdf($formulario_id)
+    public function crearPdf($formulario_id, $correo_cliente)
     {
 
         $formulario = $this->formById($formulario_id)->getData();
@@ -133,14 +134,15 @@ class formularioSupervisionController extends Controller
         $pdf->AddPage();
         $pdf->SetTextColor(52, 51, 51);
 
-        $image_file = 'C:\Users\aprendiz.sistemas\Desktop\Notas hojas de vida\imagenes/instante-removebg-preview.jpg';
+
+        $image_file = 'C:\Users\programador1\Pictures\instante-removebg-preview.jpg';
 
         $html = '<table cellpadding="2" cellspacing="0" border="1">
         <tr>
             <td style="width: 130px; text-align: center; vertical-align: middle;">
                 <img src="' . $image_file . '" width="70" height="auto" style="margin: 0 auto; display: block;">
             </td>
-            <td style="font-size: 16pt; font-weight: bold; width: 280px; text-align: center; vertical-align: middle;">
+            <td style="font-size: 16pt; font-weight: bold; width: 279px; text-align: center; vertical-align: middle;">
             <div style="position: relative; top: 50%; transform: translateY(-50%);">
                     Formulario de supervisión
                 </div>
@@ -301,7 +303,7 @@ class formularioSupervisionController extends Controller
         $texto_Conceptos = 'Conceptos';
         $html = '<table cellpadding="5" cellspacing="0" border="1">
         <tr>
-        <td style="font-size: 12pt; font-weight: bold; width: 537; text-align: center;">' . $texto_Conceptos . '</td>
+        <td style="font-size: 12pt; font-weight: bold; width: 538.5; text-align: center;">' . $texto_Conceptos . '</td>
         </tr>
         </table>';
         $pdf->writeHTML($html, true, false, true, false, '');
@@ -343,7 +345,7 @@ class formularioSupervisionController extends Controller
         $html .= '</tr>';
         foreach ($formulario->observaciones as $imagen) {
             $html .= '<tr>';
-            $html .= '<td>';
+            $html .= '<td style="text-align: center;">'; 
             $html .= '<img src="' . public_path($imagen->imagen_observacion) . '" width="300" /><br>';
             $html .= '</td>';
             $html .= '</tr>';
@@ -402,7 +404,8 @@ class formularioSupervisionController extends Controller
         $correo['subject'] = 'envio pdf';
         $correo['body'] = 'Esta es una prueba de creación y envio de pdf en php';
         $correo['formulario_supervision'] = $pdfPath;
-        $correo['to'] = 'pipiloko1020@gmail.com';
+        // $correo['to'] = $correo_cliente;
+        $correo['to'] = 'andres.duque01@gmail.com';
         $correo['cc'] = '';
         $correo['cco'] = '';
 
@@ -419,6 +422,7 @@ class formularioSupervisionController extends Controller
      */
     public function create(Request $request)
     {
+
         DB::beginTransaction();
         try {
             $formulario = new FormularioSupervision;
@@ -482,9 +486,15 @@ class formularioSupervisionController extends Controller
                 }
             }
             DB::commit();
-            $result = $this->crearPdf($formulario->id);
-            return $result;
-            // return response()->json(['status' => 'success', 'message' => 'Formulario guardado exitosamente']);
+            $correo = CorreoClienteFormularioSup::where('cod_cli','=',$request->cliente)
+            ->select('email_fe')
+            ->first();
+            if (str_contains(strtolower($correo), 'aplica')) {
+                return response()->json(['status'=>'error','message'=>'El cliente no cuenta con un correo electrónico registrado, por tal motivo no puede ser notificado.']);
+            }else{
+                $result = $this->crearPdf($formulario->id, $correo->email_fe);
+                return $result;
+            }
         } catch (\Exception $e) {
             //throw $th;
             DB::rollback();

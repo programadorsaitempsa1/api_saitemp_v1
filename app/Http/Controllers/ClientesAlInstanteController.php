@@ -23,6 +23,19 @@ class ClientesAlInstanteController extends Controller
         return response()->json($result);
     }
 
+    public function filter($filtro)
+    {
+        $result = DB::connection('second_db')->table('cxc_cliente')->select(
+            'cod_cli as codigo',
+            'nom_cli as nombre'
+        )
+        ->where('cod_cli','like','%'.$filtro.'%')
+        ->orWhere('nom_cli','like','%'.$filtro.'%')
+        ->paginate();
+        return response()->json($result);
+    }
+
+
     /**
      * Show the form for creating a new resource.
      *

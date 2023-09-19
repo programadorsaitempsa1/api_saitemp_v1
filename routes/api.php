@@ -510,6 +510,7 @@ Route::group([
     
     // Clientes al instante
    Route::get('/clientesai', [ClientesAlInstanteController::class, 'index']);
+   Route::get('/clientesalinstante/filter/{texto}', [ClientesAlInstanteController::class, 'filter']);
    Route::post('/clientesai', [ClientesAlInstanteController::class, 'create']);
    Route::post('/clientesai/{id}', [ClientesAlInstanteController::class, 'update']);
    Route::delete('/clientesai/{id}', [ClientesAlInstanteController::class, 'destroy']);
