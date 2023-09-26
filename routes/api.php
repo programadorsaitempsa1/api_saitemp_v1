@@ -150,6 +150,7 @@ Route::group([
     Route::get('/genero', [GeneroController::class, 'index']);  
     
     Route::post('/enviocorreo', [EnvioCorreoController::class, 'sendEmail']);   
+    Route::post('/authUser', [EnvioCorreoController::class, 'authUser']);   
 
     Route::get('/consultacorreo/{cantidad}', [RegistroCorreosController::class, 'index']);   
     Route::post('/registrocorreo', [RegistroCorreosController::class, 'create']);   
