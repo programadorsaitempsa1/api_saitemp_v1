@@ -518,6 +518,7 @@ Route::group([
 
     // Clientes al instante
    Route::get('/conceptosformulario', [ListaConceptosFormularioSupController::class, 'index']);
+   Route::get('/lementospp', [ListaConceptosFormularioSupController::class, 'lementospp']);
    Route::post('/conceptosformulario', [ListaConceptosFormularioSupController::class, 'create']);
    Route::post('/conceptosformulario/{id}', [ListaConceptosFormularioSupController::class, 'update']);
    Route::delete('/conceptosformulario/{id}', [ListaConceptosFormularioSupController::class, 'destroy']);
@@ -531,6 +532,7 @@ Route::group([
    
    // Clientes al instante
   Route::get('/estadosconceptoformulario', [EstadosConceptoFormularioSupController::class, 'index']);
+  Route::get('/estadoseppformulario', [EstadosConceptoFormularioSupController::class, 'estadosepp']);
   Route::post('/estadosconceptoformulario', [EstadosConceptoFormularioSupController::class, 'create']);
   Route::post('/estadosconceptoformulario/{id}', [EstadosConceptoFormularioSupController::class, 'update']);
   Route::delete('/estadosconceptoformulario/{id}', [EstadosConceptoFormularioSupController::class, 'destroy']);

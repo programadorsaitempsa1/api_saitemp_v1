@@ -17,6 +17,18 @@ class EstadosConceptoFormularioSupController extends Controller
             'id',
             'estado_concepto'
         )
+        ->where('tipo_concepto','=','1')
+        ->orderby('posicion','ASC')
+        ->get();
+        return response()->json($result);
+    }
+    public function estadosepp()
+    {
+        $result = EstadosConceptoFormularioSup::select(
+            'id',
+            'estado_concepto'
+        )
+        ->where('tipo_concepto','=','2')
         ->orderby('posicion','ASC')
         ->get();
         return response()->json($result);

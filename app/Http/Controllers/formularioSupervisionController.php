@@ -489,12 +489,12 @@ class formularioSupervisionController extends Controller
             $correo = CorreoClienteFormularioSup::where('cod_cli','=',$request->cliente)
             ->select('email_fe')
             ->first();
-            if (str_contains(strtolower($correo), 'aplica')) {
-                return response()->json(['status'=>'error','message'=>'El cliente no cuenta con un correo electrónico registrado, por tal motivo no puede ser notificado.']);
-            }else{
+            // if (str_contains(strtolower($correo), 'aplica')) {
+            //     return response()->json(['status'=>'error','message'=>'El cliente no cuenta con un correo electrónico registrado, por tal motivo no puede ser notificado.']);
+            // }else{
                 $result = $this->crearPdf($formulario->id, $correo->email_fe);
                 return $result;
-            }
+            // }
         } catch (\Exception $e) {
             //throw $th;
             DB::rollback();

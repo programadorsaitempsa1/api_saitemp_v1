@@ -15,12 +15,23 @@ class ListaConceptosFormularioSupController extends Controller
      */
     public function index()
     {
-        $result =ListaConceptosFormularioSup::select(
+        $result = ListaConceptosFormularioSup::select(
             'id as concepto_id',
             'nombre_concepto as nombre',
         )
-        ->get();
+            ->where('tipo_concepto', '=','1')
+            ->get();
         return response()->json($result);
+    }
+
+    public function lementospp(){
+        $result = ListaConceptosFormularioSup::select(
+            'id as concepto_id',
+            'nombre_concepto as nombre',
+        )
+            ->where('tipo_concepto', '=','2')
+            ->get();
+        return response()->json($result);   
     }
 
     /**

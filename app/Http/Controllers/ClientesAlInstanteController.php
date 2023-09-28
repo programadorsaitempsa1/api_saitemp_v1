@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 // use App\Models\ClientesAlInstante;
 use Illuminate\Support\Facades\DB;
+use App\Events\EventoPrueba;
 
 class ClientesAlInstanteController extends Controller
 {
