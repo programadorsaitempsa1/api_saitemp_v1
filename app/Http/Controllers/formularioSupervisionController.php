@@ -10,9 +10,11 @@ use App\Models\Municipios;
 use App\Models\User;
 use App\Models\ListaConceptosFormularioSup;
 use App\Models\CorreoClienteFormularioSup;
+use App\Models\ElementoeppFormularioSub;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Mockery\Undefined;
 use TCPDF;
 
 
@@ -79,6 +81,14 @@ class formularioSupervisionController extends Controller
             ->where('formulario_id', '=', $id)
             ->get();
 
+        $elementospp = ElementoeppFormularioSub::select(
+            'concepto_id',
+            'estado_concepto_id',
+            'observacion',
+        )
+            ->where('formulario_id', '=', $id)
+            ->get();
+
         $observaciones = ImagenObservacion::select(
             'imagen_observacion',
             'observacion',
@@ -117,6 +127,7 @@ class formularioSupervisionController extends Controller
 
         $formulario[0]['conceptos'] = $conceptos;
         $formulario[0]['observaciones'] = $observaciones;
+        $formulario[0]['elementos_pp'] = $elementospp;
         // return response()->json($conceptos);
         return response()->json($formulario[0]);
     }
@@ -125,12 +136,12 @@ class formularioSupervisionController extends Controller
     {
 
         $formulario = $this->formById($formulario_id)->getData();
-    
+
         $ListaConceptosFormularioSupController = new ListaConceptosFormularioSupController;
         $lista_conceptos = $ListaConceptosFormularioSupController->index()->getData();
-        
+
         $pdf = new TCPDF();
-        
+
         $pdf->AddPage();
         $pdf->SetTextColor(52, 51, 51);
 
@@ -345,7 +356,7 @@ class formularioSupervisionController extends Controller
         $html .= '</tr>';
         foreach ($formulario->observaciones as $imagen) {
             $html .= '<tr>';
-            $html .= '<td style="text-align: center;">'; 
+            $html .= '<td style="text-align: center;">';
             $html .= '<img src="' . public_path($imagen->imagen_observacion) . '" width="300" /><br>';
             $html .= '</td>';
             $html .= '</tr>';
@@ -389,10 +400,10 @@ class formularioSupervisionController extends Controller
         $pdf->SetX(15);
         $pdf->Cell(60, 1, $texto_encargado, 0, 0, 'L');
 
-        if (strlen($texto_contactada)<19) {
+        if (strlen($texto_contactada) < 19) {
             $pdf->SetX(90);
             $pdf->Cell(65, 1, $texto_contactada, 0, 1, 'C');
-        }else{
+        } else {
             $pdf->SetX(94);
             $pdf->Cell(65, 1, $texto_contactada, 0, 1, 'C');
         }
@@ -422,6 +433,8 @@ class formularioSupervisionController extends Controller
      */
     public function create(Request $request)
     {
+
+        // return explode('*',$request->concepto_estado_epp[0])[2];
 
         DB::beginTransaction();
         try {
@@ -468,6 +481,19 @@ class formularioSupervisionController extends Controller
                 $conceptos->save();
             }
 
+            foreach ($request->concepto_estado_epp as $item) {
+                $conceptos = new ElementoeppFormularioSub;
+                $conceptos->concepto_id = explode('*', $item)[0];
+                $conceptos->estado_concepto_id = explode('*', $item)[1];
+                try {
+                    $conceptos->observacion = explode('*', $item)[2];
+                } catch (\Exception $e) {
+                    //throw $th;
+                }
+                $conceptos->formulario_id = $formulario->id;
+                $conceptos->save();
+            }
+
             foreach ($request->imagen as $item) {
                 for ($i = 0; $i < count($item); $i++) {
                     if ($i > 0) {
@@ -486,14 +512,14 @@ class formularioSupervisionController extends Controller
                 }
             }
             DB::commit();
-            $correo = CorreoClienteFormularioSup::where('cod_cli','=',$request->cliente)
-            ->select('email_fe')
-            ->first();
+            $correo = CorreoClienteFormularioSup::where('cod_cli', '=', $request->cliente)
+                ->select('email_fe')
+                ->first();
             // if (str_contains(strtolower($correo), 'aplica')) {
             //     return response()->json(['status'=>'error','message'=>'El cliente no cuenta con un correo electrónico registrado, por tal motivo no puede ser notificado.']);
             // }else{
-                $result = $this->crearPdf($formulario->id, $correo->email_fe);
-                return $result;
+            $result = $this->crearPdf($formulario->id, $correo->email_fe);
+            return $result;
             // }
         } catch (\Exception $e) {
             //throw $th;
