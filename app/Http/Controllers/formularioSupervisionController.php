@@ -140,13 +140,16 @@ class formularioSupervisionController extends Controller
         $ListaConceptosFormularioSupController = new ListaConceptosFormularioSupController;
         $lista_conceptos = $ListaConceptosFormularioSupController->index()->getData();
 
+        $lista_conceptos_epp = $ListaConceptosFormularioSupController->lementospp()->getData();
+
+
         $pdf = new TCPDF();
 
         $pdf->AddPage();
         $pdf->SetTextColor(52, 51, 51);
 
 
-        $image_file = 'C:\Users\programador1\Pictures\instante-removebg-preview.jpg';
+        $image_file = 'C:\Users\aprendiz.sistemas\Desktop\Notas hojas de vida\imagenesinstante-removebg-preview.jpg';
 
         $html = '<table cellpadding="2" cellspacing="0" border="1">
         <tr>
@@ -162,7 +165,7 @@ class formularioSupervisionController extends Controller
             <p>Versión:1</p>
         </td>
         </tr>
-    </table>';
+     </table>';
 
         $pdf->writeHTML($html, true, false, true, false, '');
 
@@ -183,8 +186,11 @@ class formularioSupervisionController extends Controller
 
         $pdf->Rect(10, 10, $anchoPagina - 20, $alturaPagina - 25);
 
+        $fechaActual = date("d-m-Y, H:i");
 
-        if (strlen($texto_direccion) < 50) {
+        $texto_fecha_hora = $fechaActual;
+
+        if (strlen($texto_direccion) < 38) {
             $pdf->SetFont('helvetica', 'B', 11);
             $pdf->SetX(10);
             $pdf->Cell(95, 10, 'Fecha y hora:', 0, 0, 'L');
@@ -193,8 +199,9 @@ class formularioSupervisionController extends Controller
             $pdf->Cell(95, 10, 'Dirección:', 0, 1, 'L');
             $pdf->SetFont('helvetica', '', 11);
 
+
             $pdf->SetX(10);
-            $pdf->Cell(27, 1, $texto_fecha, 0, 0, 'L');
+            $pdf->Cell(27, 1, $texto_fecha_hora, 0, 0, 'L');
 
             $pdf->SetX(110);
 
@@ -208,11 +215,11 @@ class formularioSupervisionController extends Controller
 
             $pdf->Ln(10);
             $pdf->SetX(10);
-            $ancho_texto = $pdf->GetStringWidth($texto_fecha);
+            $ancho_texto = $pdf->GetStringWidth($texto_fecha_hora);
 
             $altura_celda = 7;
 
-            $pdf->MultiCell($ancho_texto + 7, $altura_celda, $texto_fecha, 0, 'L');
+            $pdf->MultiCell($ancho_texto + 7, $altura_celda, $texto_fecha_hora, 0, 'L');
 
             $pdf->SetFont('helvetica', 'B', 11);
             $pdf->SetX(10);
@@ -319,10 +326,9 @@ class formularioSupervisionController extends Controller
         </table>';
         $pdf->writeHTML($html, true, false, true, false, '');
 
-        $texto_asunto = $formulario->descripcion;
 
-        for ($i = 1; $i < count($lista_conceptos); $i++) {
-            for ($i = 1; $i < count($formulario->conceptos); $i++) {
+        for ($i = 0; $i < count($lista_conceptos); $i++) {
+            for ($i = 0; $i < count($formulario->conceptos); $i++) {
                 $pdf->SetFont('helvetica', 'B', 11);
                 $pdf->Cell(35, 5, $lista_conceptos[$i]->nombre);
                 $pdf->SetFont('helvetica', '', 11);
@@ -338,7 +344,46 @@ class formularioSupervisionController extends Controller
                 $pdf->SetX(165);
                 $pdf->RadioButton($lista_conceptos[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'No_aplica', $formulario->conceptos[$i]->estado_concepto_id == '4' ? true : false);
                 $pdf->Cell(35, 5, 'No_aplica');
-                $pdf->Ln(12);
+                $pdf->Ln(13);
+            }
+        }
+
+        $pdf->Ln(2);
+
+        $texto_elementos  = 'Elementos de protección personal';
+        $html = '<table cellpadding="5" cellspacing="0" border="1">
+        <tr>
+        <td style="font-size: 12pt; font-weight: bold; width: 538.5; text-align: center;">' . $texto_elementos . '</td>
+        </tr>
+        </table>';
+        $pdf->writeHTML($html, true, false, true, false, '');
+
+        $pdf->SetMargins(10, 10, 10, 10);
+
+        $anchoPagina = $pdf->getPageWidth();
+        $alturaPagina = $pdf->getPageHeight();
+
+        $pdf->Rect(10, 10, $anchoPagina - 20, $alturaPagina - 25);
+
+        $pdf->Ln(2);
+
+
+        for ($i = 0; $i < count($lista_conceptos_epp); $i++) {
+            for ($i = 0; $i < count($formulario->elementos_pp); $i++) {
+                $pdf->SetFont('helvetica', 'B', 11);
+                $pdf->Cell(35, 5, $lista_conceptos_epp[$i]->nombre);
+                $pdf->SetFont('helvetica', '', 11);
+                $pdf->SetX(40);
+                $pdf->RadioButton($lista_conceptos_epp[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'Completo', $formulario->elementos_pp[$i]->estado_concepto_id == '6' ? true : false);
+                $pdf->Cell(35, 5, 'Completo');
+                $pdf->SetX(75);
+                $pdf->RadioButton($lista_conceptos_epp[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'Imcompleto', $formulario->elementos_pp[$i]->estado_concepto_id == '7' ? true : false);
+                $pdf->Cell(35, 5, 'Incompleto');
+                $pdf->SetX(113);
+                $pdf->setTextColor($formulario->elementos_pp[$i]->observacion == '' ? 150 : 52, $formulario->elementos_pp[$i]->observacion == '' ? 145 : 51, $formulario->elementos_pp[$i]->observacion == '' ? 145 : 51);
+                $pdf->MultiCell(73, 7, $formulario->elementos_pp[$i]->observacion == '' ? 'Observaciones' : $formulario->elementos_pp[$i]->observacion, 1, 'L');
+                $pdf->SetTextColor(52, 51, 51);
+                $pdf->Ln(10);
             }
         }
 
@@ -412,8 +457,8 @@ class formularioSupervisionController extends Controller
         $pdf->Output($pdfPath, 'F');
 
         $correo = null;
-        $correo['subject'] = 'envio pdf';
-        $correo['body'] = 'Esta es una prueba de creación y envio de pdf en php';
+        $correo['subject'] =  $texto_asunto;
+        $correo['body'] = 'Cordial saludo, envío informe visita de supervision, quedamos atentos a sus comentarios, muchas gracias.';
         $correo['formulario_supervision'] = $pdfPath;
         // $correo['to'] = $correo_cliente;
         $correo['to'] = 'andres.duque01@gmail.com';
