@@ -83,6 +83,10 @@ use App\Http\Controllers\ClientesAlInstanteController;
 use App\Http\Controllers\ListaConceptosFormularioSupController;
 use App\Http\Controllers\formularioSupervisionController;
 use App\Http\Controllers\EstadosConceptoFormularioSupController;
+use App\Http\Controllers\ServicioOrdenServicioController;
+use App\Http\Controllers\BonificacionOrdenServicioController;
+use App\Http\Controllers\EstadoOrdenServicioController;
+use App\Http\Controllers\LaboratorioOrdenServicioController;
 
 
 /*
@@ -529,13 +533,38 @@ Route::group([
    Route::post('/formulariosupervision', [formularioSupervisionController::class, 'create']);
    Route::post('/formulariosupervision/{id}', [formularioSupervisionController::class, 'update']);
    Route::delete('/formulariosupervision/{id}', [formularioSupervisionController::class, 'destroy']);
+   Route::get('/crearPdf/{id}', [formularioSupervisionController::class, 'crearPdf']);
    
-   // Clientes al instante
+   // Estados concepto formulario de supervisión
   Route::get('/estadosconceptoformulario', [EstadosConceptoFormularioSupController::class, 'index']);
   Route::get('/estadoseppformulario', [EstadosConceptoFormularioSupController::class, 'estadosepp']);
   Route::post('/estadosconceptoformulario', [EstadosConceptoFormularioSupController::class, 'create']);
   Route::post('/estadosconceptoformulario/{id}', [EstadosConceptoFormularioSupController::class, 'update']);
   Route::delete('/estadosconceptoformulario/{id}', [EstadosConceptoFormularioSupController::class, 'destroy']);
+
+   // Servicios orden de servicio
+   Route::get('/serviciosordens', [ServicioOrdenServicioController::class, 'index']);
+   Route::post('/serviciosordens', [ServicioOrdenServicioController::class, 'create']);
+   Route::post('/serviciosordens/{id}', [ServicioOrdenServicioController::class, 'update']);
+   Route::delete('/serviciosordens/{id}', [ServicioOrdenServicioController::class, 'destroy']);
+
+    // Bonificación orden de servicio
+   Route::get('/bonificacionordens', [BonificacionOrdenServicioController::class, 'index']);
+   Route::post('/bonificacionordens', [BonificacionOrdenServicioController::class, 'create']);
+   Route::post('/bonificacionordens/{id}', [BonificacionOrdenServicioController::class, 'update']);
+   Route::delete('/bonificacionordens/{id}', [BonificacionOrdenServicioController::class, 'destroy']);
+   
+   // Estados orden de servicio
+  Route::get('/estadoordens', [EstadoOrdenServicioController::class, 'index']);
+  Route::post('/estadoordens', [EstadoOrdenServicioController::class, 'create']);
+  Route::post('/estadoordens/{id}', [EstadoOrdenServicioController::class, 'update']);
+  Route::delete('/estadoordens/{id}', [EstadoOrdenServicioController::class, 'destroy']);
+  
+  // Laboratorios orden de servicio
+  Route::get('/laboratorioos', [LaboratorioOrdenServicioController::class, 'index']);
+  Route::post('/laboratorioos', [LaboratorioOrdenServicioController::class, 'create']);
+  Route::post('/laboratorioos/{id}', [LaboratorioOrdenServicioController::class, 'update']);
+  Route::delete('/laboratorioos/{id}', [LaboratorioOrdenServicioController::class, 'destroy']);
 
   });
   

@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// use App\Models\ClientesAlInstante;
-use Illuminate\Support\Facades\DB;
-use App\Events\EventoPrueba;
+use App\Models\ServicioOrdenServicio;
 
-class ClientesAlInstanteController extends Controller
+class ServicioOrdenServicioController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -16,27 +14,13 @@ class ClientesAlInstanteController extends Controller
      */
     public function index()
     {
-        // event(new EventoPrueba('Prueba de evento'));
-        $result = DB::connection('second_db')->table('cxc_cliente')->select(
-            'cod_cli as codigo',
-            'nom_cli as nombre'
-        )->paginate();
-
-        return response()->json($result);
-    }
-
-    public function filter($filtro)
-    {
-        $result = DB::connection('second_db')->table('cxc_cliente')->select(
-            'cod_cli as codigo',
-            'nom_cli as nombre'
+        $result = ServicioOrdenServicio::select(
+            'id',
+            'nombre'
         )
-        ->where('cod_cli','like','%'.$filtro.'%')
-        ->orWhere('nom_cli','like','%'.$filtro.'%')
-        ->paginate();
+        ->get();
         return response()->json($result);
     }
-
 
     /**
      * Show the form for creating a new resource.

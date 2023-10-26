@@ -132,7 +132,7 @@ class formularioSupervisionController extends Controller
         return response()->json($formulario[0]);
     }
 
-    public function crearPdf($formulario_id, $correo_cliente)
+    public function crearPdf($formulario_id, $correo_cliente = null)
     {
 
         $formulario = $this->formById($formulario_id)->getData();
@@ -149,7 +149,8 @@ class formularioSupervisionController extends Controller
         $pdf->SetTextColor(52, 51, 51);
 
 
-        $image_file = 'C:\Users\aprendiz.sistemas\Desktop\Notas hojas de vida\imagenesinstante-removebg-preview.jpg';
+        $url = public_path('\/upload\/logo_alinstante.JPG');
+        $image_file = $url;
 
         $html = '<table cellpadding="2" cellspacing="0" border="1">
         <tr>
@@ -343,7 +344,7 @@ class formularioSupervisionController extends Controller
                 $pdf->Cell(35, 5, 'Regular');
                 $pdf->SetX(165);
                 $pdf->RadioButton($lista_conceptos[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'No_aplica', $formulario->conceptos[$i]->estado_concepto_id == '4' ? true : false);
-                $pdf->Cell(35, 5, 'No_aplica');
+                $pdf->Cell(35, 5, 'No aplica');
                 $pdf->Ln(13);
             }
         }
@@ -436,39 +437,58 @@ class formularioSupervisionController extends Controller
         $pdf->Rect(10, 10, $anchoPagina - 20, $alturaPagina - 25);
         $pdf->SetMargins(10, 10, 10, 10);
 
-        $pdf->SetX(15);
-        $pdf->Cell(95, 1, 'Nombre y firma supervisor encargado:', 0, 0, 'L');
+        $texto_encargado = preg_replace('/:/', ':<br>', 'Nombre y firma supervisor encargado:' . $texto_encargado);
+        $texto_contactada = preg_replace('/:/', ':<br>',  'Nombre y firma persona contactada:' . $texto_contactada);
 
-        $pdf->SetX(92);
-        $pdf->Cell(95, 1, 'Nombre y firma persona contactada:', 0, 1, 'C');
+        $html = '<style>
+                        .sin-margen {
+                            border-collapse: collapse;
+                        }
+                        .sin-margen td {
+                            border: none;
+                            padding: 5px;
+                        }
+                        .centrado {
+                            margin: 0 auto;
+                            text-align: center;
+                            vertical-align: middle;
+                            height: 100vh;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                        }
+                    </style>
+                    <div class="centrado">
+                        <table class="sin-margen">
+                            <tr>
+                                <td width="50%">' . $texto_encargado . '</td>
+                                <td width="50%">' . $texto_contactada . '</td>
+                            </tr>
+                        </table>
+                    </div>';
 
-        $pdf->SetX(15);
-        $pdf->Cell(60, 1, $texto_encargado, 0, 0, 'L');
+        $pdf->writeHTML($html, true, false, true, false, '');
 
-        if (strlen($texto_contactada) < 19) {
-            $pdf->SetX(90);
-            $pdf->Cell(65, 1, $texto_contactada, 0, 1, 'C');
-        } else {
-            $pdf->SetX(94);
-            $pdf->Cell(65, 1, $texto_contactada, 0, 1, 'C');
+        // $pdfPath = storage_path('app/temp.pdf');
+        // $pdf->Output($pdfPath, 'F');
+
+        if ($correo_cliente == null) {
+            $pdf->Output('I');
         }
 
-        $pdfPath = storage_path('app/temp.pdf');
-        $pdf->Output($pdfPath, 'F');
+        // $correo = null;
+        // $correo['subject'] =  $texto_asunto;
+        // $correo['body'] = 'Cordial saludo, envío informe visita de supervision, quedamos atentos a sus comentarios, muchas gracias.';
+        // $correo['formulario_supervision'] = $pdfPath;
+        // // $correo['to'] = $correo_cliente;
+        // $correo['to'] = 'andres.duque01@gmail.com';
+        // $correo['cc'] = '';
+        // $correo['cco'] = '';
 
-        $correo = null;
-        $correo['subject'] =  $texto_asunto;
-        $correo['body'] = 'Cordial saludo, envío informe visita de supervision, quedamos atentos a sus comentarios, muchas gracias.';
-        $correo['formulario_supervision'] = $pdfPath;
-        // $correo['to'] = $correo_cliente;
-        $correo['to'] = 'andres.duque01@gmail.com';
-        $correo['cc'] = '';
-        $correo['cco'] = '';
-
-        $EnvioCorreoController = new EnvioCorreoController();
-        $request = Request::createFromBase(new Request($correo));
-        $result = $EnvioCorreoController->sendEmail($request);
-        return $result;
+        // $EnvioCorreoController = new EnvioCorreoController();
+        // $request = Request::createFromBase(new Request($correo));
+        // $result = $EnvioCorreoController->sendEmail($request);
+        // return $result;
     }
 
     /**
@@ -557,14 +577,16 @@ class formularioSupervisionController extends Controller
                 }
             }
             DB::commit();
-            $correo = CorreoClienteFormularioSup::where('cod_cli', '=', $request->cliente)
-                ->select('email_fe')
-                ->first();
+            //Descomentar las lineas comentadas para activar la función de envío de correo
+            // $correo = CorreoClienteFormularioSup::where('cod_cli', '=', $request->cliente)
+            //     ->select('email_fe')
+            //     ->first();
+            return response()->json(['status' => 'success', 'message' => 'Formulario guardado con exito.']); // si se activa la función de envío de correo quitar esta liena
             // if (str_contains(strtolower($correo), 'aplica')) {
             //     return response()->json(['status'=>'error','message'=>'El cliente no cuenta con un correo electrónico registrado, por tal motivo no puede ser notificado.']);
             // }else{
-            $result = $this->crearPdf($formulario->id, $correo->email_fe);
-            return $result;
+            // $result = $this->crearPdf($formulario->id, $correo->email_fe);
+            // return $result;
             // }
         } catch (\Exception $e) {
             //throw $th;
