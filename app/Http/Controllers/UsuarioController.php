@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class UsuarioController extends Controller
 {
@@ -55,6 +56,8 @@ class UsuarioController extends Controller
     public function userslist()
     {
         $result = user::select(
+           'id',
+            DB::raw("CONCAT(nombres,' ',apellidos)  AS nombre"),
             'email'
         )
             ->get();
@@ -210,15 +213,15 @@ class UsuarioController extends Controller
         $user = user::find($request->id_user);
 
         $archivos = $request->files->all();
-        
-        if ($user->imagen_firma_1 != null && count($archivos)>0) {
+
+        if ($user->imagen_firma_1 != null && count($archivos) > 0) {
             $rutaArchivo1 = base_path('public') . $user->imagen_firma_1;
             if (file_exists($rutaArchivo1)) {
                 unlink($rutaArchivo1);
             }
         }
 
-        if ($user->imagen_firma_2 != null && count($archivos)>1) {
+        if ($user->imagen_firma_2 != null && count($archivos) > 1) {
             $rutaArchivo2 = base_path('public') . $user->imagen_firma_2;
             if (file_exists($rutaArchivo2)) {
                 unlink($rutaArchivo2);
