@@ -604,23 +604,21 @@ Route::group([
   Route::post('/ordenserviciobonificacion/{id}', [OrdenServicioBonificacionController::class, 'update']);
   Route::delete('/ordenserviciobonificacion/{id}', [OrdenServicioBonificacionController::class, 'destroy']);
   
-
-  // OservicioCargoController
-// OservicioHojaVidaController
-// OservicioClienteController
-  // OrdenServicioBonificacionController
+  // ordenserviciocliente
   Route::get('/ordenserviciocliente', [OservicioClienteController::class, 'index']);
+  Route::get('/ordenservicioclientetabla/{cantidad}', [OservicioClienteController::class, 'tabla']);
+  Route::get('/ordenserviciocliente/{id}', [OservicioClienteController::class, 'getClienteCompleto']);
   Route::post('/ordenserviciocliente', [OservicioClienteController::class, 'create']);
   Route::put('/ordenserviciocliente/{id}', [OservicioClienteController::class, 'update']);
   Route::delete('/ordenserviciocliente/{id}', [OservicioClienteController::class, 'destroy']);
   
-  // OrdenServicioBonificacionController
+  // ordenserviciocargo
   Route::get('/ordenserviciocargo', [OservicioCargoController::class, 'index']);
   Route::post('/ordenserviciocargo/{id}', [OservicioCargoController::class, 'create']);
   Route::put('/ordenserviciocargo/{id}', [OservicioCargoController::class, 'update']);
   Route::delete('/ordenserviciocargo/{id}', [OservicioCargoController::class, 'destroy']);
   
-  // OrdenServicioBonificacionController
+  // ordenserviciohojavida
   Route::get('/ordenserviciohojavida', [OservicioHojaVidaController::class, 'index']);
   Route::post('/ordenserviciohojavida/{id}', [OservicioHojaVidaController::class, 'create']);
   Route::put('/ordenserviciohojavida/{id}', [OservicioHojaVidaController::class, 'update']);

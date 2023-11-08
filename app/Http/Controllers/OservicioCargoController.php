@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\OservicioCargo;
-use App\Models\OservicioCliente;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -29,8 +28,12 @@ class OservicioCargoController extends Controller
      */
     public function create(Request $request, $id)
     {
-        $cliente = new OservicioClienteController;
-        $cliente_id = $cliente->getIdCliente($id);
+        try {
+            $cliente = new OservicioClienteController;
+            $cliente_id = $cliente->getIdCliente($id);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Cliente no registrado']);
+        }
         DB::beginTransaction();
         $cargos = $request->all();
         foreach ($cargos as $item) {
@@ -47,6 +50,7 @@ class OservicioCargoController extends Controller
                 $result->save();
             } catch (\Exception $e) {
                 DB::rollback();
+                return $e;
                 return response()->json(['status' => 'success', 'message' => 'Error al guardar registro']);
             }
         }
@@ -96,18 +100,44 @@ class OservicioCargoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $result = OservicioCargo::find($id);
-        $result->cliente_id = $request->cliente_id;
-        $result->nombre = $request->nombre;
-        $result->cantidad_vacantes = $request->cantidad_vacantes;
-        $result->salario = $request->salario;
-        $result->fecha_inicio = $request->fecha_inicio;
-        $result->fecha_solicitud = $request->fecha_solicitud;
-        $result->observaciones = $request->observaciones;
-        if ($result->save()) {
-            return response()->json(['status' => 'success', 'message' => 'Registro actualizado de manera exitosa']);
-        } else {
-            return response()->json(['status' => 'success', 'message' => 'Error al actualizar registro']);
+        try {
+            $cliente = new OservicioClienteController;
+            $cliente_id = $cliente->getIdCliente($id);
+            $nombre_cargos = OservicioCargo::select(
+                'nombre'
+            )
+                ->where('cliente_id', $cliente_id)
+                ->get();
+            $cargos = $request->all();
+            $existe_cargo = false;
+            foreach ($cargos as $cargo) {
+                foreach ($nombre_cargos as $nombre_cargo) {
+                    if ($cargo['nombre'] == $nombre_cargo->nombre) {
+                        $existe_cargo = true;
+                    }
+                }
+                if (!$existe_cargo) {
+                    $result = new OservicioCargo;
+                    $result->cliente_id = $cliente_id;
+                    $result->nombre = $cargo['nombre'];
+                    $result->cantidad_vacantes = $cargo['cantidad_personas'];
+                    $result->salario = $cargo['salario'];
+                    $result->fecha_inicio = $cargo['fecha_inicio'];
+                    $result->fecha_solicitud = Carbon::createFromFormat('Y-m-d\TH:i', $cargo['fecha_solicitud'], 'America/Bogota');
+                    $result->observaciones = $cargo['observaciones'];
+                    $result->ciudad_id = $cargo['ciudad_id'];
+                    $result->save();
+                }
+                $existe_cargo = false;
+            }
+            if ($existe_cargo) {
+                return response()->json(['status' => 'error', 'message' => 'Los cargos insertados ya están registrados']);
+            } else {
+                return response()->json(['status' => 'success', 'message' => 'Los cargos fueron registrados de manera exitosa']);
+            }
+        } catch (\Exception $e) {
+            return $e;
+            return response()->json(['status' => 'error', 'message' => 'Error al guardar los cargos']);
         }
     }
 

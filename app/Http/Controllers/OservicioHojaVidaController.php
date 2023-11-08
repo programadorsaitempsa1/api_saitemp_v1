@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\cliente;
 use Illuminate\Http\Request;
 use App\Models\OservicioHojaVida;
-use App\Models\OservicioCliente;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Mockery\Undefined;
 
 class OservicioHojaVidaController extends Controller
 {
@@ -31,19 +31,25 @@ class OservicioHojaVidaController extends Controller
     public function create(Request $request, $id)
     {
         $cliente = new OservicioClienteController;
-        $cliente_id = $cliente->getIdCliente($id);
+        try {
+            $cliente_id = $cliente->getIdCliente($id);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Cliente no registrado']);
+        }
         DB::beginTransaction();
         $hojas_vida = $request->all();
         try {
             $cargo = null;
+            $registros = 0;
             foreach ($hojas_vida['cargo'] as $items) {
                 foreach ($items as $item) {
 
                     $result = new OservicioHojaVida;
                     if (is_string($item)) {
                         $cargo = $item;
-                    } else {
+                    } elseif ($item != null) {
 
+                        $registros++;
                         $result->nombre_cargo = $cargo;
                         $result->cliente_id = $cliente_id;
                         $result->fecha_hora_envio = Carbon::now();
@@ -51,7 +57,7 @@ class OservicioHojaVidaController extends Controller
                         $nombreArchivoOriginal = $item->getClientOriginalName();
                         $nuevoNombre = Carbon::now()->timestamp . "_" . $nombreArchivoOriginal;
 
-                        $carpetaDestino = './upload/hojas_vida/' . $id;
+                        $carpetaDestino = './upload/hojas_vida/' . $id.'/';
                         $item->move($carpetaDestino, $nuevoNombre);
                         $item->ruta_documento = ltrim($carpetaDestino, '.') . $nuevoNombre;
                         $result->ruta_documento = $item->ruta_documento;
@@ -61,10 +67,13 @@ class OservicioHojaVidaController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['status' => 'success', 'message' => 'Error al guardar registro']);
+            return response()->json(['status' => 'success', 'message' => 'Error al enviar hojas de vida']);
+        }
+        if ($registros == 0) {
+            return response()->json(['status' => 'error', 'message' => 'No se adjuntaron hojas de vida']);
         }
         DB::commit();
-        return response()->json(['status' => 'success', 'message' => 'Registro guardado de manera exitosa']);
+        return response()->json(['status' => 'success', 'message' => 'Hojas de vida enviadas de manera exitosa']);
     }
 
     /**
