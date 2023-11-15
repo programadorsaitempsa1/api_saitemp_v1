@@ -57,7 +57,6 @@ class OservicioClienteController extends Controller
                 'usr_app_oservicio_clientes.celular_solicitante',
                 'usr_app_oservicio_clientes.correo_solicitante',
                 'usr_app_oservicio_clientes.usuario_id',
-                // DB::raw("CONCAT(user.nombres,'-',user.apellidos)  AS nombre_usuario"),
                 'user.nombres',
                 'user.apellidos',
             )
@@ -65,6 +64,7 @@ class OservicioClienteController extends Controller
             ->first();
         $cargos = OservicioCargo::join('usr_app_municipios as mun', 'mun.id', 'usr_app_oservicio_cargos.ciudad_id')
             ->join('usr_app_departamentos as dep', 'dep.id', 'mun.departamento_id')
+            ->join('usr_app_oservicio_estado_cargo as estcargo', 'estcargo.id', 'usr_app_oservicio_cargos.estado_cargo_id')
             ->select(
                 'usr_app_oservicio_cargos.id',
                 'usr_app_oservicio_cargos.nombre',
@@ -74,32 +74,25 @@ class OservicioClienteController extends Controller
                 'usr_app_oservicio_cargos.fecha_solicitud',
                 'usr_app_oservicio_cargos.observaciones',
                 'usr_app_oservicio_cargos.ciudad_id',
+                'usr_app_oservicio_cargos.vacantes_ocupadas',
                 'mun.nombre as municipio',
                 'dep.nombre as departamento',
                 'dep.id as departamento_id',
+                'estcargo.nombre as estado_cargo',
+                'usr_app_oservicio_cargos.estado_cargo_id as estado_cargo_id',
+                'usr_app_oservicio_cargos.motivo_cancelacion'
             )
             ->where('usr_app_oservicio_cargos.cliente_id', $id)
             ->get();
         $result['cargos'] = $cargos;
-        // $hojas_vida = OservicioHojaVida::select(
-        //     'id',
-        //     'nombre_cargo',
-        //     'cliente_id',
-        //     'fecha_hora_envio',
-        //     'ruta_documento',
-        // )
-        //     ->where('cliente_id', $id)
-        //     ->groupBy('nombre_cargo')
-        //     ->get();
-        //     $result['hojas_vida'] = $hojas_vida;
-        // use Illuminate\Support\Facades\DB;
 
         $hojas_vida = OservicioHojaVida::select(
             'nombre_cargo',
             'id',
             'cliente_id',
             'fecha_hora_envio',
-            'ruta_documento'
+            'ruta_documento',
+            'datos_solicitante'
         )
             ->where('cliente_id', $id)
             ->get();
@@ -115,6 +108,7 @@ class OservicioClienteController extends Controller
                         'cliente_id' => $item->cliente_id,
                         'fecha_hora_envio' => $item->fecha_hora_envio,
                         'ruta_documento' => $item->ruta_documento,
+                        'datos_solicitante' => $item->datos_solicitante,
                     ];
                 }),
                 'posicion' => $index,
@@ -161,11 +155,12 @@ class OservicioClienteController extends Controller
     public function getIdCliente($id)
     {
         $cliente_id = OservicioCliente::select(
-            'id'
+            'id',
+            DB::raw("CONCAT(nombre_solicitante,' - ',celular_solicitante,' - ',correo_solicitante)  AS datos_solicitante")
         )
             ->where('nit_ndocumento', '=', $id)
             ->first();
-        return $cliente_id->id;
+        return $cliente_id;
     }
 
     /**
@@ -215,8 +210,8 @@ class OservicioClienteController extends Controller
         $result->nombre_razon_social = $request->nombre_razon_social;
         $result->nombre_solicitante = $request->nombre_solicitante;
         $result->celular_solicitante = $request->celular_solicitante;
-        $result->correo_solicitant = $request->correo_solicitant;
-        $result->usuario_id = $request->usuario_id;
+        $result->correo_solicitante = $request->correo_solicitante;
+        $result->usuario_id = $request->usuario_id == '' ? auth()->user()->id : $request->usuario_id;
         if ($result->save()) {
             return response()->json(['status' => 'success', 'message' => 'Registro actualizado de manera exitosa']);
         } else {

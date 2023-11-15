@@ -10,18 +10,19 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 use App\Models\PhishingGoogle;
 
 use App\Events\EventoPrueba;
-
-
-
+use Mockery\Undefined;
 
 class EnvioCorreoController extends Controller
 {
     public function sendEmail(Request $request)
     {
+
+        // return $request['orden_servicio'];
         $user = auth()->user();
 
         $nombreArchivo1 = pathinfo($user->imagen_firma_1, PATHINFO_BASENAME);
@@ -34,9 +35,13 @@ class EnvioCorreoController extends Controller
         $cc = explode(',', $request->cc);
         $cco = explode(',', $request->cco);
 
-
-
         $archivos = $request->files->all();
+        $archivos = [];
+        foreach ($request['orden_servicio'] as $value) {
+            array_push($archivos,public_path($value->ruta_documento));
+            // return public_path($value->ruta_documento);
+        }
+        // return $archivos;
 
         if ($user->usuario == '' || $user->usuario == null) {
             return response()->json(['status' => 'error', 'message' => 'El usuario actual no cuenta con correo electrónico configurado']);
@@ -95,6 +100,7 @@ class EnvioCorreoController extends Controller
                 $email->addBcc($ccos);
             }
         }
+        
 
         foreach ($archivos as $archivo) {
 

@@ -95,6 +95,8 @@ use App\Http\Controllers\OrdenServicioBonificacionController;
 use App\Http\Controllers\OservicioCargoController;
 use App\Http\Controllers\OservicioHojaVidaController;
 use App\Http\Controllers\OservicioClienteController;
+use App\Http\Controllers\DashBoardSeleccionController;
+use App\Http\Controllers\OservicioEstadoCargoController;
 
 
 /*
@@ -603,7 +605,13 @@ Route::group([
   Route::post('/ordenserviciobonificacion', [OrdenServicioBonificacionController::class, 'create']);
   Route::post('/ordenserviciobonificacion/{id}', [OrdenServicioBonificacionController::class, 'update']);
   Route::delete('/ordenserviciobonificacion/{id}', [OrdenServicioBonificacionController::class, 'destroy']);
-  
+
+  // oservicio estado cargo
+  Route::get('/oservicioestadocargo', [OservicioEstadoCargoController::class, 'index']);
+  Route::post('/oservicioestadocargo', [OservicioEstadoCargoController::class, 'create']);
+  Route::post('/oservicioestadocargo/{id}', [OservicioEstadoCargoController::class, 'update']);
+  Route::delete('/oservicioestadocargo/{id}', [OservicioEstadoCargoController::class, 'destroy']);
+
   // ordenserviciocliente
   Route::get('/ordenserviciocliente', [OservicioClienteController::class, 'index']);
   Route::get('/ordenservicioclientetabla/{cantidad}', [OservicioClienteController::class, 'tabla']);
@@ -611,16 +619,24 @@ Route::group([
   Route::post('/ordenserviciocliente', [OservicioClienteController::class, 'create']);
   Route::put('/ordenserviciocliente/{id}', [OservicioClienteController::class, 'update']);
   Route::delete('/ordenserviciocliente/{id}', [OservicioClienteController::class, 'destroy']);
-  
+
   // ordenserviciocargo
   Route::get('/ordenserviciocargo', [OservicioCargoController::class, 'index']);
+  Route::get('/ordenserviciocargochar/{anio}', [OservicioCargoController::class, 'cargoschar']);
+  Route::get('/vacantesEfectivas/{anio}', [OservicioCargoController::class, 'vacantesEfectivas']);
+  Route::get('/ordenserviciocargocantidadchar/{anio}', [OservicioCargoController::class, 'cargosCantidadchar']);
+  Route::get('/ordenserviciocargocantidadchar2/{anio}', [OservicioCargoController::class, 'cargosCantidadchar2']);
   Route::post('/ordenserviciocargo/{id}', [OservicioCargoController::class, 'create']);
   Route::put('/ordenserviciocargo/{id}', [OservicioCargoController::class, 'update']);
   Route::delete('/ordenserviciocargo/{id}', [OservicioCargoController::class, 'destroy']);
-  
+
   // ordenserviciohojavida
   Route::get('/ordenserviciohojavida', [OservicioHojaVidaController::class, 'index']);
+  Route::get('/ordenserviciohojavidachar/{anio}', [OservicioHojaVidaController::class, 'HojaVidaChar']);
   Route::post('/ordenserviciohojavida/{id}', [OservicioHojaVidaController::class, 'create']);
   Route::put('/ordenserviciohojavida/{id}', [OservicioHojaVidaController::class, 'update']);
   Route::delete('/ordenserviciohojavida/{id}', [OservicioHojaVidaController::class, 'destroy']);
+
+  Route::get('/cargosVacantesHojasVida/{anio}', [DashBoardSeleccionController::class, 'cargosVacantesHojasVida']);
+  Route::get('/cantidadvacantesestado/{anio}', [DashBoardSeleccionController::class, 'cantidadVacantesPorEstado']);
 });

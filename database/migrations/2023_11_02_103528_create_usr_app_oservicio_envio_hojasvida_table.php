@@ -19,6 +19,7 @@ class CreateUsrAppOservicioEnvioHojasvidaTable extends Migration
             $table->string('nombre_cargo');
             $table->string('fecha_hora_envio');
             $table->string('ruta_documento');
+            $table->longText('datos_solicitante');
             $table->foreign('cliente_id')->references('id')->on('usr_app_oservicio_clientes')->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
         });

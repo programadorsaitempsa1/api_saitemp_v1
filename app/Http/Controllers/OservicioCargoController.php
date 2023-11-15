@@ -20,6 +20,98 @@ class OservicioCargoController extends Controller
             ->get();
         return response()->json($result);
     }
+    public function cargoschar($anio)
+    {
+        $registrosPorMes = DB::table('usr_app_oservicio_cargos')
+            ->select(DB::raw('MONTH(FORMAT(created_at, \'yyyy-MM-dd\')) as mes'), DB::raw('COUNT(*) as total'))
+            ->whereYear('created_at', $anio)
+            ->groupBy(DB::raw('MONTH(FORMAT(created_at, \'yyyy-MM-dd\'))'))
+            ->pluck('total', 'mes')
+            ->all();
+
+        // Inicializar un array con 12 posiciones, todas con valor 0
+        $registrosPorMesArray = array_fill(1, 12, 0);
+
+        // Actualizar las posiciones del array con los valores obtenidos de la consulta
+        foreach ($registrosPorMes as $mes => $cantidad) {
+            $registrosPorMesArray[$mes] = $cantidad;
+        }
+        return response()->json($registrosPorMesArray);
+    }
+
+    public function cargosCantidadchar($anio)
+    {
+        $registrosPorMes = DB::table('usr_app_oservicio_cargos')
+            ->select(DB::raw('MONTH(FORMAT(created_at, \'yyyy-MM-dd\')) as mes'), DB::raw('SUM(TRY_CAST(cantidad_vacantes AS INT)) AS total'))
+            ->whereYear('created_at', $anio)
+            ->groupBy(DB::raw('MONTH(FORMAT(created_at, \'yyyy-MM-dd\'))'))
+            ->pluck('total', 'mes')
+            ->all();
+
+        // Inicializar un array con 12 posiciones, todas con valor 0
+        $registrosPorMesArray = array_fill(1, 12, 0);
+
+        // Actualizar las posiciones del array con los valores obtenidos de la consulta
+        foreach ($registrosPorMes as $mes => $cantidad) {
+            $registrosPorMesArray[$mes] = $cantidad;
+        }
+        return response()->json($registrosPorMesArray);
+    }
+
+    public function cargosCantidadchar2($anio)
+    {
+        $cargos_cantidad = OservicioCargo::select(
+            'nombre',
+            'cantidad_vacantes'
+        )
+            ->get();
+
+        $cargos = [];
+        foreach ($cargos_cantidad as $cargo) {
+            // Si el cargo ya existe en el array, suma la cantidad, de lo contrario, crea una nueva entrada.
+            if (array_key_exists($cargo->nombre, $cargos)) {
+                $cargos[$cargo->nombre] += $cargo->cantidad_vacantes;
+            } else {
+                $cargos[$cargo->nombre] = $cargo->cantidad_vacantes;
+            }
+        }
+
+        // Convierte el array asociativo en dos arrays separados para los nombres de los cargos y las cantidades.
+        $nombresCargos = array_keys($cargos);
+        $cantidades = array_values($cargos);
+
+        $resultado = [
+            'cargos' => $nombresCargos,
+            'cantidad' => $cantidades
+        ];
+
+        return response()->json($resultado);
+    }
+
+    public function vacantesEfectivas($anio)
+    {
+        // Inicializar un array con ceros para cada mes
+        $resultado = array_fill(1, 12, 0);
+
+        // Obtener los datos de la base de datos
+        $consulta = DB::table('usr_app_oservicio_cargos')
+            ->select(DB::raw('MONTH(created_at) as mes'), DB::raw('SUM(CASE WHEN estado_cargo_id = 3 THEN vacantes_ocupadas ELSE 0 END) as total_vacantes_finalizadas'))
+            ->whereYear('created_at', $anio)
+            ->groupBy(DB::raw('MONTH(created_at)'))
+            ->get();
+
+        // Actualizar el array con los resultados de la consulta
+        foreach ($consulta as $fila) {
+            $mes = $fila->mes;
+            $totalVacantesFinalizadas = $fila->total_vacantes_finalizadas;
+            // Asignar el total de vacantes finalizadas al mes correspondiente
+            $resultado[$mes] = $totalVacantesFinalizadas;
+        }
+
+        return $resultado;
+    }
+
+
 
     /**
      * Show the form for creating a new resource.
@@ -29,6 +121,7 @@ class OservicioCargoController extends Controller
     public function create(Request $request, $id)
     {
         try {
+            $usuario_id = auth()->user()->id;
             $cliente = new OservicioClienteController;
             $cliente_id = $cliente->getIdCliente($id);
         } catch (\Exception $e) {
@@ -39,14 +132,18 @@ class OservicioCargoController extends Controller
         foreach ($cargos as $item) {
             try {
                 $result = new OservicioCargo;
-                $result->cliente_id = $cliente_id;
+                $result->cliente_id = $cliente_id->id;
                 $result->nombre = $item['nombre'];
                 $result->cantidad_vacantes = $item['cantidad_personas'];
                 $result->salario = $item['salario'];
                 $result->fecha_inicio = $item['fecha_inicio'];
-                $result->fecha_solicitud = Carbon::createFromFormat('Y-m-d\TH:i', $item['fecha_solicitud'], 'America/Bogota');
+                $result->fecha_solicitud = Carbon::createFromFormat('Y-d-m\TH:i', $item['fecha_solicitud'], 'America/Bogota');
                 $result->observaciones = $item['observaciones'];
                 $result->ciudad_id = $item['ciudad_id'];
+                $result->estado_cargo_id = $item['estado_cargo_id'] == '' ? 1 : $item['estado_cargo_id'];
+                $result->motivo_cancelacion = $item['observaciones'];
+                // $result->estado_cargo_id = $item['vacanates_ocupadas'] == '' ? '0' : $item['estado_cargo_id'];
+                $result->usuario_id = $usuario_id;
                 $result->save();
             } catch (\Exception $e) {
                 DB::rollback();
@@ -101,31 +198,77 @@ class OservicioCargoController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $usuario_id = auth()->user()->id;
             $cliente = new OservicioClienteController;
             $cliente_id = $cliente->getIdCliente($id);
             $nombre_cargos = OservicioCargo::select(
                 'nombre'
             )
-                ->where('cliente_id', $cliente_id)
+                ->where('cliente_id', $cliente_id->id)
                 ->get();
             $cargos = $request->all();
             $existe_cargo = false;
             foreach ($cargos as $cargo) {
                 foreach ($nombre_cargos as $nombre_cargo) {
-                    if ($cargo['nombre'] == $nombre_cargo->nombre) {
+                    if ($cargo['id'] != '' && $cargo['id'] != null) {
+                        // if ($cargo['nombre'] == $nombre_cargo->nombre) {
                         $existe_cargo = true;
+                        $vacantes_ocupadas = '0';
+                        if ($cargo['estado_cargo_id'] == '3') {
+                            // return $cargo['estado_cargo_id'];
+                            $vacantes_ocupadas =  $cargo['vacantes_ocupadas'];
+                        }
+                        if ($cargo['estado_cargo_id'] == 1 || $cargo['estado_cargo_id'] == 3) {
+                            //Se puede eliminar para que no actualicen la información
+
+                            OservicioCargo::where('id', $cargo['id'])
+                                ->update([
+                                    'nombre' => $cargo['nombre'],
+                                    'estado_cargo_id' => $cargo['estado_cargo_id'],
+                                    'cantidad_vacantes' => $cargo['cantidad_personas'],
+                                    'ciudad_id' => $cargo['ciudad_id'],
+                                    'fecha_inicio' => $cargo['fecha_inicio'],
+                                    'fecha_solicitud' => Carbon::createFromFormat('Y-d-m\TH:i', $cargo['fecha_solicitud'], 'America/Bogota'),
+                                    'nombre' => $cargo['nombre'],
+                                    'observaciones' => $cargo['observaciones'],
+                                    'salario' => $cargo['salario'],
+                                ]);
+                        }
+                        try {
+                            OservicioCargo::where('nombre', $cargo['nombre'])
+                                ->update([
+                                    'estado_cargo_id' => $cargo['estado_cargo_id'],
+                                    'motivo_cancelacion' => $cargo['motivo_cancelacion']
+                                ]);
+                        } catch (\Exception $e) {
+                            //throw $th;
+                        }
+                        try {
+                            OservicioCargo::where('nombre', $cargo['nombre'])
+                                ->update([
+                                    'estado_cargo_id' => $cargo['estado_cargo_id'],
+                                    'vacantes_ocupadas' => $vacantes_ocupadas,
+                                    // 'vacantes_ocupadas' => $cargo['vacantes_ocupadas'],
+                                ]);
+                        } catch (\Exception $e) {
+                            //throw $th;
+                        }
                     }
                 }
                 if (!$existe_cargo) {
                     $result = new OservicioCargo;
-                    $result->cliente_id = $cliente_id;
+                    $result->cliente_id = $cliente_id->id;
                     $result->nombre = $cargo['nombre'];
                     $result->cantidad_vacantes = $cargo['cantidad_personas'];
                     $result->salario = $cargo['salario'];
                     $result->fecha_inicio = $cargo['fecha_inicio'];
-                    $result->fecha_solicitud = Carbon::createFromFormat('Y-m-d\TH:i', $cargo['fecha_solicitud'], 'America/Bogota');
+                    $result->fecha_solicitud = Carbon::createFromFormat('Y-d-m\TH:i', $cargo['fecha_solicitud'], 'America/Bogota');
                     $result->observaciones = $cargo['observaciones'];
                     $result->ciudad_id = $cargo['ciudad_id'];
+                    $result->estado_cargo_id = $cargo['estado_cargo_id'] == '' ? 1 : $cargo['estado_cargo_id'];
+                    $result->motivo_cancelacion = $cargo['observaciones'];
+                    // $result->vacantes_ocupadas = $cargo['vacanates_ocupadas'] == '' ? '0' : $cargo['vacanates_ocupadas'];
+                    $result->usuario_id = $usuario_id;
                     $result->save();
                 }
                 $existe_cargo = false;
