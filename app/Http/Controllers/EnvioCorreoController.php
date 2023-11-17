@@ -36,12 +36,18 @@ class EnvioCorreoController extends Controller
         $cco = explode(',', $request->cco);
 
         $archivos = $request->files->all();
-        $archivos = [];
-        foreach ($request['orden_servicio'] as $value) {
-            array_push($archivos,public_path($value->ruta_documento));
-            // return public_path($value->ruta_documento);
-        }
-        // return $archivos;
+
+
+        //Adjuntar pdf desde algun componente en vuejs
+        // $nombre_archivo = [];
+        // $ruta_archivo = [];
+        // foreach ($request['orden_servicio'] as $value) {
+        //     array_push($archivos,$value->ruta_documento);
+        //     return public_path($value->ruta_documento);
+        //     array_push($ruta_archivo, public_path($value->ruta_documento));    // $ruta_archivo = public_path($value->ruta_documento);
+        //     array_push($nombre_archivo, $value->ruta_documento);     //$ruta_archivo = $nombre_archivo  = $value->ruta_documento;
+
+        // }
 
         if ($user->usuario == '' || $user->usuario == null) {
             return response()->json(['status' => 'error', 'message' => 'El usuario actual no cuenta con correo electrónico configurado']);
@@ -100,7 +106,6 @@ class EnvioCorreoController extends Controller
                 $email->addBcc($ccos);
             }
         }
-        
 
         foreach ($archivos as $archivo) {
 

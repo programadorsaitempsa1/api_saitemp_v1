@@ -24,6 +24,8 @@ class CreateUsrAppFormularioSupervisionTable extends Migration
             $table->longText('descripcion');
             $table->string('firma_supervisor');
             $table->string('firma_persona_contactada');
+            $table->string('latitud');
+            $table->string('longitud');
             $table->timestamps();
         });
     }

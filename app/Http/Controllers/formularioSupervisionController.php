@@ -65,6 +65,8 @@ class formularioSupervisionController extends Controller
                 'usr_app_formulario_supervision.persona_contactada',
                 'usr_app_formulario_supervision.direccion',
                 'usr_app_formulario_supervision.municipio',
+                'usr_app_formulario_supervision.latitud',
+                'usr_app_formulario_supervision.longitud',
                 'usr_app_formulario_supervision.firma_supervisor',
                 'usr_app_formulario_supervision.firma_persona_contactada',
                 'cxc_cliente.cod_cli',
@@ -345,7 +347,7 @@ class formularioSupervisionController extends Controller
                 $pdf->SetX(165);
                 $pdf->RadioButton($lista_conceptos[$i]->nombre, 5, array('checked' => false, 'readonly' => true), array(), 'No_aplica', $formulario->conceptos[$i]->estado_concepto_id == '4' ? true : false);
                 $pdf->Cell(35, 5, 'No aplica');
-                $pdf->Ln(13);
+                $pdf->Ln(14);
             }
         }
 
@@ -398,16 +400,14 @@ class formularioSupervisionController extends Controller
 
         $html = '<table cellpadding="5" cellspacing="0" border="0.5">';
         $html .= '<tr>';
-        $html .= '<td style="margin-top: 0 !important; text-align: center; font-size: 12px;">Observaciones</td>';
+        $html .= '<td style="text-align: center; font-size: 16px;" colspan="2"><strong style="font-size: 12px;">Observaciones</strong></td>';
         $html .= '</tr>';
         foreach ($formulario->observaciones as $imagen) {
             $html .= '<tr>';
-            $html .= '<td style="text-align: center;">';
-            $html .= '<img src="' . public_path($imagen->imagen_observacion) . '" width="300" /><br>';
+            $html .= '<td style="text-align: left; width: 37%;">';
+            $html .= '<img src="' . public_path($imagen->imagen_observacion) . '" width="200px" /><br>';
             $html .= '</td>';
-            $html .= '</tr>';
-            $html .= '<tr>';
-            $html .= '<td colspan="2">Observacion: ' . $imagen->observacion . '</td>';
+            $html .= '<td style="text-align: left; font-size: 14px; width: 63%; padding: 10%;">Observación: ' . $imagen->observacion . '</td>';
             $html .= '</tr>';
         }
 
@@ -417,15 +417,23 @@ class formularioSupervisionController extends Controller
 
         $pdf->writeHTML($html, true, false, true, false, '');
 
+        
+        $anchoPagina = $pdf->getPageWidth();
+        $alturaPagina = $pdf->getPageHeight();
+        $pdf->Rect(10, 10, $anchoPagina - 20, $alturaPagina - 25);
+        $pdf->SetMargins(10, 10, 10, 10);
+
         $pdf->Ln(3);
 
-        $html = '<table border="0" style="border-collapse: collapse;">';
+        $html = '<table border="0" style="border-collapse: collapse; margin: 0 auto; width: 600px;">';
         $html .= '<tr>';
-        $html .= '<td>';
-        $html .= '<img src="' . public_path($formulario->firma_supervisor) . '" width="120" /><br>';
+        $html .= '<td style="text-align: center; width: 270px; height: 100px;">';
+        $html .= '<img src="' . public_path($formulario->firma_supervisor) . '" width="120" height="120" style="display: block; margin: 0 auto;" /><br>';
+        $html .= 'Nombre y firma supervisor encargado:<br>' . $texto_encargado;
         $html .= '</td>';
-        $html .= '<td>';
-        $html .= '<img src="' . public_path($formulario->firma_persona_contactada) . '" width="120" /><br>';
+        $html .= '<td style="text-align: center; width: 270px; height: 100px;">';
+        $html .= '<img src="' . public_path($formulario->firma_persona_contactada) . '" width="120" height="120" style="display: block; margin: 0 auto;" /><br>';
+        $html .= 'Nombre y firma persona contactada:<br>' . $texto_contactada;
         $html .= '</td>';
         $html .= '</tr>';
         $html .= '</table>';
@@ -436,38 +444,6 @@ class formularioSupervisionController extends Controller
         $alturaPagina = $pdf->getPageHeight();
         $pdf->Rect(10, 10, $anchoPagina - 20, $alturaPagina - 25);
         $pdf->SetMargins(10, 10, 10, 10);
-
-        $texto_encargado = preg_replace('/:/', ':<br>', 'Nombre y firma supervisor encargado:' . $texto_encargado);
-        $texto_contactada = preg_replace('/:/', ':<br>',  'Nombre y firma persona contactada:' . $texto_contactada);
-
-        $html = '<style>
-                        .sin-margen {
-                            border-collapse: collapse;
-                        }
-                        .sin-margen td {
-                            border: none;
-                            padding: 5px;
-                        }
-                        .centrado {
-                            margin: 0 auto;
-                            text-align: center;
-                            vertical-align: middle;
-                            height: 100vh;
-                            display: flex;
-                            flex-direction: column;
-                            justify-content: center;
-                        }
-                    </style>
-                    <div class="centrado">
-                        <table class="sin-margen">
-                            <tr>
-                                <td width="50%">' . $texto_encargado . '</td>
-                                <td width="50%">' . $texto_contactada . '</td>
-                            </tr>
-                        </table>
-                    </div>';
-
-        $pdf->writeHTML($html, true, false, true, false, '');
 
         // $pdfPath = storage_path('app/temp.pdf');
         // $pdf->Output($pdfPath, 'F');
@@ -498,7 +474,6 @@ class formularioSupervisionController extends Controller
      */
     public function create(Request $request)
     {
-
         // return explode('*',$request->concepto_estado_epp[0])[2];
 
         DB::beginTransaction();
@@ -513,6 +488,8 @@ class formularioSupervisionController extends Controller
             $formulario->firma_supervisor = $request->firma_supervisor;
             $formulario->firma_persona_contactada = $request->firma_persona_contactada;
             $formulario->cliente_id = $request->cliente;
+            $formulario->latitud = $request->latitud;
+            $formulario->longitud = $request->longitud;
 
             if ($request->hasFile('firma_supervisor')) {
 

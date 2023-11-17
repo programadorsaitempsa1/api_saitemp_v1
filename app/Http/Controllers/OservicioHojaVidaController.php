@@ -129,7 +129,7 @@ class OservicioHojaVidaController extends Controller
             DB::rollback();
             return response()->json(['status' => 'success', 'message' => 'Error al enviar hojas de vida']);
         }
-        return $this->envioHojaVida($hojas_vida, $archivos);
+        // return $this->envioHojaVida($hojas_vida, $archivos);
         if ($registros == 0) {
             return response()->json(['status' => 'error', 'message' => 'No se adjuntaron hojas de vida']);
         }
