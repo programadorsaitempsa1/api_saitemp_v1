@@ -16,7 +16,7 @@ class ClientesAlInstanteController extends Controller
      */
     public function index()
     {
-        // event(new EventoPrueba('Prueba de evento'));
+        event(new EventoPrueba('Listando empresas'));
         $result = DB::connection('second_db')->table('cxc_cliente')->select(
             'cod_cli as codigo',
             'nom_cli as nombre'

@@ -12,9 +12,43 @@ class PermisoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($cantidad)
     {
-        $result = Permiso::all();
+        $result = Permiso::select(
+            'id',
+            'nombre',
+            'descripcion',
+        )
+            ->paginate($cantidad);
+        return response()->json($result);
+    }
+
+    public function byId()
+    {
+        $user = auth()->user();
+
+        $result = Permiso::rightJoin('usr_app_permisos_roles as pr', 'pr.permiso_id', '=', 'usr_app_permisos.id')
+            ->leftJoin('usr_app_permisos_usuarios as pu', 'pu.permiso_id', '=', 'usr_app_permisos.id')
+            ->where(function ($query) use ($user) {
+                $query->where('pr.rol_id', '=', $user['rol_id'])
+                    ->orWhere('pu.usuario_id', '=', $user['id']);
+            })
+            ->select(
+                'usr_app_permisos.nombre',
+                'usr_app_permisos.alias'
+            )
+            ->distinct()
+            ->get();
+
+        return response()->json($result);
+    }
+    public function permisoslista()
+    {
+        $result = Permiso::select(
+            'id',
+            'nombre',
+        )
+            ->get();
         return response()->json($result);
     }
 
@@ -29,12 +63,17 @@ class PermisoController extends Controller
             $permiso = new Permiso;
             $permiso->nombre = $request->nombre;
             $permiso->descripcion = $request->descripcion;
+            $permiso->oculto = 0;
             if ($permiso->save()) {
+                Permiso::where('id', $permiso->id)
+                    ->update([
+                        'alias' => 'P' . $permiso->id,
+                    ]);
                 return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
             } else {
                 return response()->json(['status' => 'error', 'message' => 'Error al guardar el registro, por favor intente nuevamente']);
             }
-        } catch (\Exception$e) {
+        } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Este permiso ya se encuentra registrado']);
         }
     }
@@ -83,16 +122,15 @@ class PermisoController extends Controller
     {
         try {
             $permiso = Permiso::find($id);
-            if ($request->input('nombre')) {
-                $permiso->nombre = $request->nombre;
-                $permiso->descripcion = $request->descripcion;
-            }
+            $permiso->nombre = $request->nombre;
+            $permiso->descripcion = $request->descripcion;
+            $permiso->oculto = 0;
             if ($permiso->save()) {
                 return response()->json(['status' => 'success', 'message' => 'Registro actualizado exitosamente']);
             } else {
                 return response()->json(['status' => 'error', 'message' => 'Error al actualizar el registro, por favor intente nuevamente']);
             }
-        } catch (\Exception$e) {
+        } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Este permiso ya se encuentra registrado']);
         }
     }

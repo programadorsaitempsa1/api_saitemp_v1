@@ -97,6 +97,8 @@ use App\Http\Controllers\OservicioHojaVidaController;
 use App\Http\Controllers\OservicioClienteController;
 use App\Http\Controllers\DashBoardSeleccionController;
 use App\Http\Controllers\OservicioEstadoCargoController;
+use App\Http\Controllers\UsuarioPermisoController;
+
 
 
 /*
@@ -298,15 +300,30 @@ Route::group([
 
 
   // Rol permiso
-  Route::get('/rolpermiso', [SigPermisoRolController::class, 'index']);
+  Route::get('/rolpermiso/{cantidad}', [SigPermisoRolController::class, 'index']);
+  Route::get('/filtrorol/{id}/{cantidad}', [SigPermisoRolController::class, 'filtrorol']);
   Route::post('/rolpermiso', [SigPermisoRolController::class, 'create']);
   Route::post('/rolpermiso/{id}', [SigPermisoRolController::class, 'update']);
+  Route::post('/rolpermisoborradomasivo', [SigPermisoRolController::class, 'borradomasivo']);
   Route::delete('/rolpermiso/{id}', [SigPermisoRolController::class, 'destroy']);
   Route::get('/rolespermisos', [RolController::class, 'rolesPermisos']);
 
+  
+  // Usuario permiso
+  Route::get('/usuariopermiso/{cantidad}', [UsuarioPermisoController::class, 'index']);
+  Route::post('/usuariopermiso', [UsuarioPermisoController::class, 'create']);
+  Route::post('/usuariopermiso/{id}', [UsuarioPermisoController::class, 'update']);
+  Route::post('/usuariopermisoborradomasivo', [UsuarioPermisoController::class, 'borradomasivo']);
+  Route::delete('/usuariopermiso/{id}', [UsuarioPermisoController::class, 'destroy']);
+  Route::get('/filtroporusuario/{id}/{cantidad}', [UsuarioPermisoController::class, 'filtroporusuario']);
 
   // Permisos
-  Route::get('/permisos', [PermisoController::class, 'index']);
+  Route::get('/permisos/{cantidad}', [PermisoController::class, 'index']);
+  Route::get('/permisos', [PermisoController::class, 'byId']);
+  Route::get('/permisoslista', [PermisoController::class, 'permisoslista']);
+  Route::post('/permisos', [PermisoController::class, 'create']);
+  Route::post('/permisos/{id}', [PermisoController::class, 'update']);
+  Route::delete('/permisos/{id}', [PermisoController::class, 'destroy']);
 
 
   // Tipo de cliente

@@ -14,9 +14,6 @@ use Illuminate\Support\Facades\Storage;
 
 use App\Models\PhishingGoogle;
 
-use App\Events\EventoPrueba;
-use Mockery\Undefined;
-
 class EnvioCorreoController extends Controller
 {
     public function sendEmail(Request $request)

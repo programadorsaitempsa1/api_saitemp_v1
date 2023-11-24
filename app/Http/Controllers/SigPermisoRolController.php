@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PermisoRol;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SigPermisoRolController extends Controller
 {
@@ -12,11 +13,68 @@ class SigPermisoRolController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($cantidad)
     {
-        // $roles_permisos = roles_permiso::orderBy('id', 'DESC')->paginate(6);
-        $roles_permisos = PermisoRol::all();
-        return response()->json($roles_permisos);
+        $user = auth()->user();
+        if ($user->rol_id == 1) {
+            $roles = PermisoRol::join("usr_app_permisos as per", "per.id", "=", "usr_app_permisos_roles.permiso_id")
+                ->join("usr_app_roles as rol", "rol.id", "=", "usr_app_permisos_roles.rol_id")
+                ->select(
+                    "usr_app_permisos_roles.id",
+                    "rol.nombre as rol",
+                    "per.nombre as permiso",
+                )
+                ->orderby('usr_app_permisos_roles.id', 'DESC')
+                ->paginate($cantidad);
+        } else {
+            $roles = PermisoRol::join("usr_app_permisos as per", "per.id", "=", "usr_app_permisos_roles.permiso_id")
+                ->join("usr_app_roles", "usr_app_roles.id", "=", "usr_app_permisos_roles.rol_id")
+                ->where("usr_app_menus_roles.rol_id", "!=", 1)
+                ->select(
+
+                    "usr_app_permisos_roles.id",
+                    "usr_app_roles.nombre as rol",
+                    "usr_app_permisos.nombre as menu",
+                )
+                ->orderby('usr_app_permisos_roles.id', 'DESC')
+                ->paginate($cantidad);
+        }
+        return response()->json($roles);
+    }
+
+    public function filtrorol($id = null, $cantidad)
+    {
+        $user = auth()->user();
+        if ($user->rol_id == 1) {
+            $roles = PermisoRol::join("usr_app_permisos as per", "per.id", "=", "usr_app_permisos_roles.permiso_id")
+                ->join("usr_app_roles as rol", "rol.id", "=", "usr_app_permisos_roles.rol_id")
+                ->when($id != null, function ($query) use ($id) {
+                    return $query->where('rol.id', '=', $id);
+                })
+                ->select(
+                    "usr_app_permisos_roles.id",
+                    "rol.nombre as rol",
+                    "per.nombre as permiso",
+                )
+                ->orderby('usr_app_permisos_roles.id', 'DESC')
+                ->paginate($cantidad);
+        } else {
+            $roles = PermisoRol::join("usr_app_permisos as per", "per.id", "=", "usr_app_permisos_roles.permiso_id")
+                ->join("usr_app_roles as rol", "usr_app_roles.id", "=", "usr_app_permisos_roles.rol_id")
+                ->when($id != null, function ($query) use ($id) {
+                    return $query->where('usr_app_roles.id', '=', $id);
+                })
+                ->where("usr_app_menus_roles.rol_id", "!=", 1)
+                ->select(
+
+                    "usr_app_permisos_roles.id",
+                    "rol.nombre as rol",
+                    "usr_app_permisos.nombre as menu",
+                )
+                ->orderby('usr_app_permisos_roles.id', 'DESC')
+                ->paginate($cantidad);
+        }
+        return response()->json($roles);
     }
 
     /**
@@ -26,13 +84,22 @@ class SigPermisoRolController extends Controller
      */
     public function create(Request $request)
     {
-        $roles_permisos = new PermisoRol;
-        $roles_permisos->rol_id = $request->rol_id;
-        $roles_permisos->permiso_id = $request->permiso_id;
-
-        if ($roles_permisos->save()) {
+        try {
+            DB::beginTransaction();
+            $permisos = $request->all();
+            foreach ($permisos[0] as  $rol) {
+                foreach ($permisos[1] as  $permiso) {
+                    $permisos_roles = new PermisoRol;
+                    $permisos_roles->rol_id = $rol['id'];
+                    $permisos_roles->permiso_id = $permiso['id'];
+                    $permisos_roles->save();
+                }
+            }
+            DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
-        } else {
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $e;
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el registro, por favor intente nuevamente']);
         }
     }
@@ -87,7 +154,19 @@ class SigPermisoRolController extends Controller
         } else {
             return response()->json(['status' => 'error', 'message' => 'Error al actualizar el registro, por favor intente nuevamente']);
         }
+    }
 
+    public function borradomasivo(Request $request)
+    {
+        try {
+            for ($i = 0; $i < count($request->id); $i++) {
+                $result = PermisoRol::find($request->id[$i]);
+                $result->delete();
+            }
+            return response()->json(['status' => 'success', 'message' => 'Registros eliminados exitosamente']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Error al eliminar el registro, por favor intente nuevamente']);
+        }
     }
 
     /**

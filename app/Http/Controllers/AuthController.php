@@ -33,27 +33,24 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        if ($request->password == '') {
+            return response()->json(['status' => 'error', 'message' => 'Por favor ingrese una contraseña correcta']);
+        }
         if (str_contains($request->email, '@')) {
             $user = explode('@', $request->email)[0];
         } else {
             $user = $request->email;
         }
 
-        // $ldaprdn = "programador1@saitempsa.local";
-        // $ldappass = $request->password; //'Micro123*#1';
-
         $ldapconn = ldap_connect('saitempsa.local');
         ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
 
         try {
             if ($ldapconn) {
-                // return $user.'@saitempsa.local' ;
                 try {
                     $ldapbind = ldap_bind($ldapconn, $user . '@saitempsa.local',  $request->password);
                     if ($ldapbind) {
-
                         ldap_close($ldapconn);
-                        // return 'usuario logueado con exito';
                         $user = User::where('email', $request->email)->first();
 
                         if ($user) {
