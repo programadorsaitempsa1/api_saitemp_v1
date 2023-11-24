@@ -34,7 +34,7 @@ class PermisoController extends Controller
                     ->orWhere('pu.usuario_id', '=', $user['id']);
             })
             ->select(
-                'usr_app_permisos.nombre',
+                // 'usr_app_permisos.nombre',
                 'usr_app_permisos.alias'
             )
             ->distinct()
