@@ -27,6 +27,24 @@ class UsuariosMenusController extends Controller
         return response()->json($result);
     }
 
+    public function filtroporusuario($id, $cantidad)
+    {
+        $result = UsuariosMenus::join('usr_app_usuarios as user', 'user.id', 'usr_app_usuarios_menus.usuario_id')
+            ->join('usr_app_menus', 'usr_app_menus.id', 'usr_app_usuarios_menus.menu_id')
+            // ->when($id != null, function ($query) use ($id) {
+            //     return $query->where('rol.id', '=', $id);
+            // })
+            ->where('user.id', '=', $id)
+            ->select(
+                'usr_app_usuarios_menus.id',
+                'user.nombres',
+                'user.apellidos',
+                'usr_app_menus.nombre as menu',
+            )
+            ->paginate($cantidad);
+        return response()->json($result);
+    }
+
     /**
      * Show the form for creating a new resource.
      *
