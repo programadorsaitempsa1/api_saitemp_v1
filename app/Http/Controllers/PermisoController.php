@@ -26,18 +26,15 @@ class PermisoController extends Controller
     public function byId()
     {
         $user = auth()->user();
-
-        $result = Permiso::rightJoin('usr_app_permisos_roles as pr', 'pr.permiso_id', '=', 'usr_app_permisos.id')
+        $result = Permiso::leftJoin('usr_app_permisos_roles as pr', 'pr.permiso_id', '=', 'usr_app_permisos.id')
             ->leftJoin('usr_app_permisos_usuarios as pu', 'pu.permiso_id', '=', 'usr_app_permisos.id')
             ->where(function ($query) use ($user) {
                 $query->where('pr.rol_id', '=', $user['rol_id'])
                     ->orWhere('pu.usuario_id', '=', $user['id']);
             })
             ->select(
-                // 'usr_app_permisos.nombre',
                 'usr_app_permisos.alias'
             )
-            ->distinct()
             ->get();
 
         return response()->json($result);

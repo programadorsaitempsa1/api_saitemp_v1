@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\UsuarioPermiso;
+use App\Models\UsuariosMenus;
 use Illuminate\Support\Facades\DB;
 
-class UsuarioPermisoController extends Controller
+class UsuariosMenusController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -15,32 +15,13 @@ class UsuarioPermisoController extends Controller
      */
     public function index($cantidad)
     {
-        $result = UsuarioPermiso::join('usr_app_usuarios as user', 'user.id', 'usr_app_permisos_usuarios.usuario_id')
-            ->join('usr_app_permisos as per', 'per.id', 'usr_app_permisos_usuarios.permiso_id')
+        $result = UsuariosMenus::join('usr_app_usuarios as user', 'user.id', 'usr_app_usuarios_menus.usuario_id')
+            ->join('usr_app_menus', 'usr_app_menus.id', 'usr_app_usuarios_menus.menu_id')
             ->select(
-                'usr_app_permisos_usuarios.id',
+                'usr_app_usuarios_menus.id',
                 'user.nombres',
                 'user.apellidos',
-                'per.nombre as permiso',
-            )
-            ->paginate($cantidad);
-        return response()->json($result);
-    }
-
-
-    public function filtroporusuario($id, $cantidad)
-    {
-        $result = UsuarioPermiso::join('usr_app_usuarios as user', 'user.id', 'usr_app_permisos_usuarios.usuario_id')
-            ->join('usr_app_permisos as per', 'per.id', 'usr_app_permisos_usuarios.permiso_id')
-            // ->when($id != null, function ($query) use ($id) {
-            //     return $query->where('rol.id', '=', $id);
-            // })
-            ->where('user.id', '=', $id)
-            ->select(
-                'usr_app_permisos_usuarios.id',
-                'user.nombres',
-                'user.apellidos',
-                'per.nombre as permiso',
+                'usr_app_menus.nombre as menu',
             )
             ->paginate($cantidad);
         return response()->json($result);
@@ -55,13 +36,13 @@ class UsuarioPermisoController extends Controller
     {
         try {
             DB::beginTransaction();
-            $permisos = $request->all();
-            foreach ($permisos[0] as  $usuario) {
-                foreach ($permisos[1] as  $permiso) {
-                    $permisos_roles = new UsuarioPermiso;
-                    $permisos_roles->usuario_id = $usuario['id'];
-                    $permisos_roles->permiso_id = $permiso['id'];
-                    $permisos_roles->save();
+            $menus = $request->all();
+            foreach ($menus[0] as  $usuario) {
+                foreach ($menus[1] as  $menu) {
+                    $menus_ususarios = new UsuariosMenus;
+                    $menus_ususarios->usuario_id = $usuario['id'];
+                    $menus_ususarios->menu_id = $menu['id'];
+                    $menus_ususarios->save();
                 }
             }
             DB::commit();
@@ -72,8 +53,6 @@ class UsuarioPermisoController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el registro, por favor intente nuevamente']);
         }
     }
-
-
 
     /**
      * Store a newly created resource in storage.
@@ -117,21 +96,14 @@ class UsuarioPermisoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // $result = UsuarioPermiso::find($id);
-        // $result->usuario_id = $request->usuario_id;
-        // $result->permiso_id = $request->permiso_id;
-        // if ($result->save()) {
-        //     return response()->json(['status' => 'success', 'message' => 'Registro guardado de manera exitosa']);
-        // } else {
-        //     return response()->json(['status' => 'success', 'message' => 'Error al guardar registro']);
-        // }
+        //
     }
 
     public function borradomasivo(Request $request)
     {
         try {
             for ($i = 0; $i < count($request->id); $i++) {
-                $result = UsuarioPermiso::find($request->id[$i]);
+                $result = UsuariosMenus::find($request->id[$i]);
                 $result->delete();
             }
             return response()->json(['status' => 'success', 'message' => 'Registros eliminados exitosamente']);
@@ -148,7 +120,7 @@ class UsuarioPermisoController extends Controller
      */
     public function destroy($id)
     {
-        $result = UsuarioPermiso::find($id);
+        $result = UsuariosMenus::find($id);
         if ($result->delete()) {
             return response()->json(['status' => 'success', 'message' => 'Registro eliminado de manera exitosa']);
         } else {

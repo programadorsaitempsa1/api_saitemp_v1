@@ -21,69 +21,50 @@ class MenuController extends Controller
 
     public function menubyRole()
     {
-        $user = auth()->user();
-        $users = menu::join("usr_app_menus_roles", "usr_app_menus_roles.menu_id", "=", "usr_app_menus.id")
-            ->join('usr_app_roles', 'usr_app_roles.id', '=', 'usr_app_menus_roles.rol_id')
-            ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
-            ->where('usr_app_roles.id', '=', $user->rol_id)
-            ->where('usr_app_menus.oculto', '=', 0)
-            ->orderBy('usr_app_menus.posicion')
-            ->select(
+        // $user = auth()->user();
+        // $users = menu::join("usr_app_menus_roles", "usr_app_menus_roles.menu_id", "=", "usr_app_menus.id")
+        //     ->join('usr_app_roles', 'usr_app_roles.id', '=', 'usr_app_menus_roles.rol_id')
+        //     ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
+        //     ->where('usr_app_roles.id', '=', $user->rol_id)
+        //     ->where('usr_app_menus.oculto', '=', 0)
+        //     ->orderBy('usr_app_menus.posicion')
+        //     ->select(
 
-                "usr_app_roles.id as rol",
-                "usr_app_menus.nombre",
-                "usr_app_menus.id",
+        //         "usr_app_roles.id as rol",
+        //         "usr_app_menus.nombre",
+        //         "usr_app_menus.id",
+        //         "usr_app_menus.url",
+        //         "usr_app_menus.icon",
+        //         "usr_app_menus.urlExterna",
+        //         "usr_app_menus.oculto",
+        //         "usr_app_categorias_menu.nombre as categoria",
+        //         "usr_app_menus.powerbi"
+        //     )
+        //     ->get();
+        // return response()->json($users);
+        
+        $user = auth()->user();
+        $result = menu::leftJoin('usr_app_menus_roles', 'usr_app_menus_roles.menu_id', '=', 'usr_app_menus.id')
+            ->leftJoin('usr_app_usuarios_menus', 'usr_app_usuarios_menus.menu_id', '=', 'usr_app_menus.id')
+            ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
+            ->where(function ($query) use ($user) {
+                $query->where('usr_app_menus_roles.rol_id', '=', $user['rol_id'])
+                    ->orWhere('usr_app_usuarios_menus.usuario_id', '=', $user['id']);
+            })
+            ->select(
+                'usr_app_menus.id',
+                'usr_app_menus.nombre',
                 "usr_app_menus.url",
                 "usr_app_menus.icon",
                 "usr_app_menus.urlExterna",
                 "usr_app_menus.oculto",
+                "usr_app_menus.powerbi",
                 "usr_app_categorias_menu.nombre as categoria",
-                "usr_app_menus.powerbi"
             )
+            ->distinct()
             ->get();
-        return response()->json($users);
 
-        // $users = menu::leftJoin('usr_app_menus_roles', 'usr_app_menus_roles.menu_id', '=', 'usr_app_menus.id')
-        //     ->leftJoin('usr_app_roles', 'usr_app_roles.id', '=', 'usr_app_menus_roles.rol_id')
-        //     ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
-        //     ->where('usr_app_menus.oculto', '=', 0)
-        //     ->where('usr_app_roles.id', '=', $user->rol_id)
-        //     ->orderBy('usr_app_menus.posicion')
-        //     ->select(
-        //         "usr_app_roles.id as rol",
-        //         "usr_app_menus.nombre",
-        //         "usr_app_menus.id",
-        //         "usr_app_menus.url",
-        //         "usr_app_menus.icon",
-        //         "usr_app_menus.urlExterna",
-        //         "usr_app_menus.oculto",
-        //         "usr_app_categorias_menu.nombre as categoria"
-        //     )
-        //     ->get();
-
-        // return response()->json($users);
-        // $users = menu::leftJoin('usr_app_menus_roles', 'usr_app_menus_roles.menu_id', '=', 'usr_app_menus.id')
-        //     ->leftJoin('usr_app_roles', 'usr_app_roles.id', '=', 'usr_app_menus_roles.rol_id')
-        //     ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
-        //     ->where('usr_app_menus.oculto', '=', 0)
-        //     ->when($user->rol_id != 1, function ($query) use ($user) {
-        //         return $query->where('usr_app_roles.id', '=', $user->rol_id);
-        //     })
-        //     ->orderBy('usr_app_menus.posicion')
-        //     ->select(
-        //         "usr_app_roles.id as rol",
-        //         "usr_app_menus.nombre",
-        //         "usr_app_menus.id",
-        //         "usr_app_menus.url",
-        //         "usr_app_menus.icon",
-        //         "usr_app_menus.urlExterna",
-        //         "usr_app_menus.oculto",
-        //         "usr_app_categorias_menu.nombre as categoria"
-        //     )
-        //     ->get();
-
-        // return response()->json($users);
-
+        return response()->json($result);
     }
 
 

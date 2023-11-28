@@ -98,6 +98,7 @@ use App\Http\Controllers\OservicioClienteController;
 use App\Http\Controllers\DashBoardSeleccionController;
 use App\Http\Controllers\OservicioEstadoCargoController;
 use App\Http\Controllers\UsuarioPermisoController;
+use App\Http\Controllers\UsuariosMenusController;
 
 
 
@@ -316,6 +317,14 @@ Route::group([
   Route::post('/usuariopermisoborradomasivo', [UsuarioPermisoController::class, 'borradomasivo']);
   Route::delete('/usuariopermiso/{id}', [UsuarioPermisoController::class, 'destroy']);
   Route::get('/filtroporusuario/{id}/{cantidad}', [UsuarioPermisoController::class, 'filtroporusuario']);
+
+  // Usuarios menús
+  Route::get('/usuariosmenus/{cantidad}', [UsuariosMenusController::class, 'index']);
+  Route::post('/usuariosmenus', [UsuariosMenusController::class, 'create']);
+  Route::post('/usuariosmenus/{id}', [UsuariosMenusController::class, 'update']);
+  Route::post('/usuariosmenusborradomasivo', [UsuariosMenusController::class, 'borradomasivo']);
+  Route::delete('/usuariosmenus/{id}', [UsuariosMenusController::class, 'destroy']);
+  Route::get('/filtromenuporusuario/{id}/{cantidad}', [UsuariosMenusController::class, 'filtroporusuario']);
 
   // Permisos
   Route::get('/permisos/{cantidad}', [PermisoController::class, 'index']);
