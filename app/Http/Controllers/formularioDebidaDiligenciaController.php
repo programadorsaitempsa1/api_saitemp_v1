@@ -21,6 +21,10 @@ use App\Models\Documento;
 use App\Models\DocumentoCliente;
 use App\Models\PersonasExpuestas;
 use App\Models\OrigenFondo;
+use App\Models\CargoCliente;
+use App\Models\Cargo2;
+use App\Models\Cargo2Examen;
+use App\Models\Cargo2Recomendacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
@@ -273,7 +277,99 @@ class formularioDebidaDiligenciaController extends Controller
         $resultados = array_values($resultados);
         $result['cargos'] = $resultados;
 
-        // return $resultados;
+
+        // **************************************************************************************
+        $cargos = Cargo2::join('usr_app_riesgos_laborales as rl2', 'rl2.id', '=', 'usr_app_cargos2.riesgo_laboral_id')
+            ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_cargos2.cargo_id')
+            ->join('usr_app_subcategoria_cargos as sc', 'sc.id', '=', 'lc.subcategoria_cargo_id')
+            ->join('usr_app_categoria_cargos as cc', 'cc.id', '=', 'sc.categoria_cargo_id')
+            ->join('usr_app_cargos2_recomendaciones as cr', 'cr.cargo_id', '=', 'usr_app_cargos2.id')
+            ->join('usr_app_lista_recomendaciones as recom', 'recom.id', '=', 'cr.recomendacion_id')
+            ->join('usr_app_cargos2_examenes as cx', 'cx.cargo_id', '=', 'usr_app_cargos2.id')
+            ->join('usr_app_lista_examenes as exam', 'exam.id', '=', 'cx.examen_id')
+            ->select(
+                'usr_app_cargos2.cargo_id as id_cargo',
+                'lc.nombre as cargo',
+                'lc.subcategoria_cargo_id as categoria_cargo_id',
+                'sc.categoria_cargo_id as tipo_cargo_id',
+                'sc.nombre as categoria',
+                'cc.nombre as tipo_cargo',
+                'usr_app_cargos2.funcion_cargo as funcion_cargo',
+                'usr_app_cargos2.riesgo_laboral_id',
+                'rl2.nombre as riesgo_laboral',
+                'cr.recomendacion_id',
+                'recom.recomendacion1 as recomendacion1',
+                'recom.recomendacion2 as recomendacion2',
+                'cx.examen_id',
+                'exam.nombre as examen',
+
+            )
+            ->where('cliente_id', '=', $id)
+            ->distinct('exam.nombre as examen')
+            ->get();
+
+        // Array para almacenar los resultados
+        $resultados = [];
+
+        // Recorrer el array original
+        foreach ($cargos as $objeto) {
+            // Extraer los datos del objeto
+
+            $funcion_cargo = $objeto['funcion_cargo'];
+            $idCargo = $objeto['id_cargo'];
+            $cargo = $objeto['cargo'];
+            $idSubcategoria = $objeto['categoria_cargo_id'];
+            $subcategoria = $objeto['categoria'];
+            $idCategoria = $objeto['tipo_cargo_id'];
+            $categoria = $objeto['tipo_cargo'];
+            $idRiesgoLaboral = $objeto['riesgo_laboral_id'];
+            $riesgoLaboral = $objeto['riesgo_laboral'];
+            $idRequisito = $objeto['recomendacion_id'];
+            $recomendacion1 = $objeto['recomendacion1'];
+            $recomendacion2 = $objeto['recomendacion2'];
+            $idExamen = $objeto['examen_id'];
+            $examen = $objeto['examen'];
+
+            // Verificar si el cargo ya existe en los resultados
+            if (!isset($resultados[$idCargo])) {
+                // Si no existe, crear un nuevo objeto para el cargo
+                $resultados[$idCargo] = [
+                    'id_cargo' => $idCargo,
+                    'cargo' => $cargo,
+                    'riesgo_laboral_id' => $idRiesgoLaboral,
+                    'riesgo_laboral' => $riesgoLaboral,
+                    'examenes' => [],
+                    'recomendaciones' => [],
+                    'categoria_cargo_id' => $idSubcategoria,
+                    'categoria' => $subcategoria,
+                    'tipo_cargo_id' => $idCategoria,
+                    'tipo_cargo' => $categoria,
+                    'funcion_cargo' => $funcion_cargo
+                ];
+            }
+
+            // Verificar si el examen ya existe en los resultados del cargo
+            if (!in_array($idExamen, array_column($resultados[$idCargo]['examenes'], 'id'))) {
+                $resultados[$idCargo]['examenes'][] = [
+                    'id' => $idExamen,
+                    'nombre' => $examen,
+                ];
+            }
+
+            // Verificar si el requisito ya existe en los resultados del cargo
+            if (!in_array($idRequisito, array_column($resultados[$idCargo]['recomendaciones'], 'id'))) {
+                $resultados[$idCargo]['recomendaciones'][] = [
+                    'id' => $idRequisito,
+                    'recomendacion1' => $recomendacion1,
+                    'recomendacion2' => $recomendacion2,
+                ];
+            }
+        }
+
+        // Resultado: Array final con cargos, exámenes y requisitos sin duplicados
+        $resultados = array_values($resultados);
+        $result['cargos2'] = $resultados;
+        // **************************************************************************************
 
 
         $accionistas = Accionista::join('gen_tipide as ti', 'ti.cod_tip', '=', 'usr_app_accionistas.tipo_identificacion_id')
@@ -506,7 +602,6 @@ class formularioDebidaDiligenciaController extends Controller
      */
     public function create(Request $request)
     {
-
         DB::beginTransaction();
 
         try {
@@ -538,11 +633,11 @@ class formularioDebidaDiligenciaController extends Controller
             $cliente->acuerdo_comercial = $request['acuerdo_comercial'];
             $cliente->aiu_negociado = $request['aiu_negociado'];
             $cliente->plazo_pago = $request['plazo_pago'];
-            $cliente->vendedor_id = $request['vendedor'] == '' ? 1 : $request['vendedor'];
+            $cliente->vendedor_id = $request['vendedor'] == '' ? "0  " : $request['vendedor'];
             $cliente->numero_empleados = $request['empleados_empresa'];
             $cliente->jornada_laboral_id = $request['jornada_laboral'] == '' ? 1 : $request['jornada_laboral'];
             $cliente->rotacion_personal_id = $request['rotacion_personal'] == '' ? 1 : $request['rotacion_personal'];
-            $cliente->riesgo_cliente_id = $request['riesgo_cliente'];
+            $cliente->riesgo_cliente_id = $request['riesgo_cliente'] == '' ? 1 : $request['riesgo_cliente'];
             $cliente->junta_directiva = $request['junta_directiva'];
             $cliente->responsable_inpuesto_ventas = $request['responsable_inpuesto_ventas'];
             $cliente->correo_facturacion_electronica = $request['correo_factura_electronica'];
@@ -556,30 +651,32 @@ class formularioDebidaDiligenciaController extends Controller
             $cliente->save();
 
             $contador = 0;
-            foreach ($request['cargos'] as $item) {
-                if ($item['cargo'] != '' || $item['riesgo'] != '') {
-                    $cargo = new Cargos;
-                    $cargo->nombre = $item['cargo'];
-                    $cargo->riesgo_laboral_id = $item['riesgo'];
+            foreach ($request['cargos2'] as $item) {
+                if ($item['cargo_id'] != '' || $item['riesgo_laboral_id'] != '') {
+                    $cargo = new cargo2;
+                    $cargo->cargo_id = $item['cargo_id'];
+                    $cargo->riesgo_laboral_id = $item['riesgo_laboral_id'];
+                    $cargo->funcion_cargo = $item['funcion_cargo'];
                     $cargo->cliente_id = $cliente->id;
                     $cargo->save();
 
 
-                    foreach ($request['cargos'][$contador]['examenes'] as $item) {
+                    foreach ($request['cargos2'][$contador]['examenes'] as $item) {
                         if ($item['id'] != '') {
-                            $cargoExamen = new CargoExamen;
+                            $cargoExamen = new Cargo2Examen;
                             $cargoExamen->examen_id = $item['id'];
                             $cargoExamen->cargo_id = $cargo->id;
                             $cargoExamen->save();
                         }
                     }
 
-                    foreach ($request['cargos'][$contador]['requisitos'] as $item) {
+                    // Se eliminan los requisitos del formulario
+                    foreach ($request['cargos2'][$contador]['recomendaciones'] as $item) {
                         if ($item['id'] != '') {
-                            $cargoRequisito = new CargoRequisito;
-                            $cargoRequisito->requisito_id = $item['id'];
-                            $cargoRequisito->cargo_id = $cargo->id;
-                            $cargoRequisito->save();
+                            $cargoRecomendacion = new Cargo2Recomendacion;
+                            $cargoRecomendacion->recomendacion_id = $item['id'];
+                            $cargoRecomendacion->cargo_id = $cargo->id;
+                            $cargoRecomendacion->save();
                         }
                     }
                     $contador++;
@@ -889,54 +986,86 @@ class formularioDebidaDiligenciaController extends Controller
             $cliente->municipio_prestacion_servicio_id = $request['municipio_prestacion_servicio'];
             $cliente->save();
 
-            $cargo = Cargos::where('cliente_id', '=', $id)
+            $cargo = Cargo2::where('cliente_id', '=', $id)
                 ->select()
                 ->get();
-            $cargoExamen = CargoExamen::where('cargo_id', '=', $id)
+            $cargoExamen = Cargo2Examen::where('cargo_id', '=', $id)
                 ->select()
                 ->get();
-            $cargoRequisito = CargoRequisito::where('cargo_id', '=', $id)
+            $cargoRecomendacion = Cargo2Recomendacion::where('cargo_id', '=', $id)
                 ->select()
                 ->get();
             foreach ($cargoExamen as $item) {
                 $item->delete();
             }
-            foreach ($cargoRequisito as $item) {
+            foreach ($cargoRecomendacion as $item) {
                 $item->delete();
             }
             foreach ($cargo as $item) {
                 $item->delete();
             }
             $contador = 0;
-            foreach ($request['cargos'] as $item) {
-                if ($item['cargo'] != '' || $item['riesgo'] != '') {
-                    $cargo = new Cargos;
-                    $cargo->nombre = $item['cargo'];
-                    $cargo->riesgo_laboral_id = $item['riesgo'];
+            foreach ($request['cargos2'] as $item) {
+                if ($item['cargo_id'] != '' || $item['riesgo_laboral_id'] != '') {
+                    $cargo = new cargo2;
+                    $cargo->cargo_id = intval($item['cargo_id']);
+                    $cargo->riesgo_laboral_id = $item['riesgo_laboral_id'];
+                    $cargo->funcion_cargo = $item['funcion_cargo'];
                     $cargo->cliente_id = $cliente->id;
                     $cargo->save();
 
 
-                    foreach ($request['cargos'][$contador]['examenes'] as $item) {
+                    foreach ($request['cargos2'][$contador]['examenes'] as $item) {
                         if ($item['id'] != '') {
-                            $cargoExamen = new CargoExamen;
+                            $cargoExamen = new Cargo2Examen;
                             $cargoExamen->examen_id = $item['id'];
                             $cargoExamen->cargo_id = $cargo->id;
                             $cargoExamen->save();
                         }
                     }
 
-                    foreach ($request['cargos'][$contador]['requisitos'] as $item) {
+                    foreach ($request['cargos2'][$contador]['recomendaciones'] as $item) {
                         if ($item['id'] != '') {
-                            $cargoRequisito = new CargoRequisito;
-                            $cargoRequisito->requisito_id = $item['id'];
-                            $cargoRequisito->cargo_id = $cargo->id;
-                            $cargoRequisito->save();
+                            $cargoRecomendacion = new Cargo2Recomendacion;
+                            $cargoRecomendacion->recomendacion_id = $item['id'];
+                            $cargoRecomendacion->cargo_id = $cargo->id;
+                            $cargoRecomendacion->save();
                         }
                     }
                     $contador++;
                 }
             }
+            // foreach ($request['cargos2'] as $item) {
+            //     if ($item['cargo'] != '' || $item['riesgo_laboral_id'] != '') {
+            //         $cargo = new cargo2;
+            //         $cargo->cargo_id = $item['cargo'];
+            //         $cargo->riesgo_laboral_id = $item['riesgo_laboral_id'];
+            //         $cargo->funcion_cargo = $item['funcion_cargo'];
+            //         $cargo->cliente_id = $cliente->id;
+            //         $cargo->save();
+
+
+            //         foreach ($request['cargos2'][$contador]['examenes'] as $item) {
+            //             if ($item['id'] != '') {
+            //                 $cargoExamen = new Cargo2Examen;
+            //                 $cargoExamen->examen_id = $item['id'];
+            //                 $cargoExamen->cargo_id = $cargo->id;
+            //                 $cargoExamen->save();
+            //             }
+            //         }
+
+            //         // Se eliminan los requisitos del formulario
+            //         foreach ($request['cargos2'][$contador]['recomendaciones'] as $item) {
+            //             if ($item['id'] != '') {
+            //                 $cargoRecomendacion = new Cargo2Recomendacion;
+            //                 $cargoRecomendacion->recomendacion_id = $item['id'];
+            //                 $cargoRecomendacion->cargo_id = $cargo->id;
+            //                 $cargoRecomendacion->save();
+            //             }
+            //         }
+            //         $contador++;
+            //     }
+            // }
 
             $accionista = Accionista::where('cliente_id', '=', $id)
                 ->get();
@@ -1148,7 +1277,7 @@ class formularioDebidaDiligenciaController extends Controller
         } catch (\Exception $e) {
             // Revertir la transacción si se produce alguna excepción
             DB::rollback();
-            // return $e;
+            return $e;
             return response()->json(['status' => 'error', 'message' => 'Error al guardar formulario, por favor intente nuevamente']);
         }
     }
@@ -1163,7 +1292,7 @@ class formularioDebidaDiligenciaController extends Controller
     {
         $result = Cliente::find($id);
         if ($result->delete()) {
-            if($error_carga_archivos == null){        
+            if ($error_carga_archivos == null) {
                 return response()->json("registro borrado Con Exito");
             }
         } else {

@@ -64,17 +64,13 @@ class RolController extends Controller
 
     public function rolesPermisos()
     {
-        $roles = Rol::join("permisos_roles", "permisos_roles.rol_id", "=", "roles.id")
-            ->join("permisos", "permisos.id", "=", "permisos_roles.permiso_id")
+        $roles = Rol::join("usr_app_permisos_roles", "usr_app_permisos_roles.rol_id", "=", "usr_app_roles.id")
+            ->join("usr_app_permisos", "usr_app_permisos.id", "=", "usr_app_permisos_roles.permiso_id")
             ->select(
 
-                "roles.nombre as rol",
-                "roles.id as id_rol",
-                "permisos.nombre as permiso",
-                "permisos.id as id_permiso",
-                "permisos_roles.id as id_registro",
-
+                "usr_app_roles.nombre as rol",
             )
+            ->distinct()
             ->get();
         return response()->json($roles);
     }
