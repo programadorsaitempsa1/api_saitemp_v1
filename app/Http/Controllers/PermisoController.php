@@ -35,6 +35,7 @@ class PermisoController extends Controller
             ->select(
                 'usr_app_permisos.alias'
             )
+            ->distinct()
             ->get();
 
         return response()->json($result);
@@ -45,6 +46,7 @@ class PermisoController extends Controller
             'id',
             'nombre',
         )
+        ->orderby('id','DESC')
             ->get();
         return response()->json($result);
     }

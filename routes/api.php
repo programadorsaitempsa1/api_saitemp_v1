@@ -99,6 +99,8 @@ use App\Http\Controllers\DashBoardSeleccionController;
 use App\Http\Controllers\OservicioEstadoCargoController;
 use App\Http\Controllers\UsuarioPermisoController;
 use App\Http\Controllers\UsuariosMenusController;
+use App\Http\Controllers\categoriaMenuController;
+use App\Http\Controllers\ExamenPruebaController;
 
 
 
@@ -139,6 +141,15 @@ Route::group([
   // Route::get('/usuariosporcontrato', [UsuarioController::class, 'usuariosporcontrato']); 
   // Route::get('/usuariosporcontrato/{id}', [UsuarioController::class, 'usuariosporcontrato2']); 
 
+  // Categorías menú
+  Route::get('/categoriasMenu/{cantidad}', [categoriaMenuController::class, 'index']);
+  Route::post('/categoriasMenu', [categoriaMenuController::class, 'create']);
+  Route::post('/categoriasMenu/{id}', [categoriaMenuController::class, 'update']);
+  Route::delete('/categoriasMenu/{id}', [categoriaMenuController::class, 'destroy']);
+  Route::get('/categoriasMenulista', [categoriaMenuController::class, 'lista']);
+  Route::post('/categoriasMenuborradomasivo', [categoriaMenuController::class, 'borradomasivo']);
+
+
   // Opciones de menú
   Route::get('/menuslista', [MenuController::class, 'index']);
   Route::post('/menus', [MenuController::class, 'create']);
@@ -146,6 +157,7 @@ Route::group([
   Route::delete('/menus/{id}', [MenuController::class, 'destroy']);
   Route::get('/menus', [MenuController::class, 'menubyRole']);
   Route::get('/categoriaMenu', [MenuController::class, 'categoriaMenu']);
+  Route::get('/menus/{cantidad}', [MenuController::class, 'menus']);
 
   // Rol menú
   Route::get('/rolmenu/{cantidad}', [MenuRolController::class, 'rolesMenus']);
@@ -665,4 +677,10 @@ Route::group([
 
   Route::get('/cargosVacantesHojasVida/{anio}', [DashBoardSeleccionController::class, 'cargosVacantesHojasVida']);
   Route::get('/cantidadvacantesestado/{anio}', [DashBoardSeleccionController::class, 'cantidadVacantesPorEstado']);
+
+
+
+  // estos endpoint se usan para asignar a un empleado el lider correspondiente
+  // Route::get('/examen/{cedula}', [ExamenPruebaController::class, 'examen']);
+  // Route::get('/examenprueba', [ExamenPruebaController::class, 'create']);
 });
