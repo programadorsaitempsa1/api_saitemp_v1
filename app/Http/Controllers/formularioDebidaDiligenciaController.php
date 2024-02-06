@@ -25,11 +25,12 @@ use App\Models\CargoCliente;
 use App\Models\Cargo2;
 use App\Models\Cargo2Examen;
 use App\Models\Cargo2Recomendacion;
+use App\Models\ClienteEpp;
+use App\Models\RegistroCambio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
-use Mockery\Undefined;
-use PhpParser\Node\Stmt\TryCatch;
+
 
 class formularioDebidaDiligenciaController extends Controller
 {
@@ -47,17 +48,23 @@ class formularioDebidaDiligenciaController extends Controller
 
     public function consultacliente($cantidad)
     {
+        $year_actual = date('Y');
         $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
+            ->leftJoin('usr_app_estados_firma as estf', 'estf.id', '=', 'usr_app_clientes.estado_firma_id')
+            ->whereYear('usr_app_clientes.created_at', $year_actual)
             ->select(
                 'usr_app_clientes.id',
+                DB::raw('COALESCE(CONVERT(VARCHAR, usr_app_clientes.numero_radicado), CONVERT(VARCHAR, usr_app_clientes.id)) AS numero_radicado'),
                 'usr_app_clientes.razon_social',
                 'usr_app_clientes.numero_identificacion',
                 'usr_app_clientes.nit',
                 'ven.nom_ven as vendedor',
                 'usr_app_clientes.telefono_empresa',
-                'usr_app_clientes.created_at'
+                'usr_app_clientes.created_at',
+                'estf.nombre as nombre_estado_firma',
+                'estf.color as color_estado_firma'
             )
-            ->orderby('id', 'DESC')
+            ->orderby('usr_app_clientes.id', 'DESC')
             ->paginate($cantidad);
         return response()->json($result);
     }
@@ -119,6 +126,7 @@ class formularioDebidaDiligenciaController extends Controller
             ->join('usr_app_tipo_proveedor as tpro', 'tpro.id', '=', 'usr_app_clientes.tipo_proveedor_id')
             ->join('usr_app_tipo_cliente as tcli', 'tcli.id', '=', 'usr_app_clientes.tipo_cliente_id')
             ->select(
+                DB::raw('COALESCE(CONVERT(VARCHAR, usr_app_clientes.numero_radicado), CONVERT(VARCHAR, usr_app_clientes.id)) AS numero_radicado'),
                 'ac.codigo_actividad as codigo_actividad_ciiu',
                 'ac.id as codigo_actividad_ciiu_id',
                 'cc.codigo as codigo_ciiu',
@@ -206,6 +214,31 @@ class formularioDebidaDiligenciaController extends Controller
                 'usr_app_clientes.tipo_proveedor_id as tipo_proveedor_id',
                 'tcli.nombre as tipo_cliente',
                 'usr_app_clientes.tipo_cliente_id as tipo_cliente_id',
+
+                'usr_app_clientes.empresa_extranjera',
+                'usr_app_clientes.empresa_en_exterior',
+                'usr_app_clientes.vinculos_empresa',
+                'usr_app_clientes.numero_empleados_directos',
+                'usr_app_clientes.vinculado_empresa_temporal',
+                'usr_app_clientes.visita_presencial',
+                'usr_app_clientes.facturacion_contacto',
+                'usr_app_clientes.facturacion_cargo',
+                'usr_app_clientes.facturacion_telefono',
+                'usr_app_clientes.facturacion_celular',
+                'usr_app_clientes.facturacion_correo',
+                'usr_app_clientes.facturacion_factura_unica',
+                'usr_app_clientes.facturacion_fecha_corte',
+                'usr_app_clientes.facturacion_encargado_factura',
+                'usr_app_clientes.requiere_anexo_factura',
+                'usr_app_clientes.trabajo_alto_riesgo',
+                'usr_app_clientes.accidentalidad',
+                'usr_app_clientes.encargado_sst',
+                'usr_app_clientes.nombre_encargado_sst',
+                'usr_app_clientes.cargo_encargado_sst',
+                'usr_app_clientes.induccion_entrenamiento',
+                'usr_app_clientes.entrega_dotacion',
+                'usr_app_clientes.evaluado_arl',
+                'usr_app_clientes.entrega_epp',
             )
             ->where('usr_app_clientes.id', '=', $id)
             ->first();
@@ -371,6 +404,10 @@ class formularioDebidaDiligenciaController extends Controller
         $result['cargos2'] = $resultados;
         // **************************************************************************************
 
+        $clientes_epps = ClienteEpp::where('cliente_id', $id)
+            ->select('epp_id')
+            ->get();
+        $result['clientes_epps'] = $clientes_epps;
 
         $accionistas = Accionista::join('gen_tipide as ti', 'ti.cod_tip', '=', 'usr_app_accionistas.tipo_identificacion_id')
             ->where('cliente_id', '=', $id)
@@ -516,84 +553,75 @@ class formularioDebidaDiligenciaController extends Controller
         return response()->json($result);
     }
 
+
     public function filtro($cadena)
     {
-        $consulta = base64_decode($cadena);
-        $valores = explode("/", $consulta);
-        $campo = $valores[0];
-        $operador = $valores[1];
-        $valor = $valores[2];
-        $valor2 = $valores[3];
-        // return $campo . '' . $operador . '' . $valor.''.$valor2;
-        if ($operador == 'Contiene') {
-            $operador = 'like';
-            $valor = '%' . $valor . '%';
-        } else if ($operador == 'Igual a') {
-            $operador = '=';
-        } else if ($operador == 'Igual a fecha') {
-            $operador = '=';
-            $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
-                ->whereDate('usr_app_clientes.' . $campo, $operador, $valor)
+
+        try {
+            $consulta = base64_decode($cadena);
+            $valores = explode("/", $consulta);
+            $campo = $valores[0];
+            $operador = $valores[1];
+            $valor = $valores[2];
+            $valor2 = isset($valores[3]) ? $valores[3] : null;
+
+            // return $campo."".$valor;
+
+            $query = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
+                ->leftJoin('usr_app_estados_firma as estf', 'estf.id', '=', 'usr_app_clientes.estado_firma_id')
                 ->select(
                     'usr_app_clientes.id',
+                    DB::raw('COALESCE(CONVERT(VARCHAR, usr_app_clientes.numero_radicado), CONVERT(VARCHAR, usr_app_clientes.id)) AS numero_radicado'),
                     'usr_app_clientes.razon_social as nombre',
                     'usr_app_clientes.numero_identificacion',
                     'usr_app_clientes.nit',
                     'ven.nom_ven as vendedor',
                     'usr_app_clientes.telefono_empresa',
-                    'usr_app_clientes.created_at'
+                    'usr_app_clientes.created_at',
+                    'estf.nombre as nombre_estado_firma',
+                    'estf.color as color_estado_firma'
                 )
-                ->orderby('id', 'DESC')
-                ->paginate();
+                ->orderby('id', 'DESC');
+
+
+            switch ($operador) {
+                case 'Contiene':
+                    if ($campo == "vendedor") {
+                        $query->where('ven.nom_ven', 'like', '%' . $valor . '%');
+                    }
+                    // else if ($campo == "nombre_estado_firma") {
+                    //     $query->where('estf.nombre', 'like', '%' . $valor . '%');
+                    // } 
+                    else {
+                        $query->where($campo, 'like', '%' . $valor . '%');
+                    }
+                    break;
+                case 'Igual a':
+                    if ($campo == "vendedor") {
+                        $query->where('ven.nom_ven', '=', $valor);
+                    } else if ($campo == "nombre_estado_firma") {
+                        $query->where('estf.id', '=', $valor);
+                    } else {
+                        $query->where($campo, '=', $valor);
+                    }
+                    break;
+                case 'Igual a fecha':
+                    $query->whereDate($campo, '=', $valor);
+                    break;
+                case 'Entre':
+                    $query->whereDate($campo, '>=', $valor)
+                        ->whereDate($campo, '<=', $valor2);
+                    break;
+            }
+
+
+            $result = $query->paginate();
             return response()->json($result);
-        } else if ($operador == 'Entre') {
-            $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
-                ->whereDate('usr_app_clientes.' . $campo, '>=', $valor)
-                ->whereDate('usr_app_clientes.' . $campo, '<=', $valor2)
-                ->select(
-                    'usr_app_clientes.id',
-                    'usr_app_clientes.razon_social as nombre',
-                    'usr_app_clientes.numero_identificacion',
-                    'usr_app_clientes.nit',
-                    'ven.nom_ven as vendedor',
-                    'usr_app_clientes.telefono_empresa',
-                    'usr_app_clientes.created_at'
-                )
-                ->orderby('usr_app_clientes.id', 'DESC')
-                ->paginate();
-            return response()->json($result);
+        } catch (\Exception $e) {
+            return $e;
         }
-        if ($campo == 'vendedor') {
-            $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
-                ->where('ven.nom_ven', $operador, $valor2)
-                ->select(
-                    'usr_app_clientes.id',
-                    'usr_app_clientes.razon_social as nombre',
-                    'usr_app_clientes.numero_identificacion',
-                    'usr_app_clientes.nit',
-                    'ven.nom_ven as vendedor',
-                    'usr_app_clientes.telefono_empresa',
-                    'usr_app_clientes.created_at'
-                )
-                ->orderby('id', 'DESC')
-                ->paginate();
-            return response()->json($result);
-        }
-        $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
-            ->where('usr_app_clientes.' . $campo, $operador, $valor)
-            ->select(
-                'usr_app_clientes.id',
-                'usr_app_clientes.razon_social as nombre',
-                'usr_app_clientes.numero_identificacion',
-                'usr_app_clientes.nit',
-                'ven.nom_ven as vendedor',
-                'usr_app_clientes.telefono_empresa',
-                'usr_app_clientes.created_at'
-            )
-            ->orderby('id', 'DESC')
-            ->paginate();
-        return response()->json($result);
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -608,6 +636,13 @@ class formularioDebidaDiligenciaController extends Controller
             // $request = $request[0];
             $actividad_ciiu = $this->actividades_ciiu($request['actividad_ciiu']);
             $cliente = new cliente;
+
+            // encabezado paraa el formato del contrato
+            $cliente->codigo_documento = 'FEGC-01-01';
+            $cliente->fecha_documento = '02/01/2024';
+            $cliente->version_documento = '20';
+            // fin encabezado paraa el formato del contrato
+
             $cliente->operacion_id = $request['operacion'] == '' ? 1 : $request['operacion'];
             $cliente->tipo_persona_id = $request['tipo_persona'];
             $cliente->digito_verificacion = $request['digito_verificacion'];
@@ -648,6 +683,33 @@ class formularioDebidaDiligenciaController extends Controller
             $cliente->tipo_cliente_id = $request['tipo_cliente_id'];
             $cliente->tipo_proveedor_id = $request['tipo_proveedor_id'] == '' ? 1 : $request['tipo_proveedor_id'];
             $cliente->municipio_prestacion_servicio_id = $request['municipio_prestacion_servicio'];
+
+            $cliente->empresa_extranjera = $request['empresa_extranjera'];
+            $cliente->empresa_en_exterior = $request['empresa_exterior'];
+            $cliente->vinculos_empresa = $request['vinculos_empresa'];
+            $cliente->numero_empleados_directos = $request['numero_empleados_directos'];
+            $cliente->vinculado_empresa_temporal = $request['personal_vinculado_temporal'];
+            $cliente->visita_presencial = $request['visita_presencial'];
+            $cliente->facturacion_contacto = $request['facturacion_contacto'];
+            $cliente->facturacion_cargo = $request['facturacion_cargo'];
+            $cliente->facturacion_telefono = $request['facturacion_telefono'];
+            $cliente->facturacion_celular = $request['facturacion_celular'];
+            $cliente->facturacion_correo = $request['facturacion_correo'];
+            $cliente->facturacion_factura_unica = $request['facturacion_factura'];
+            $cliente->facturacion_fecha_corte = $request['facturacion_fecha_corte'];
+            $cliente->facturacion_encargado_factura = $request['facturacion_encargado_factura'];
+            $cliente->requiere_anexo_factura = $request['anexo_factura'];
+            $cliente->trabajo_alto_riesgo = $request['trabajo_alto_riesgo'];
+            $cliente->accidentalidad = $request['accidentalidad'];
+            $cliente->encargado_sst = $request['encargado_sst'];
+            $cliente->nombre_encargado_sst = $request['nombre_encargado_sst'];
+            $cliente->cargo_encargado_sst = $request['cargo_encargado_sst'];
+            $cliente->induccion_entrenamiento = $request['induccion_entrenamiento'];
+            $cliente->entrega_dotacion = $request['entrega_dotacion'];
+            $cliente->evaluado_arl = $request['evaluado_arl'];
+            $cliente->entrega_epp = $request['entrega_epp'];
+            $cliente->estado_firma_id = 1;
+
             $cliente->save();
 
             $contador = 0;
@@ -814,14 +876,21 @@ class formularioDebidaDiligenciaController extends Controller
             }
 
             foreach ($request['referencias_comerciales'] as $item) {
-                // if ($item['nombre'] != '' || $item['contacto'] != '' || $item['telefono'] != '') {
                 $ReferenciaComercial = new ReferenciaComercial;
                 $ReferenciaComercial->razon_social = $item['nombre'];
                 $ReferenciaComercial->contacto = $item['contacto'];
                 $ReferenciaComercial->telefono = $item['telefono'];
                 $ReferenciaComercial->cliente_id = $cliente->id;
                 $ReferenciaComercial->save();
-                // }
+            }
+
+            foreach ($request['elementos_epp'] as $index => $item) {
+                if ($item == true) {
+                    $cliente_epp = new ClienteEpp;
+                    $cliente_epp->epp_id = $index;
+                    $cliente_epp->cliente_id = $cliente->id;
+                    $cliente_epp->save();
+                }
             }
 
             DB::commit();
@@ -939,6 +1008,9 @@ class formularioDebidaDiligenciaController extends Controller
      */
     public function update(Request $request, $id)
     {
+        
+
+        $user = auth()->user();
         $cliente = Cliente::where('usr_app_clientes.id', '=', $id)
             ->select()
             ->first();
@@ -984,7 +1056,43 @@ class formularioDebidaDiligenciaController extends Controller
             $cliente->tipo_cliente_id = $request['tipo_cliente_id'];
             $cliente->tipo_proveedor_id = $request['tipo_proveedor_id'];
             $cliente->municipio_prestacion_servicio_id = $request['municipio_prestacion_servicio'];
+
+            $cliente->empresa_extranjera = $request['empresa_extranjera'];
+            $cliente->empresa_en_exterior = $request['empresa_exterior'];
+            $cliente->vinculos_empresa = $request['vinculos_empresa'];
+            $cliente->numero_empleados_directos = $request['numero_empleados_directos'];
+            $cliente->vinculado_empresa_temporal = $request['personal_vinculado_temporal'];
+            $cliente->visita_presencial = $request['visita_presencial'];
+            $cliente->facturacion_contacto = $request['facturacion_contacto'];
+            $cliente->facturacion_cargo = $request['facturacion_cargo'];
+            $cliente->facturacion_telefono = $request['facturacion_telefono'];
+            $cliente->facturacion_celular = $request['facturacion_celular'];
+            $cliente->facturacion_correo = $request['facturacion_correo'];
+            $cliente->facturacion_factura_unica = $request['facturacion_factura'];
+            $cliente->facturacion_fecha_corte = $request['facturacion_fecha_corte'];
+            $cliente->facturacion_encargado_factura = $request['facturacion_encargado_factura'];
+            $cliente->requiere_anexo_factura = $request['anexo_factura'];
+            $cliente->trabajo_alto_riesgo = $request['trabajo_alto_riesgo'];
+            $cliente->accidentalidad = $request['accidentalidad'];
+            $cliente->encargado_sst = $request['encargado_sst'];
+            $cliente->nombre_encargado_sst = $request['nombre_encargado_sst'];
+            $cliente->cargo_encargado_sst = $request['cargo_encargado_sst'];
+            $cliente->induccion_entrenamiento = $request['induccion_entrenamiento'];
+            $cliente->entrega_dotacion = $request['entrega_dotacion'];
+            $cliente->evaluado_arl = $request['evaluado_arl'];
+            $cliente->entrega_epp = $request['entrega_epp'];
             $cliente->save();
+
+            $nombres = str_replace("null", "", $user->nombres);
+            $apellidos = str_replace("null", "", $user->apellidos);
+
+            $registroCambio = new RegistroCambio;
+            $registroCambio->observaciones = $request['registro_cambios']['observaciones'];
+            $registroCambio->solicitante = $request['registro_cambios']['solicitante'];
+            $registroCambio->autoriza = $request['registro_cambios']['autoriza'];
+            $registroCambio->actualiza = $nombres . ' ' . $apellidos;
+            $registroCambio->cliente_id = $id;
+            $registroCambio->save();
 
             $cargo = Cargo2::where('cliente_id', '=', $id)
                 ->select()
@@ -1272,6 +1380,23 @@ class formularioDebidaDiligenciaController extends Controller
                 }
             }
 
+            $clientes_epps = ClienteEpp::where('cliente_id', $id)
+                ->select()
+                ->get();
+            if (count($clientes_epps) > 0) {
+                foreach ($clientes_epps as $item) {
+                    $item->delete();
+                }
+            }
+            foreach ($request['elementos_epp'] as $index => $item) {
+                if ($item == true) {
+                    $cliente_epp = new ClienteEpp;
+                    $cliente_epp->epp_id = $index;
+                    $cliente_epp->cliente_id = $cliente->id;
+                    $cliente_epp->save();
+                }
+            }
+
             DB::commit();
             return response()->json(['status' => '200', 'message' => 'ok', 'client' => $cliente->id]);
         } catch (\Exception $e) {
@@ -1280,6 +1405,18 @@ class formularioDebidaDiligenciaController extends Controller
             return $e;
             return response()->json(['status' => 'error', 'message' => 'Error al guardar formulario, por favor intente nuevamente']);
         }
+    }
+
+    public function actualizaestadofirma($item_id, $estado_id)
+    {
+        $cliente = Cliente::where('usr_app_clientes.id', '=', $item_id)
+            ->select()
+            ->first();
+        $cliente->estado_firma_id = $estado_id;
+        if ($cliente->save()) {
+            return response()->json(['status' => 'success', 'message' => 'Registro actualizado de manera exitosa.']);
+        }
+        return response()->json(['status' => 'error', 'message' => 'Error al actualizar registro.']);
     }
 
     /**

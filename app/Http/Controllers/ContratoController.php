@@ -43,6 +43,10 @@ class ContratoController extends Controller
                 'correo_facturacion_electronica',
                 'aiu_negociado',
                 'plazo_pago',
+                'codigo_documento',
+                'fecha_documento',
+                'version_documento',
+                DB::raw('COALESCE(CONVERT(VARCHAR, usr_app_clientes.numero_radicado), CONVERT(VARCHAR, usr_app_clientes.id)) AS radicado'),
             )
             ->where('usr_app_clientes.id', '=', $id)
             ->first();

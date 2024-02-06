@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// use App\Models\ClientesAlInstante;
-use Illuminate\Support\Facades\DB;
-use App\Events\EventoPrueba;
+use App\Models\NivelAccidentalidad;
 
-class ClientesAlInstanteController extends Controller
+class NivelAccidentalidadController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -16,27 +14,13 @@ class ClientesAlInstanteController extends Controller
      */
     public function index()
     {
-        event(new EventoPrueba('Listando empresas'));
-        $result = DB::connection('second_db')->table('cxc_cliente')->select(
-            'cod_cli as codigo',
-            'nom_cli as nombre'
-        )->paginate();
-
+        $result = NivelAccidentalidad::select(
+            'id',
+            'nombre',
+            'descripcion'
+        )->get();
         return response()->json($result);
     }
-
-    public function filter($filtro)
-    {
-        $result = DB::connection('second_db')->table('cxc_cliente')->select(
-            'cod_cli as codigo',
-            'nom_cli as nombre'
-        )
-        ->where('cod_cli','like','%'.$filtro.'%')
-        ->orWhere('nom_cli','like','%'.$filtro.'%')
-        ->paginate();
-        return response()->json($result);
-    }
-
 
     /**
      * Show the form for creating a new resource.

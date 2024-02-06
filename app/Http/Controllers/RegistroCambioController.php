@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// use App\Models\ClientesAlInstante;
-use Illuminate\Support\Facades\DB;
-use App\Events\EventoPrueba;
+use App\Models\RegistroCambio;
 
-class ClientesAlInstanteController extends Controller
+class RegistroCambioController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -16,27 +14,37 @@ class ClientesAlInstanteController extends Controller
      */
     public function index()
     {
-        event(new EventoPrueba('Listando empresas'));
-        $result = DB::connection('second_db')->table('cxc_cliente')->select(
-            'cod_cli as codigo',
-            'nom_cli as nombre'
-        )->paginate();
-
-        return response()->json($result);
-    }
-
-    public function filter($filtro)
-    {
-        $result = DB::connection('second_db')->table('cxc_cliente')->select(
-            'cod_cli as codigo',
-            'nom_cli as nombre'
+        $result = RegistroCambio::select(
+            'solicitante',
+            'autoriza',
+            'actualiza',
+            'observaciones',
+            'cliente_id as cliente',
+            'created_at',
+            'updated_at'
         )
-        ->where('cod_cli','like','%'.$filtro.'%')
-        ->orWhere('nom_cli','like','%'.$filtro.'%')
-        ->paginate();
+            ->get();
         return response()->json($result);
     }
 
+    public function byid($id)
+    {
+        $result = RegistroCambio::join('usr_app_clientes as cli','cli.id','usr_app_registro_cambios.cliente_id')
+        ->select(
+            'cli.razon_social',
+            'cli.numero_radicado',
+            'usr_app_registro_cambios.solicitante',
+            'usr_app_registro_cambios.autoriza',
+            'usr_app_registro_cambios.actualiza',
+            'usr_app_registro_cambios.observaciones',
+            'usr_app_registro_cambios.cliente_id as cliente',
+            'usr_app_registro_cambios.updated_at'
+        )
+            ->where('usr_app_registro_cambios.cliente_id', $id)
+            ->orderby('usr_app_registro_cambios.id','DESC')
+            ->get();
+        return response()->json($result);
+    }
 
     /**
      * Show the form for creating a new resource.

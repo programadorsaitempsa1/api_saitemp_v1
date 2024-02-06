@@ -100,7 +100,13 @@ use App\Http\Controllers\OservicioEstadoCargoController;
 use App\Http\Controllers\UsuarioPermisoController;
 use App\Http\Controllers\UsuariosMenusController;
 use App\Http\Controllers\categoriaMenuController;
+use App\Http\Controllers\NivelAccidentalidadController;
+use App\Http\Controllers\ElementosPPController;
+use App\Http\Controllers\EstadosFirmaController;
+use App\Http\Controllers\RegistroCambioController;
 use App\Http\Controllers\ExamenPruebaController;
+use App\Http\Controllers\SeleccionModalController;
+use App\Http\Controllers\ContratacionModalController;
 
 
 
@@ -545,6 +551,7 @@ Route::group([
   Route::post('/formulariocliente/doc/{id}', [formularioDebidaDiligenciaController::class, 'store']);
   Route::post('/formulariocliente/{id}', [formularioDebidaDiligenciaController::class, 'update']);
   Route::delete('/formulariocliente/{id}', [formularioDebidaDiligenciaController::class, 'destroy']);
+  Route::post('/actualizaestadofirma/{item_id}/{estado_id}', [formularioDebidaDiligenciaController::class, 'actualizaestadofirma']);
 
   Route::get('/consultaformulariocliente/{cantidad}', [formularioDebidaDiligenciaController::class, 'consultacliente']);
   Route::get('/clientesactivos', [formularioDebidaDiligenciaController::class, 'clientesactivos']);
@@ -674,10 +681,49 @@ Route::group([
   Route::post('/ordenserviciohojavida/{id}', [OservicioHojaVidaController::class, 'create']);
   Route::put('/ordenserviciohojavida/{id}', [OservicioHojaVidaController::class, 'update']);
   Route::delete('/ordenserviciohojavida/{id}', [OservicioHojaVidaController::class, 'destroy']);
-
+  
   Route::get('/cargosVacantesHojasVida/{anio}', [DashBoardSeleccionController::class, 'cargosVacantesHojasVida']);
   Route::get('/cantidadvacantesestado/{anio}', [DashBoardSeleccionController::class, 'cantidadVacantesPorEstado']);
+  
+  // Nivel de accidentalidad
+  Route::get('/nivelaccidentalidad', [NivelAccidentalidadController::class, 'index']);
+  Route::post('/nivelaccidentalidad/{id}', [NivelAccidentalidadController::class, 'create']);
+  Route::put('/nivelaccidentalidad/{id}', [NivelAccidentalidadController::class, 'update']);
+  Route::delete('/nivelaccidentalidad/{id}', [NivelAccidentalidadController::class, 'destroy']);
+  
+  
+  // Elementos de protección personal
+  Route::get('/elementospp', [ElementosPPController::class, 'index']);
+  Route::post('/elementospp/{id}', [ElementosPPController::class, 'create']);
+  Route::put('/elementospp/{id}', [ElementosPPController::class, 'update']);
+  Route::delete('/elementospp/{id}', [ElementosPPController::class, 'destroy']);
 
+  // Estados firma
+  Route::get('/estadosfirma', [EstadosFirmaController::class, 'index']);
+  Route::post('/estadosfirma/{id}', [EstadosFirmaController::class, 'create']);
+  Route::put('/estadosfirma/{id}', [EstadosFirmaController::class, 'update']);
+  Route::delete('/estadosfirma/{id}', [EstadosFirmaController::class, 'destroy']);
+
+  // Historial de cambios
+  Route::get('/registrocambios', [RegistroCambioController::class, 'index']);
+  Route::get('/registrocambios/{id}', [RegistroCambioController::class, 'byid']);
+  Route::post('/registrocambios/{id}', [RegistroCambioController::class, 'create']);
+  Route::put('/registrocambios/{id}', [RegistroCambioController::class, 'update']);
+  Route::delete('/registrocambios/{id}', [RegistroCambioController::class, 'destroy']);
+
+  // Ventana modal de selección debida diligencia
+  Route::get('/selecciondd', [SeleccionModalController::class, 'index']);
+  Route::get('/selecciondd/{id}', [SeleccionModalController::class, 'byid']);
+  Route::post('/selecciondd', [SeleccionModalController::class, 'create']);
+  Route::post('/selecciondd/{id}', [SeleccionModalController::class, 'update']);
+  Route::delete('/selecciondd/{id}', [SeleccionModalController::class, 'destroy']);
+
+  // Ventana modal de selección debida diligencia
+  Route::get('/contrataciondd', [ContratacionModalController::class, 'index']);
+  Route::get('/contrataciondd/{id}', [ContratacionModalController::class, 'byid']);
+  Route::post('/contrataciondd', [ContratacionModalController::class, 'create']);
+  Route::post('/contrataciondd/{id}', [ContratacionModalController::class, 'update']);
+  Route::delete('/contrataciondd/{id}', [ContratacionModalController::class, 'destroy']);
 
 
   // estos endpoint se usan para asignar a un empleado el lider correspondiente
