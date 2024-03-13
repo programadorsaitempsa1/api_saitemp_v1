@@ -116,6 +116,7 @@ use App\Http\Controllers\ArchivosFormularioIngresoController;
 use App\Http\Controllers\AfpFormularioIngresoController;
 use App\Http\Controllers\formularioGestionIngresoController;
 use App\Http\Controllers\estadosIngresoController;
+use App\Http\Controllers\FormularioIngresoTipoServicioController;
 
 
 
@@ -767,6 +768,7 @@ Route::group([
   Route::get('/responsableingresos/{estado}', [formularioGestionIngresoController::class, 'responsableingresos']);
 
 
+  Route::get('/tiposserviofi', [FormularioIngresoTipoServicioController::class, 'index']);
 
 
 

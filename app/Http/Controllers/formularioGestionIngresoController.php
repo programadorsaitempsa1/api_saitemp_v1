@@ -104,6 +104,7 @@ class formularioGestionIngresoController extends Controller
             ->leftJoin('usr_app_paises as pais', 'pais.id', 'dep.pais_id')
             ->leftJoin('usr_app_afp as afp', 'afp.id', 'usr_app_formulario_ingreso.afp_id')
             ->leftJoin('usr_app_estados_ingreso as esti', 'esti.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
+            ->leftJoin('usr_app_formulario_ingreso_tipo_servicio as tiser', 'tiser.id', 'usr_app_formulario_ingreso.tipo_servicio_id')
             ->where('usr_app_formulario_ingreso.id', '=', $id)
             ->select(
                 'usr_app_formulario_ingreso.id',
@@ -131,7 +132,16 @@ class formularioGestionIngresoController extends Controller
                 'dep.nombre as departamento',
                 'pais.id as pais_id',
                 'pais.nombre as pais',
-                'usr_app_formulario_ingreso.created_at as fecha_radicado'
+                'usr_app_formulario_ingreso.created_at as fecha_radicado',
+                'tiser.nombre_servicio',
+                'tiser.id as tipo_servicio_id',
+                'usr_app_formulario_ingreso.numero_vacantes',
+                'usr_app_formulario_ingreso.numero_contrataciones',
+                'usr_app_formulario_ingreso.citacion_entrevista',
+                'usr_app_formulario_ingreso.profesional',
+                'usr_app_formulario_ingreso.informe_seleccion',
+                'usr_app_formulario_ingreso.cambio_fecha',
+                'usr_app_formulario_ingreso.numero_radicado',
             )
             ->first();
 
@@ -149,11 +159,12 @@ class formularioGestionIngresoController extends Controller
         return response()->json($result);
     }
 
-   
+
     public function filtro($cadena)
     {
         $cadenaJSON = base64_decode($cadena);
-        $arrays = explode('/', $cadenaJSON);
+        $cadenaUTF8 = mb_convert_encoding($cadenaJSON, 'UTF-8', 'ISO-8859-1');
+        $arrays = explode('/', $cadenaUTF8);
         $arraysDecodificados = array_map('json_decode', $arrays);
 
         $campo = $arraysDecodificados[0];
@@ -161,7 +172,7 @@ class formularioGestionIngresoController extends Controller
         $valor_comparar = $arraysDecodificados[2];
         $valor_comparar2 = $arraysDecodificados[3];
 
-        // return $campo[1].''.$operador[1].''.$valor_comparar[1];
+        // return $arrays;//$campo[1].''.$operador[1].''.$valor_comparar[1];
 
         $query = FormularioGestionIngreso::leftJoin('usr_app_clientes as cli', 'cli.id', 'usr_app_formulario_ingreso.cliente_id')
             ->leftJoin('usr_app_municipios as mun', 'mun.id', 'usr_app_formulario_ingreso.municipio_id')
@@ -181,7 +192,7 @@ class formularioGestionIngresoController extends Controller
                 'usr_app_formulario_ingreso.responsable as responsable_ingreso',
                 'est.id as estado_ingreso_id'
             )
-            ->orderBy('usr_app_formulario_ingreso.id', 'DESC');
+            ->orderBy('usr_app_formulario_ingreso.created_at', 'DESC');
 
         $numElementos = count($campo);
 
@@ -222,7 +233,8 @@ class formularioGestionIngresoController extends Controller
                 case 'Entre':
                     // Suponiendo que $valor_comparar2 contiene el segundo valor en el rango
                     $valorComparar2Actual = $valor_comparar2[$i];
-                    $query->whereBetween($prefijoCampo . $campoActual, [$valorCompararActual, $valorComparar2Actual]);
+                    $query->whereDate($prefijoCampo . $campoActual, '>=', $valorCompararActual);
+                    $query->whereDate($prefijoCampo . $campoActual, '<=', $valorComparar2Actual);
                     break;
                 case 'Igual a':
                     $query->where($prefijoCampo . $campoActual, '=', $valorCompararActual);
@@ -264,13 +276,20 @@ class formularioGestionIngresoController extends Controller
         $result->numero_contacto = $request->numero_contacto;
         $result->eps = $request->eps;
         $result->afp_id = $request->afp_id;
-        $result->estradata = $request->verificado_stradata;
+        $result->estradata = $request->consulta_stradata;
         $result->novadades = $request->novedades;
         $result->laboratorio = $request->laboratorio;
         $result->examenes = $request->examenes;
         $result->fecha_examen = $request->fecha_examen;
         $result->estado_ingreso_id = 1;
         $result->responsable = $user->nombres . ' ' . $user->apellidos;
+        $result->tipo_servicio_id = $request->tipo_servicio_id;
+        $result->numero_vacantes = $request->numero_vacantes;
+        $result->numero_contrataciones = $request->numero_contrataciones;
+        $result->citacion_entrevista = $request->citacion_entrevista;
+        $result->profesional = $request->profesional;
+        $result->informe_seleccion = $request->informe_seleccion;
+        $result->cambio_fecha = $request->cambio_fecha;
 
         if ($result->save()) {
             // return response()->json(['status' => 'success', 'message' => 'ok']);
@@ -392,12 +411,19 @@ class formularioGestionIngresoController extends Controller
         $result->numero_contacto = $request->numero_contacto;
         $result->eps = $request->eps;
         $result->afp_id = $request->afp_id;
-        $result->estradata = $request->verificado_stradata;
+        $result->estradata = $request->consulta_stradata;
         $result->novadades = $request->novedades;
         $result->laboratorio = $request->laboratorio;
         $result->examenes = $request->examenes;
         $result->fecha_examen = $request->fecha_examen;
         $result->estado_ingreso_id = 1;
+        $result->tipo_servicio_id = $request->tipo_servicio_id;
+        $result->numero_vacantes = $request->numero_vacantes;
+        $result->numero_contrataciones = $request->numero_contrataciones;
+        $result->citacion_entrevista = $request->citacion_entrevista;
+        $result->profesional = $request->profesional;
+        $result->informe_seleccion = $request->informe_seleccion;
+        $result->cambio_fecha = $request->cambio_fecha;
         // $result->responsable = $user->nombres . ' ' . $user->apellidos;
 
         if ($result->save()) {

@@ -33,6 +33,18 @@ class UsuarioController extends Controller
         return response()->json($users);
     }
 
+    public function index2()
+    {
+        $users = user::select(
+            // "usr_app_usuarios.nombres",
+            // "usr_app_usuarios.apellidos",
+            DB::raw("CONCAT(nombres, ' ', apellidos) AS nombre"),
+
+        )
+            ->get();
+        return response()->json($users);
+    }
+
     public function filtro($filtro, $cantidad)
     {
         $users = user::join("usr_app_roles", "usr_app_roles.id", "=", "usr_app_usuarios.rol_id")
@@ -56,7 +68,7 @@ class UsuarioController extends Controller
     public function userslist()
     {
         $result = user::select(
-           'id',
+            'id',
             DB::raw("CONCAT(nombres,' ',apellidos)  AS nombre"),
             'email'
         )
