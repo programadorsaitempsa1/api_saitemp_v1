@@ -107,6 +107,15 @@ use App\Http\Controllers\RegistroCambioController;
 use App\Http\Controllers\ExamenPruebaController;
 use App\Http\Controllers\SeleccionModalController;
 use App\Http\Controllers\ContratacionModalController;
+use App\Http\Controllers\OtroSiController;
+use App\Http\Controllers\CiudadLaboratorioController;
+use App\Http\Controllers\AtencionInteraccionController;
+use App\Http\Controllers\ProcesosController;
+use App\Http\Controllers\ClienteInteraccionController;
+use App\Http\Controllers\ArchivosFormularioIngresoController;
+use App\Http\Controllers\AfpFormularioIngresoController;
+use App\Http\Controllers\formularioGestionIngresoController;
+use App\Http\Controllers\estadosIngresoController;
 
 
 
@@ -216,6 +225,7 @@ Route::group([
 
   // Banco
   Route::get('/banco', [BancoController::class, 'index']);
+  Route::get('/conveniobanco', [BancoController::class, 'conveniobanco']);
 
   // Tipo de contrato
   Route::get('/tipocontrato', [TipoContratoController::class, 'index']);
@@ -327,7 +337,7 @@ Route::group([
   Route::delete('/rolpermiso/{id}', [SigPermisoRolController::class, 'destroy']);
   Route::get('/rolespermisos', [RolController::class, 'rolesPermisos']);
 
-  
+
   // Usuario permiso
   Route::get('/usuariopermiso/{cantidad}', [UsuarioPermisoController::class, 'index']);
   Route::post('/usuariopermiso', [UsuarioPermisoController::class, 'create']);
@@ -545,6 +555,7 @@ Route::group([
 
   // Formularios registro clientes
   Route::get('/formulariocliente', [formularioDebidaDiligenciaController::class, 'index']);
+  Route::get('/empresascliente', [formularioDebidaDiligenciaController::class, 'empresascliente']);
   Route::get('/formulariocliente/{id}', [formularioDebidaDiligenciaController::class, 'getbyid']);
   Route::get('/clienteexist/{id}/{tipo_id}', [formularioDebidaDiligenciaController::class, 'existbyid']);
   Route::post('/formulariocliente', [formularioDebidaDiligenciaController::class, 'create']);
@@ -681,17 +692,17 @@ Route::group([
   Route::post('/ordenserviciohojavida/{id}', [OservicioHojaVidaController::class, 'create']);
   Route::put('/ordenserviciohojavida/{id}', [OservicioHojaVidaController::class, 'update']);
   Route::delete('/ordenserviciohojavida/{id}', [OservicioHojaVidaController::class, 'destroy']);
-  
+
   Route::get('/cargosVacantesHojasVida/{anio}', [DashBoardSeleccionController::class, 'cargosVacantesHojasVida']);
   Route::get('/cantidadvacantesestado/{anio}', [DashBoardSeleccionController::class, 'cantidadVacantesPorEstado']);
-  
+
   // Nivel de accidentalidad
   Route::get('/nivelaccidentalidad', [NivelAccidentalidadController::class, 'index']);
   Route::post('/nivelaccidentalidad/{id}', [NivelAccidentalidadController::class, 'create']);
   Route::put('/nivelaccidentalidad/{id}', [NivelAccidentalidadController::class, 'update']);
   Route::delete('/nivelaccidentalidad/{id}', [NivelAccidentalidadController::class, 'destroy']);
-  
-  
+
+
   // Elementos de protección personal
   Route::get('/elementospp', [ElementosPPController::class, 'index']);
   Route::post('/elementospp/{id}', [ElementosPPController::class, 'create']);
@@ -725,6 +736,44 @@ Route::group([
   Route::post('/contrataciondd/{id}', [ContratacionModalController::class, 'update']);
   Route::delete('/contrataciondd/{id}', [ContratacionModalController::class, 'destroy']);
 
+  // Otros si
+  Route::get('/otrosi', [OtroSiController::class, 'index']);
+
+  Route::get('/laboratorios', [CiudadLaboratorioController::class, 'index']);
+  Route::get('/laboratorios/{id}', [CiudadLaboratorioController::class, 'byid']);
+
+
+  Route::get('/interaccion', [AtencionInteraccionController::class, 'index']);
+  Route::get('/procesos', [ProcesosController::class, 'index']);
+
+  Route::get('/interaccioncliente', [ClienteInteraccionController::class, 'index']);
+  Route::get('/interaccioncliente/{id}', [ClienteInteraccionController::class, 'byid']);
+  Route::post('/interaccioncliente', [ClienteInteraccionController::class, 'create']);
+
+  Route::get('/archivosingreso', [ArchivosFormularioIngresoController::class, 'index']);
+  Route::get('/afp', [AfpFormularioIngresoController::class, 'index']);
+
+  Route::get('/formularioingreso/{cantidad}', [formularioGestionIngresoController::class, 'index']);
+  Route::get('/formularioingresobyid/{id}', [formularioGestionIngresoController::class, 'byid']);
+  Route::post('/formularioingreso', [formularioGestionIngresoController::class, 'create']);
+  Route::post('/formularioingreso/{id}', [formularioGestionIngresoController::class, 'update']);
+  Route::post('/formularioingreso/doc/{id}', [formularioGestionIngresoController::class, 'store']);
+  Route::delete('/formularioingreso/{id}', [formularioGestionIngresoController::class, 'destroy']);
+  Route::get('/formularioingresofiltro/{cadena}', [formularioGestionIngresoController::class, 'filtro']);
+
+  Route::get('/estadosingresos', [estadosIngresoController::class, 'index']);
+  Route::get('/actualizaestadoingreso/{item}/{estado}', [formularioGestionIngresoController::class, 'actualizaestadoingreso']);
+  Route::get('/actualizaResponsableingreso/{item}/{nombre}', [formularioGestionIngresoController::class, 'actualizaResponsableingreso']);
+  Route::get('/responsableingresos/{estado}', [formularioGestionIngresoController::class, 'responsableingresos']);
+
+
+
+
+
+  // Route::get('/otrosi/{id}', [OtroSiController::class, 'byid']);
+  // Route::post('/otrosi', [OtroSiController::class, 'create']);
+  // Route::post('/otrosi/{id}', [OtroSiController::class, 'update']);
+  // Route::delete('/otrosi/{id}', [OtroSiController::class, 'destroy']);
 
   // estos endpoint se usan para asignar a un empleado el lider correspondiente
   // Route::get('/examen/{cedula}', [ExamenPruebaController::class, 'examen']);

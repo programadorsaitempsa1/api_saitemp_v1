@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\TipoContrato;
-use Illuminate\Http\Request;
 
-class TipoContratoController extends Controller
+use Illuminate\Http\Request;
+use App\Models\CiudadLaboratorio;
+
+class CiudadLaboratorioController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -13,11 +14,24 @@ class TipoContratoController extends Controller
      */
     public function index()
     {
-        $result = TipoContrato::select(
-            'tip_con as id',
-            'nom_con as nombre',
+        $result = CiudadLaboratorio::select(
+            'id',
+            'ciudad_id',
+            'laboratorio as nombre',
         )
-        ->get();
+            ->get();
+        return response()->json($result);
+    }
+
+    public function byid($id)
+    {
+        $result = CiudadLaboratorio::where('ciudad_id', $id)
+            ->select(
+                'id',
+                'ciudad_id',
+                'laboratorio as nombre',
+            )
+            ->get();
         return response()->json($result);
     }
 

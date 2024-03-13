@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\TipoContrato;
-use Illuminate\Http\Request;
 
-class TipoContratoController extends Controller
+use Illuminate\Http\Request;
+use App\Models\OtroSi;
+
+class OtroSiController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -13,9 +14,9 @@ class TipoContratoController extends Controller
      */
     public function index()
     {
-        $result = TipoContrato::select(
-            'tip_con as id',
-            'nom_con as nombre',
+        $result = OtroSi::select(
+            'id',
+            'nombre',
         )
         ->get();
         return response()->json($result);

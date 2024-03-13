@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\TipoContrato;
-use Illuminate\Http\Request;
 
-class TipoContratoController extends Controller
+use Illuminate\Http\Request;
+use App\Models\ClienteConvenioBanco;
+
+class ClienteConvenioBancocontroller extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -13,11 +14,8 @@ class TipoContratoController extends Controller
      */
     public function index()
     {
-        $result = TipoContrato::select(
-            'tip_con as id',
-            'nom_con as nombre',
-        )
-        ->get();
+        $result = ClienteConvenioBanco::select()
+            ->get();
         return response()->json($result);
     }
 
@@ -26,9 +24,9 @@ class TipoContratoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+       
     }
 
     /**
