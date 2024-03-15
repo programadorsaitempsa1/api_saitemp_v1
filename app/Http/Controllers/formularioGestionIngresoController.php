@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\formularioGestionIngreso;
 use App\Models\FormularioIngresoArchivos;
 use App\Models\FormularioIngresoResponsable;
+use Carbon\Carbon;
 
 class formularioGestionIngresoController extends Controller
 {
@@ -35,6 +36,7 @@ class formularioGestionIngresoController extends Controller
                 'usr_app_formulario_ingreso.responsable as responsable_ingreso',
                 'est.id as estado_ingreso_id'
             )
+            ->orderby('usr_app_formulario_ingreso.id', 'DESC')
             ->paginate($cantidad);
         return response()->json($result);
     }
@@ -89,7 +91,7 @@ class formularioGestionIngresoController extends Controller
             ->where('usr_app_formulario_ingreso_responsable.estado_ingreso_id', '=', $estado)
             ->select(
                 'usuario_id',
-                'usr.nombres'
+                'usr.nombres as nombre'
             )
             ->get();
         return response()->json($usuarios);
@@ -109,6 +111,7 @@ class formularioGestionIngresoController extends Controller
             ->select(
                 'usr_app_formulario_ingreso.id',
                 'esti.nombre as estado_ingreso',
+                'esti.id as estado_ingreso_id',
                 'usr_app_formulario_ingreso.responsable as responsable_ingreso',
                 'usr_app_formulario_ingreso.fecha_ingreso',
                 'usr_app_formulario_ingreso.numero_identificacion',
@@ -172,8 +175,6 @@ class formularioGestionIngresoController extends Controller
         $valor_comparar = $arraysDecodificados[2];
         $valor_comparar2 = $arraysDecodificados[3];
 
-        // return $arrays;//$campo[1].''.$operador[1].''.$valor_comparar[1];
-
         $query = FormularioGestionIngreso::leftJoin('usr_app_clientes as cli', 'cli.id', 'usr_app_formulario_ingreso.cliente_id')
             ->leftJoin('usr_app_municipios as mun', 'mun.id', 'usr_app_formulario_ingreso.municipio_id')
             ->leftJoin('usr_app_estados_ingreso as est', 'est.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
@@ -232,6 +233,7 @@ class formularioGestionIngresoController extends Controller
                     break;
                 case 'Entre':
                     // Suponiendo que $valor_comparar2 contiene el segundo valor en el rango
+
                     $valorComparar2Actual = $valor_comparar2[$i];
                     $query->whereDate($prefijoCampo . $campoActual, '>=', $valorCompararActual);
                     $query->whereDate($prefijoCampo . $campoActual, '<=', $valorComparar2Actual);
@@ -266,6 +268,7 @@ class formularioGestionIngresoController extends Controller
     {
         $user = auth()->user();
         $result = new formularioGestionIngreso;
+        // $result->fecha_ingreso = Carbon::createFromFormat('Y-m-d\TH:i', $request->fecha_ingreo)->format('Y-m-d H:i:s');
         $result->fecha_ingreso = $request->fecha_ingreo;
         $result->numero_identificacion = $request->numero_identificacion;
         $result->nombre_completo = $request->nombre_completo;
@@ -280,19 +283,20 @@ class formularioGestionIngresoController extends Controller
         $result->novadades = $request->novedades;
         $result->laboratorio = $request->laboratorio;
         $result->examenes = $request->examenes;
-        $result->fecha_examen = $request->fecha_examen;
+        $result->fecha_examen = Carbon::createFromFormat('Y-m-d\TH:i', $request->fecha_examen)->format('Y-m-d H:i:s');
         $result->estado_ingreso_id = 1;
         $result->responsable = $user->nombres . ' ' . $user->apellidos;
         $result->tipo_servicio_id = $request->tipo_servicio_id;
         $result->numero_vacantes = $request->numero_vacantes;
         $result->numero_contrataciones = $request->numero_contrataciones;
-        $result->citacion_entrevista = $request->citacion_entrevista;
+        $result->citacion_entrevista = Carbon::createFromFormat('Y-m-d\TH:i', $request->citacion_entrevista)->format('Y-m-d H:i:s');
         $result->profesional = $request->profesional;
         $result->informe_seleccion = $request->informe_seleccion;
         $result->cambio_fecha = $request->cambio_fecha;
+        $result->responsable = $request->consulta_encargado;
+        $result->estado_ingreso_id = $request->estado_id;
 
         if ($result->save()) {
-            // return response()->json(['status' => 'success', 'message' => 'ok']);
             return response()->json(['status' => '200', 'message' => 'ok', 'registro_ingreso_id' => $result->id]);
         } else {
             return response()->json(['status' => 'success', 'message' => 'error']);
@@ -424,7 +428,8 @@ class formularioGestionIngresoController extends Controller
         $result->profesional = $request->profesional;
         $result->informe_seleccion = $request->informe_seleccion;
         $result->cambio_fecha = $request->cambio_fecha;
-        // $result->responsable = $user->nombres . ' ' . $user->apellidos;
+        $result->responsable = $request->consulta_encargado;
+        $result->estado_ingreso_id = $request->estado_id;
 
         if ($result->save()) {
             // return response()->json(['status' => 'success', 'message' => 'ok']);
