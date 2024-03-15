@@ -7,6 +7,7 @@ use App\Models\formularioGestionIngreso;
 use App\Models\FormularioIngresoArchivos;
 use App\Models\FormularioIngresoResponsable;
 use Carbon\Carbon;
+// use Illuminate\Support\Carbon;
 
 class formularioGestionIngresoController extends Controller
 {
@@ -283,18 +284,27 @@ class formularioGestionIngresoController extends Controller
         $result->novadades = $request->novedades;
         $result->laboratorio = $request->laboratorio;
         $result->examenes = $request->examenes;
-        $result->fecha_examen = Carbon::createFromFormat('Y-m-d\TH:i', $request->fecha_examen)->format('Y-m-d H:i:s');
-        $result->estado_ingreso_id = 1;
+        if ($request->fecha_examen != null) {
+            $result->fecha_examen = Carbon::createFromFormat('Y-m-d\TH:i', $request->fecha_examen)->format('Y-m-d H:i:s');
+        }
+        if ($request->estado_id == '') {
+            $result->estado_ingreso_id = 1;
+        } else {
+            $result->estado_ingreso_id = $request->estado_id;
+        }
         $result->responsable = $user->nombres . ' ' . $user->apellidos;
         $result->tipo_servicio_id = $request->tipo_servicio_id;
         $result->numero_vacantes = $request->numero_vacantes;
         $result->numero_contrataciones = $request->numero_contrataciones;
-        $result->citacion_entrevista = Carbon::createFromFormat('Y-m-d\TH:i', $request->citacion_entrevista)->format('Y-m-d H:i:s');
+        if ($request->citacion_entrevista != null) {
+            $result->citacion_entrevista = Carbon::createFromFormat('Y-m-d\TH:i', $request->citacion_entrevista)->format('Y-m-d H:i:s');
+        }
         $result->profesional = $request->profesional;
         $result->informe_seleccion = $request->informe_seleccion;
-        $result->cambio_fecha = $request->cambio_fecha;
+        if ($request->cambio_fecha != null) {
+            $result->cambio_fecha = Carbon::createFromFormat('Y-m-d\TH:i', $request->cambio_fecha)->format('Y-m-d H:i:s');
+        }
         $result->responsable = $request->consulta_encargado;
-        $result->estado_ingreso_id = $request->estado_id;
 
         if ($result->save()) {
             return response()->json(['status' => '200', 'message' => 'ok', 'registro_ingreso_id' => $result->id]);
