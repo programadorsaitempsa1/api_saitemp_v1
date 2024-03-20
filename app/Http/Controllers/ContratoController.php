@@ -28,6 +28,7 @@ class ContratoController extends Controller
             ->join('usr_app_actividades_ciiu as ac', 'ac.id', '=', 'usr_app_clientes.actividad_ciiu_id')
             ->join('gen_tipide as doc', 'doc.cod_tip', '=', 'usr_app_clientes.tipo_identificacion_id')
             ->select(
+                'usr_app_clientes.id',
                 'razon_social',
                 'nit',
                 'rl.nombre as representante_legal',
@@ -42,6 +43,10 @@ class ContratoController extends Controller
                 'correo_facturacion_electronica',
                 'aiu_negociado',
                 'plazo_pago',
+                'codigo_documento',
+                'fecha_documento',
+                'version_documento',
+                DB::raw('COALESCE(CONVERT(VARCHAR, usr_app_clientes.numero_radicado), CONVERT(VARCHAR, usr_app_clientes.id)) AS radicado'),
             )
             ->where('usr_app_clientes.id', '=', $id)
             ->first();

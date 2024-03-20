@@ -13,7 +13,10 @@ class TipoContratoController extends Controller
      */
     public function index()
     {
-        $result = TipoContrato::select()
+        $result = TipoContrato::select(
+            'tip_con as id',
+            'nom_con as nombre',
+        )
         ->get();
         return response()->json($result);
     }

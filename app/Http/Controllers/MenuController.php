@@ -21,69 +21,54 @@ class MenuController extends Controller
 
     public function menubyRole()
     {
-        $user = auth()->user();
-        $users = menu::join("usr_app_menus_roles", "usr_app_menus_roles.menu_id", "=", "usr_app_menus.id")
-            ->join('usr_app_roles', 'usr_app_roles.id', '=', 'usr_app_menus_roles.rol_id')
-            ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
-            ->where('usr_app_roles.id', '=', $user->rol_id)
-            ->where('usr_app_menus.oculto', '=', 0)
-            ->orderBy('usr_app_menus.posicion')
-            ->select(
+        // $user = auth()->user();
+        // $users = menu::join("usr_app_menus_roles", "usr_app_menus_roles.menu_id", "=", "usr_app_menus.id")
+        //     ->join('usr_app_roles', 'usr_app_roles.id', '=', 'usr_app_menus_roles.rol_id')
+        //     ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
+        //     ->where('usr_app_roles.id', '=', $user->rol_id)
+        //     ->where('usr_app_menus.oculto', '=', 0)
+        //     ->orderBy('usr_app_menus.posicion')
+        //     ->select(
 
-                "usr_app_roles.id as rol",
-                "usr_app_menus.nombre",
-                "usr_app_menus.id",
+        //         "usr_app_roles.id as rol",
+        //         "usr_app_menus.nombre",
+        //         "usr_app_menus.id",
+        //         "usr_app_menus.url",
+        //         "usr_app_menus.icon",
+        //         "usr_app_menus.urlExterna",
+        //         "usr_app_menus.oculto",
+        //         "usr_app_categorias_menu.nombre as categoria",
+        //         "usr_app_menus.powerbi"
+        //     )
+        //     ->get();
+        // return response()->json($users);
+
+        $user = auth()->user();
+        $result = menu::leftJoin('usr_app_menus_roles', 'usr_app_menus_roles.menu_id', '=', 'usr_app_menus.id')
+            ->leftJoin('usr_app_usuarios_menus', 'usr_app_usuarios_menus.menu_id', '=', 'usr_app_menus.id')
+            ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
+            ->where(function ($query) use ($user) {
+                $query->where('usr_app_menus_roles.rol_id', '=', $user['rol_id'])
+                    ->orWhere('usr_app_usuarios_menus.usuario_id', '=', $user['id']);
+            })
+            ->where('usr_app_menus.oculto', '=', 0)
+            ->orderBy('usr_app_menus.posicion', 'ASC')
+            ->select(
+                'usr_app_menus.id',
+                'usr_app_menus.nombre',
                 "usr_app_menus.url",
                 "usr_app_menus.icon",
                 "usr_app_menus.urlExterna",
                 "usr_app_menus.oculto",
+                "usr_app_menus.powerbi",
                 "usr_app_categorias_menu.nombre as categoria",
-                "usr_app_menus.powerbi"
+                "usr_app_menus.posicion"
             )
+            ->distinct()
+            // ->orderby('usr_app_menus.posicion','ASC')
             ->get();
-        return response()->json($users);
 
-        // $users = menu::leftJoin('usr_app_menus_roles', 'usr_app_menus_roles.menu_id', '=', 'usr_app_menus.id')
-        //     ->leftJoin('usr_app_roles', 'usr_app_roles.id', '=', 'usr_app_menus_roles.rol_id')
-        //     ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
-        //     ->where('usr_app_menus.oculto', '=', 0)
-        //     ->where('usr_app_roles.id', '=', $user->rol_id)
-        //     ->orderBy('usr_app_menus.posicion')
-        //     ->select(
-        //         "usr_app_roles.id as rol",
-        //         "usr_app_menus.nombre",
-        //         "usr_app_menus.id",
-        //         "usr_app_menus.url",
-        //         "usr_app_menus.icon",
-        //         "usr_app_menus.urlExterna",
-        //         "usr_app_menus.oculto",
-        //         "usr_app_categorias_menu.nombre as categoria"
-        //     )
-        //     ->get();
-
-        // return response()->json($users);
-        // $users = menu::leftJoin('usr_app_menus_roles', 'usr_app_menus_roles.menu_id', '=', 'usr_app_menus.id')
-        //     ->leftJoin('usr_app_roles', 'usr_app_roles.id', '=', 'usr_app_menus_roles.rol_id')
-        //     ->join('usr_app_categorias_menu', 'usr_app_categorias_menu.id', '=', 'usr_app_menus.categoria_menu_id')
-        //     ->where('usr_app_menus.oculto', '=', 0)
-        //     ->when($user->rol_id != 1, function ($query) use ($user) {
-        //         return $query->where('usr_app_roles.id', '=', $user->rol_id);
-        //     })
-        //     ->orderBy('usr_app_menus.posicion')
-        //     ->select(
-        //         "usr_app_roles.id as rol",
-        //         "usr_app_menus.nombre",
-        //         "usr_app_menus.id",
-        //         "usr_app_menus.url",
-        //         "usr_app_menus.icon",
-        //         "usr_app_menus.urlExterna",
-        //         "usr_app_menus.oculto",
-        //         "usr_app_categorias_menu.nombre as categoria"
-        //     )
-        //     ->get();
-
-        // return response()->json($users);
-
+        return response()->json($result);
     }
 
 
@@ -103,6 +88,7 @@ class MenuController extends Controller
             foreach ($menus->original as $item2) {
                 if ($item2->categoria == $item->categoria) {
                     $opcion = [
+                        'id' => $item2->id,
                         'nombre' => $item2->nombre,
                         'rol' => $item2->rol,
                         'url' => $item2->url,
@@ -124,6 +110,26 @@ class MenuController extends Controller
         return response()->json($menu);
     }
 
+    public function menus($cantidad)
+    {
+        $result = Menu::join('usr_app_categorias_menu as ct', 'ct.id', 'usr_app_menus.categoria_menu_id')
+            ->select(
+                'usr_app_menus.id',
+                'usr_app_menus.nombre',
+                'usr_app_menus.url',
+                'usr_app_menus.icon',
+                'usr_app_menus.urlExterna',
+                'usr_app_menus.posicion',
+                'usr_app_menus.oculto',
+                'categoria_menu_id',
+                'ct.nombre as categoria',
+                'usr_app_menus.powerbi',
+            )
+            ->orderby('posicion', 'DESC')
+            ->paginate($cantidad);
+        return response()->json($result);
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -131,14 +137,16 @@ class MenuController extends Controller
      */
     public function create(Request $request)
     {
-        $datosmenu = new Menu;
-        $datosmenu->nombre = $request->nombre;
-        $datosmenu->url = $request->url;
-        $datosmenu->icon = $request->icon;
-        $datosmenu->urlExterna = $request->urlExterna;
-        $datosmenu->posicion = $request->posicion;
-        $datosmenu->oculto = $request->oculto;
-        if ($datosmenu->save()) {
+        $menu = new Menu;
+        $menu->nombre = $request->nombre;
+        $menu->url = $request->url;
+        $menu->icon = $request->icono;
+        $menu->urlExterna = $request->url_externa;
+        $menu->posicion = $request->posicion;
+        $menu->oculto = $request->oculto;
+        $menu->categoria_menu_id = $request->categoria_menu_id;
+        $menu->powerbi = ''; //$request->powerbi;
+        if ($menu->save()) {
             return response()->json(['status' => 'success', 'message' => 'Menú insertado exitosamente']);
         } else {
             return response()->json(['status' => 'success', 'message' => 'Error al insertar registro, por favor intente nuevamente']);
@@ -187,15 +195,17 @@ class MenuController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $datosmenu = Menu::find($id);
-
-        $datosmenu->nombre = $request->nombre;
-        $datosmenu->url = $request->url;
-        $datosmenu->icon = $request->icon;
-        $datosmenu->urlExterna = $request->urlExterna;
-        $datosmenu->posicion = $request->posicion;
-        $datosmenu->oculto = $request->oculto;
-        if ($datosmenu->save()) {
+        $menu = Menu::find($id);
+        $menu->nombre = $request->nombre;
+        $menu->url = $request->url;
+        $menu->icon = $request->icono;
+        $menu->urlExterna = $request->url_externa;
+        $menu->posicion = $request->posicion;
+        $menu->oculto = $request->oculto;
+        $menu->categoria_menu_id = $request->categoria_menu_id;
+        // if($request->powerbi != '')
+        $menu->powerbi = $request->powerbi !=  '' ? $request->powerbi : '';
+        if ($menu->save()) {
             return response()->json(['status' => 'success', 'message' => 'Menú actualizado exitosamente']);
         } else {
             return response()->json(['status' => 'success', 'message' => 'Error al actualizar registro, por favor intente nuevamente']);
@@ -210,11 +220,16 @@ class MenuController extends Controller
      */
     public function destroy($id)
     {
-        $datosmenu = Menu::find($id);
-        if ($datosmenu->delete()) {
-            return response()->json("registro borrado Con Exito");
-        } else {
-            return response()->json("Error al borrar registro");
+        try {
+            $menu = Menu::find($id);
+            if ($menu->delete()) {
+                return response()->json(['status' => 'success', 'message' => 'Menú borrado exitosamente']);
+            } else {
+                return response()->json(['status' => 'success', 'message' => 'Error al borrar registro, por favor intente nuevamente']);
+            }
+        } catch (\Exception $e) {
+            // return $e;
+            return response()->json(['status' => 'error', 'message' => 'Hay una relación entre un usuario y este menú, por favor primero elimine la relación']);
         }
     }
 }

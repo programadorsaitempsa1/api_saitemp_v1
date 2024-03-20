@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Banco;
 use Illuminate\Http\Request;
 
@@ -14,9 +15,25 @@ class BancoController extends Controller
     public function index()
     {
         $result = Banco::select()
-        ->get();
+            ->get();
         return response()->json($result);
     }
+
+    public function conveniobanco()
+    {
+        $result = Banco::where('cod_ban', '07')
+            ->orWhere('cod_ban', '01')
+            ->orWhere('cod_ban', '52')
+            ->orWhere('cod_ban', '13')
+            ->select(
+                'cod_ban as id',
+                'nom_ban as nombre',
+            )
+            ->get();
+        return response()->json($result);
+    }
+
+
 
     /**
      * Show the form for creating a new resource.
