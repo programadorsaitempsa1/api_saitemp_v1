@@ -29,6 +29,26 @@ class RegistroCorreosController extends Controller
         return $result;
     }
 
+    public function index2($modulo, $registro_id)
+    {
+        $result = RegistroCorreos::where('usr_app_registro_correos.modulo','=',$modulo)
+        ->where('usr_app_registro_correos.registro_id','=',$registro_id)
+        ->select(
+            'id',
+            'remitente',
+            'destinatario',
+            'con_copia',
+            'con_copia_oculta',
+            'asunto',
+            'mensaje',
+            'adjunto',
+        )
+       
+            ->orderby('id', 'DESC')
+            ->get();
+        return $result;
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -44,14 +64,10 @@ class RegistroCorreosController extends Controller
         $result->asunto = $request['asunto'];
         $result->mensaje = htmlspecialchars_decode(strip_tags($request['mensaje']));
         $result->adjunto = implode(", ", $request['adjunto']);
-        // $result->modulo = $request->modulo;
-        // $result->area = $request->area;
+        $result->modulo = intval($request['modulo']);
+        $result->registro_id = $request['registro_id'];
+        $result->formulario_correo = $request['formulario_correo'];
         $result->save();
-        // if($result->save()){
-        //     // return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
-        // }else{ 
-        //     return response()->json(['status' => 'error', 'message' => 'Error al guardar el registro, por favor intente nuevamente']);
-        // }
     }
 
     public function correosfiltro($cadena)

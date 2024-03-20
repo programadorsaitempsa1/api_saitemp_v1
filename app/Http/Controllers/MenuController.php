@@ -52,7 +52,7 @@ class MenuController extends Controller
                     ->orWhere('usr_app_usuarios_menus.usuario_id', '=', $user['id']);
             })
             ->where('usr_app_menus.oculto', '=', 0)
-            ->orderBy('usr_app_menus.posicion','ASC')
+            ->orderBy('usr_app_menus.posicion', 'ASC')
             ->select(
                 'usr_app_menus.id',
                 'usr_app_menus.nombre',
@@ -88,6 +88,7 @@ class MenuController extends Controller
             foreach ($menus->original as $item2) {
                 if ($item2->categoria == $item->categoria) {
                     $opcion = [
+                        'id' => $item2->id,
                         'nombre' => $item2->nombre,
                         'rol' => $item2->rol,
                         'url' => $item2->url,
@@ -228,7 +229,7 @@ class MenuController extends Controller
             }
         } catch (\Exception $e) {
             // return $e;
-            return response()->json(['status'=>'error','message'=>'Hay una relación entre un usuario y este menú, por favor primero elimine la relación']);
+            return response()->json(['status' => 'error', 'message' => 'Hay una relación entre un usuario y este menú, por favor primero elimine la relación']);
         }
     }
 }

@@ -19,6 +19,7 @@ class EnvioCorreoController extends Controller
     public function sendEmail(Request $request)
     {
 
+        // return $request->modulo;
         // return $request['orden_servicio'];
         $user = auth()->user();
 
@@ -89,6 +90,10 @@ class EnvioCorreoController extends Controller
             $email->attachFromPath($request->formulario_supervision, 'Formulario de supervisión');
         }
 
+        if (file_exists($request->formulario_ingreso)) {
+            $email->attachFromPath($request->formulario_ingreso, 'Formulario de ingreso');
+        }
+
         foreach ($destinatarios as $destinatario) {
             $email->addTo($destinatario);
         }
@@ -122,7 +127,15 @@ class EnvioCorreoController extends Controller
             $correo['asunto'] = $request->subject;
             $correo['mensaje'] = $request->body;
             $correo['adjunto'] = $adjuntos;
+            $correo['modulo'] = $request->modulo;
+            $correo['registro_id'] = $request->registro_id;
+            if ($request->formulario_correo == null) {
+                $correo['formulario_correo'] = 0;
+            } else {
+                $correo['formulario_correo'] = $request->formulario_correo;
+            }
             $registroCorreosController->create($correo);
+
             return response()->json(['status' => 'success', 'message' => 'El correo electrónico se ha enviado correctamente.']);
         } else {
             return response()->json(['status' => 'error', 'message' => 'Hubo un error al enviar el correo electrónico.']);

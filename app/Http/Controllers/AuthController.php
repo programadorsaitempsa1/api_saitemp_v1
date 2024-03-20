@@ -41,10 +41,9 @@ class AuthController extends Controller
         } else {
             $user = $request->email;
         }
-
+      
         $ldapconn = ldap_connect('saitempsa.local');
         ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
-
         try {
             if ($ldapconn) {
                 try {

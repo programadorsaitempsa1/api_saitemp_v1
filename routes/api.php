@@ -198,6 +198,7 @@ Route::group([
   Route::post('/authUser', [EnvioCorreoController::class, 'authUser']);
 
   Route::get('/consultacorreo/{cantidad}', [RegistroCorreosController::class, 'index']);
+  Route::get('/consultacorreo/{modulo}/{registro_id}', [RegistroCorreosController::class, 'index2']);
   Route::post('/registrocorreo', [RegistroCorreosController::class, 'create']);
   Route::get('/consultacorreofiltro/{cadena}', [RegistroCorreosController::class, 'correosfiltro']);
 
@@ -766,9 +767,11 @@ Route::group([
   Route::get('/actualizaestadoingreso/{item}/{estado}', [formularioGestionIngresoController::class, 'actualizaestadoingreso']);
   Route::get('/actualizaResponsableingreso/{item}/{nombre}', [formularioGestionIngresoController::class, 'actualizaResponsableingreso']);
   Route::get('/responsableingresos/{estado}', [formularioGestionIngresoController::class, 'responsableingresos']);
+  Route::get('/gestioningresospdf/{modulo}/{id}', [formularioGestionIngresoController::class, 'gestioningresospdf']);
 
 
   Route::get('/tiposserviofi', [FormularioIngresoTipoServicioController::class, 'index']);
+
 
 
 
