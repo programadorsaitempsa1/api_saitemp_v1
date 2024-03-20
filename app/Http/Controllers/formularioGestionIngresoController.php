@@ -178,7 +178,7 @@ class formularioGestionIngresoController extends Controller
         $pdf->SetAutoPageBreak(false, 0);
         $pdf->SetMargins(0, 0, 0);
 
-        $img_file = 'C:\Users\Programador2\Downloads\MEMBRETE.png';
+        $img_file = 'C:\Users\programador1\Downloads\MEMBRETE.png';
         $pdf->Image($img_file, -0.5, 0, $pdf->getPageWidth() + 0.5, $pdf->getPageHeight(), '', '', '', false, 300, '', false, false, 0);
 
         $pdf->Ln(25);
