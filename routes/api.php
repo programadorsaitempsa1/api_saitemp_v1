@@ -758,16 +758,21 @@ Route::group([
   Route::get('/formularioingreso/{cantidad}', [formularioGestionIngresoController::class, 'index']);
   Route::get('/formularioingresobyid/{id}', [formularioGestionIngresoController::class, 'byid']);
   Route::post('/formularioingreso', [formularioGestionIngresoController::class, 'create']);
+  Route::post('/formularioingresopendientes', [formularioGestionIngresoController::class, 'pendientes']);
+  Route::get('/formularioingresopendientes/{cantidad}', [formularioGestionIngresoController::class, 'pendientes2']);
   Route::post('/formularioingreso/{id}', [formularioGestionIngresoController::class, 'update']);
   Route::post('/formularioingreso/doc/{id}', [formularioGestionIngresoController::class, 'store']);
   Route::delete('/formularioingreso/{id}', [formularioGestionIngresoController::class, 'destroy']);
   Route::get('/formularioingresofiltro/{cadena}', [formularioGestionIngresoController::class, 'filtro']);
+  Route::post('/formularioingresopendientesborradomasivo', [formularioGestionIngresoController::class, 'borradomasivo']);
 
   Route::get('/estadosingresos', [estadosIngresoController::class, 'index']);
   Route::get('/actualizaestadoingreso/{item}/{estado}', [formularioGestionIngresoController::class, 'actualizaestadoingreso']);
   Route::get('/actualizaResponsableingreso/{item}/{nombre}', [formularioGestionIngresoController::class, 'actualizaResponsableingreso']);
   Route::get('/responsableingresos/{estado}', [formularioGestionIngresoController::class, 'responsableingresos']);
   Route::get('/gestioningresospdf/{modulo}/{id}', [formularioGestionIngresoController::class, 'gestioningresospdf']);
+
+  Route::get('/consulta_id_trump/{id}', [formularioGestionIngresoController::class, 'consulta_id_trump']);
 
 
   Route::get('/tiposserviofi', [FormularioIngresoTipoServicioController::class, 'index']);

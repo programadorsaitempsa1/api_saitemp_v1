@@ -22,7 +22,7 @@ class categoriaMenuController extends Controller
             'oculto',
 
         )
-            ->orderby('posicion','DESC')
+            ->orderby('posicion', 'DESC')
             ->paginate($cantidad);
         return response()->json($result);
     }
@@ -113,6 +113,7 @@ class categoriaMenuController extends Controller
 
     public function borradomasivo(Request $request)
     {
+        return $request;
         try {
             for ($i = 0; $i < count($request->id); $i++) {
                 $result = categoriaMenu::find($request->id[$i]);
