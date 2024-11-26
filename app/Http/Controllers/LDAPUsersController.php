@@ -29,7 +29,7 @@ class LDAPUsersController extends Controller
         ldap_bind($ldap_conn, $ldap_user, $ldap_pass);
 
         ldap_set_option($ldap_conn, LDAP_OPT_REFERRALS, 0);
-        ldap_set_option($ldap_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
+        // ldap_set_option($ldap_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
         $search_attrs = array("*", "memberOf");
 
         // Búsqueda de usuarios
