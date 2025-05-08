@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Paises;
 use Illuminate\Http\Request;
 
@@ -14,8 +15,14 @@ class PaisController extends Controller
     public function index()
     {
         $result = Paises::select()
-        ->where('activo','=',1)
-        ->get();
+            ->where('activo', '=', 1)
+            ->get();
+        return response()->json($result);
+    }
+    public function index2()
+    {
+        $result = Paises::select()
+            ->get();
         return response()->json($result);
     }
 

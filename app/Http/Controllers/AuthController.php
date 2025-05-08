@@ -6,11 +6,16 @@ use App\Models\SigContratoEmpleado;
 use App\Models\SigEmpleados;
 use App\Models\SigUsuarioContrato;
 use App\Models\User;
+use App\Models\UsuarioDebidaDiligencia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Validator;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
+
 
 class AuthController extends Controller
 {
@@ -31,37 +36,36 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        if ($request->password == '') {
+            return response()->json(['status' => 'error', 'message' => 'Por favor ingrese una contraseña correcta']);
+        }
         if (str_contains($request->email, '@')) {
             $user = explode('@', $request->email)[0];
         } else {
             $user = $request->email;
         }
 
-        // $ldaprdn = "programador1@saitempsa.local";
-        // $ldappass = $request->password; //'Micro123*#1';
-
         $ldapconn = ldap_connect('saitempsa.local');
         ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
-
         try {
             if ($ldapconn) {
-                // return $user.'@saitempsa.local' ;
                 try {
                     $ldapbind = ldap_bind($ldapconn, $user . '@saitempsa.local',  $request->password);
                     if ($ldapbind) {
-                       
                         ldap_close($ldapconn);
-                        // return 'usuario logueado con exito';
                         $user = User::where('email', $request->email)->first();
-
+                        $uuid = $this->guadarMarcaTemporal($user->email);
+                        if ($user->estado_id == 2) {
+                            return response()->json(['status' => 'error', 'message' => 'Este usuario se encuentra inactivo, por favor consulte al administrador del sistema']);
+                        }
                         if ($user) {
                             Auth::guard('no-password-validation')->login($user);
                             $token = JWTAuth::fromUser($user);
-
                             return response()->json([
                                 'access_token' => $token,
                                 'token_type' => 'bearer',
-                                'expires_in' => auth()->factory()->getTTL() * 60,
+                                'expires_in' => auth()->factory()->getTTL() / 60 / 60 / 8,
+                                'marca' => $uuid
                             ]);
                         }
 
@@ -70,7 +74,8 @@ class AuthController extends Controller
                 } catch (\Exception $e) {
                     ldap_close($ldapconn);
                     $validator = Validator::make($request->all(), [
-                        'email' => 'required|email',
+                        'email' => 'required',
+                        // 'email' => 'required|email',
                         'password' => 'required|string|min:6',
                     ]);
 
@@ -78,32 +83,29 @@ class AuthController extends Controller
                         return response()->json($validator->errors(), 422);
                     }
 
-                    if (!$token = auth()->attempt($validator->validated())) {
+                    $token = auth()->attempt($validator->validated());
+                    if (!$token) {
                         return response()->json(['status' => 'error', 'message' => 'Por favor verifique sus datos de inicio de sesión e intente nuevamente']);
                     }
 
-                    return $this->createNewToken($token);
+                    $token = $this->createNewToken($token);
+                    return $token;
                 }
             }
         } catch (\Exception $e) {
+            return $e;
             return response()->json(['status' => 'error', 'message' => 'No se pudo establecer la conexión con el servidor LDAP.']);
         }
+    }
 
-
-        // $validator = Validator::make($request->all(), [
-        //     'email' => 'required|email',
-        //     'password' => 'required|string|min:6',
-        // ]);
-
-        // if ($validator->fails()) {
-        //     return response()->json($validator->errors(), 422);
-        // }
-
-        // if (!$token = auth()->attempt($validator->validated())) {
-        //     return response()->json(['status' => 'error', 'message'=>'Por favor verifique sus datos de inicio de sesión e intente nuevamente']);
-        // }
-
-        // return $this->createNewToken($token);
+    public function guadarMarcaTemporal($email)
+    {
+        $user = User::where('email', $email)->first();
+        $uuid = (string) Str::orderedUuid();
+        $user->marca_temporal =  $uuid;
+        if ($user->save()) {
+            return $user->marca_temporal;
+        }
     }
 
     /**
@@ -113,31 +115,35 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        // $validator = Validator::make($request->all(), [
-        //     // 'nombres' => 'string|between:2,100',
-        //     // 'apellidos' => 'string|between:2,100',
-        //     // 'documento_identidad' => 'string|between:2,100',
-        //     // 'email' => 'required|string|max:100',
-        //     // 'password' => 'string|min:6',
-        //     // 'rol_id' => 'required',
-        // ]);
-
-        // if ($validator->fails()) {
-        //     return response()->json($validator->errors()->toJson(), 400);
-        // }
-
-        // $user = User::create(array_merge(
-        //     $validator->validated(),
-        //     ['password' => bcrypt($request->password)]
-        // ));
-
         $user = new User;
         $user->nombres = $request->nombres;
         $user->apellidos = $request->apellidos;
         $user->documento_identidad = $request->documento_identidad;
+        $user->usuario = $request->usuario;
+        $user->contrasena_correo = Crypt::encryptString($request->contrasena_correo);
         $user->email = $request->email;
         $user->password = bcrypt($request->password);
-        $user->rol_id = $request->rol_id == '' ? 3 : $request->rol_id;
+        if (is_numeric($request->email)) { // se verifica si el usuario a registrar es un número de documento para asignar el rol de cliente
+            $user->rol_id = 53;
+            $user->empresa_cliente = 1;
+        } else {
+            $user->rol_id = $request->rol_id == '' ? 3 : $request->rol_id;
+        }
+        $archivos = $request->files->all();
+        $contador = 1;
+        foreach ($archivos as $archivo) {
+            if ($contador <= 2) {
+
+                $nombreArchivoOriginal = ($archivo)->getClientOriginalName();
+                $nuevoNombre = Carbon::now()->timestamp . "_" . $nombreArchivoOriginal;
+
+                $carpetaDestino = './upload/';
+                ($archivo)->move($carpetaDestino, $nuevoNombre);
+                $user->{'imagen_firma_' . $contador} = ltrim($carpetaDestino, '.') . $nuevoNombre;
+                $contador++;
+            }
+        }
+
         if ($user->save()) {
             return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
         } else {
@@ -184,13 +190,12 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function createNewToken($token)
+    protected function createNewToken($token, $uuid = null)
     {
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
-            // 'user' => auth()->user()
+            'expires_in' => auth()->factory()->getTTL() * 60 * 60 * 8
         ]);
     }
 }

@@ -17,9 +17,6 @@ class EmpleadoController extends Controller
     {
         $result = Empleado::select(
             'cod_emp',
-            // 'ap1_emp',
-            // 'ap2_emp',
-            // 'nom_emp',
             DB::raw("CONCAT(ap1_emp,' ',ap2_emp,' ',nom_emp)  AS fullname")
         )
             ->orderby('cod_emp')

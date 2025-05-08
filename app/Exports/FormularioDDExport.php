@@ -123,7 +123,7 @@ class FormularioDDExport implements WithMultipleSheets
                         'fin.patrimonio as patrimonio',
                         'usr_app_clientes.operaciones_internacionales',
                         'ti.des_tip as tipo_operacion_internacional',
-                        'usr_app_clientes.declaraciones_autirizaciones',
+                        'usr_app_clientes.declaraciones_autorizaciones',
                     );
 
                 $origenFondo = OrigenFondo::join('usr_app_tipos_origen_fondos as of', 'of.id', '=', 'usr_app_origenes_fondos.tipo_origen_fondos_id')
