@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MenuRol;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MenuRolController extends Controller
 {
@@ -40,7 +41,6 @@ class MenuRolController extends Controller
                 ->distinct()
                 // ->orderby('roles.id', 'desc')
                 ->get();
-
         }
         return response()->json($roles);
     }
@@ -98,12 +98,22 @@ class MenuRolController extends Controller
      */
     public function create(Request $request)
     {
-        $menu_roles = new MenuRol;
-        $menu_roles->rol_id = $request->rol_id;
-        $menu_roles->menu_id = $request->menu_id;
-        if ($menu_roles->save()) {
+        try {
+            DB::beginTransaction();
+            $menus = $request->all();
+            foreach ($menus[0] as  $rol) {
+                foreach ($menus[1] as  $menu) {
+                    $menu_roles = new MenuRol;
+                    $menu_roles->rol_id = $rol['id'];
+                    $menu_roles->menu_id = $menu['id'];
+                    $menu_roles->save();
+                }
+            }
+            DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
-        } else {
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $e;
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el registro, por favor intente nuevamente']);
         }
     }
@@ -155,8 +165,7 @@ class MenuRolController extends Controller
                 $result->save();
             }
             return response()->json(['status' => 'success', 'message' => 'Registros actualizados exitosamente']);
-
-        } catch (\Exception$e) {
+        } catch (\Exception $e) {
             return response()->json($e);
             return response()->json(['status' => 'error', 'message' => 'Error al actualizar el registro, por favor intente nuevamente']);
         }
@@ -172,12 +181,12 @@ class MenuRolController extends Controller
     public function update(Request $request, $id)
     {
         $menu_roles = MenuRol::find($id);
-        
-       
-            $menu_roles->rol_id = $request->rol_id;
-            $menu_roles->menu_id = $request->menu_id;
-            // return $menu_roles;
-        
+
+
+        $menu_roles->rol_id = $request->rol_id;
+        $menu_roles->menu_id = $request->menu_id;
+        // return $menu_roles;
+
         if ($menu_roles->save()) {
             return response()->json(['status' => 'success', 'message' => 'Registro actualizado exitosamente']);
         } else {
@@ -209,7 +218,7 @@ class MenuRolController extends Controller
                 $result->delete();
             }
             return response()->json(['status' => 'success', 'message' => 'Registros eliminados exitosamente']);
-        } catch (\Exception$e) {
+        } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Error al eliminar el registro, por favor intente nuevamente']);
         }
     }

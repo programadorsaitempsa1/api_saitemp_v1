@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Validator;
 
 class AuthController extends Controller
@@ -31,37 +34,33 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        if ($request->password == '') {
+            return response()->json(['status' => 'error', 'message' => 'Por favor ingrese una contraseña correcta']);
+        }
         if (str_contains($request->email, '@')) {
             $user = explode('@', $request->email)[0];
         } else {
             $user = $request->email;
         }
 
-        // $ldaprdn = "programador1@saitempsa.local";
-        // $ldappass = $request->password; //'Micro123*#1';
-
         $ldapconn = ldap_connect('saitempsa.local');
         ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
-
         try {
             if ($ldapconn) {
-                // return $user.'@saitempsa.local' ;
                 try {
                     $ldapbind = ldap_bind($ldapconn, $user . '@saitempsa.local',  $request->password);
                     if ($ldapbind) {
-                       
                         ldap_close($ldapconn);
-                        // return 'usuario logueado con exito';
                         $user = User::where('email', $request->email)->first();
-
+                        $uuid = $this->guadarMarcaTemporal($user->email);
                         if ($user) {
                             Auth::guard('no-password-validation')->login($user);
                             $token = JWTAuth::fromUser($user);
-
                             return response()->json([
                                 'access_token' => $token,
                                 'token_type' => 'bearer',
-                                'expires_in' => auth()->factory()->getTTL() * 60,
+                                'expires_in' => auth()->factory()->getTTL() * 60 * 60 * 8,
+                                'marca' => $uuid
                             ]);
                         }
 
@@ -82,7 +81,10 @@ class AuthController extends Controller
                         return response()->json(['status' => 'error', 'message' => 'Por favor verifique sus datos de inicio de sesión e intente nuevamente']);
                     }
 
-                    return $this->createNewToken($token);
+                    $uuid = $this->guadarMarcaTemporal($request->email);
+                    $token_marca = $this->createNewToken($token, $uuid);
+                    // $token_marca['marca'] = $uuid;
+                    return $token_marca;
                 }
             }
         } catch (\Exception $e) {
@@ -104,6 +106,16 @@ class AuthController extends Controller
         // }
 
         // return $this->createNewToken($token);
+    }
+
+    public function guadarMarcaTemporal($email)
+    {
+        $user = User::where('email', $email)->first();
+        $uuid = (string) Str::orderedUuid();
+        $user->marca_temporal =  $uuid;
+        if ($user->save()) {
+            return $user->marca_temporal;
+        }
     }
 
     /**
@@ -135,9 +147,28 @@ class AuthController extends Controller
         $user->nombres = $request->nombres;
         $user->apellidos = $request->apellidos;
         $user->documento_identidad = $request->documento_identidad;
+        $user->usuario = $request->usuario;
+        $user->contrasena_correo = Crypt::encryptString($request->contrasena_correo);
         $user->email = $request->email;
         $user->password = bcrypt($request->password);
         $user->rol_id = $request->rol_id == '' ? 3 : $request->rol_id;
+
+
+        $archivos = $request->files->all();
+        $contador = 1;
+        foreach ($archivos as $archivo) {
+            if ($contador <= 2) {
+
+                $nombreArchivoOriginal = ($archivo)->getClientOriginalName();
+                $nuevoNombre = Carbon::now()->timestamp . "_" . $nombreArchivoOriginal;
+
+                $carpetaDestino = './upload/';
+                ($archivo)->move($carpetaDestino, $nuevoNombre);
+                $user->{'imagen_firma_' . $contador} = ltrim($carpetaDestino, '.') . $nuevoNombre;
+                $contador++;
+            }
+        }
+
         if ($user->save()) {
             return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
         } else {
@@ -184,12 +215,13 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function createNewToken($token)
+    protected function createNewToken($token, $uuid = null)
     {
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
+            'expires_in' => auth()->factory()->getTTL() * 60 * 60 * 8,
+            'marca' => $uuid
             // 'user' => auth()->user()
         ]);
     }

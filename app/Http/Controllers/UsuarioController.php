@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class UsuarioController extends Controller
 {
@@ -21,11 +24,27 @@ class UsuarioController extends Controller
                 "usr_app_roles.nombre as rol",
                 "usr_app_usuarios.nombres",
                 "usr_app_usuarios.apellidos",
+                "usr_app_usuarios.usuario",
                 "usr_app_usuarios.email",
+                "usr_app_usuarios.rol_usuario_interno_id",
                 "usr_app_usuarios.id as id_user",
                 "usr_app_estados_usuario .nombre as estado",
+
+
             )
             ->paginate($cantidad);
+        return response()->json($users);
+    }
+
+    public function index2()
+    {
+        $users = user::select(
+            // "usr_app_usuarios.nombres",
+            // "usr_app_usuarios.apellidos",
+            DB::raw("CONCAT(REPLACE(nombres, 'null', ''), ' ', REPLACE(apellidos, 'null', '')) AS nombre")
+
+        )
+            ->orderby('nombre')->get();
         return response()->json($users);
     }
 
@@ -33,13 +52,14 @@ class UsuarioController extends Controller
     {
         $users = user::join("usr_app_roles", "usr_app_roles.id", "=", "usr_app_usuarios.rol_id")
             ->join("usr_app_estados_usuario ", "usr_app_estados_usuario .id", "=", "usr_app_usuarios.estado_id")
-            ->where('usr_app_usuarios.nombres','like', '%'.$filtro.'%')
-            ->orWhere('usr_app_usuarios.apellidos','like', '%'.$filtro.'%')
-            ->orWhere('usr_app_usuarios.email','like', '%'.$filtro.'%')
+            ->where('usr_app_usuarios.nombres', 'like', '%' . $filtro . '%')
+            ->orWhere('usr_app_usuarios.apellidos', 'like', '%' . $filtro . '%')
+            ->orWhere('usr_app_usuarios.email', 'like', '%' . $filtro . '%')
             ->select(
                 "usr_app_roles.nombre as rol",
                 "usr_app_usuarios.nombres",
                 "usr_app_usuarios.apellidos",
+                "usr_app_usuarios.usuario",
                 "usr_app_usuarios.email",
                 "usr_app_usuarios.id as id_user",
                 "usr_app_estados_usuario .nombre as estado",
@@ -51,7 +71,10 @@ class UsuarioController extends Controller
     public function userslist()
     {
         $result = user::select(
-            'email'
+            'id',
+            DB::raw("CONCAT(nombres,' ',apellidos)  AS nombre"),
+            'usuario AS email',
+            'lider',
         )
             ->get();
         return response()->json($result);
@@ -69,10 +92,12 @@ class UsuarioController extends Controller
                 "usr_app_usuarios.nombres",
                 "usr_app_usuarios.apellidos",
                 "usr_app_usuarios.documento_identidad",
+                "usr_app_usuarios.usuario",
                 "usr_app_usuarios.email",
                 "usr_app_roles.id",
                 'usr_app_usuarios.id as usuario_id',
                 "usr_app_estados_usuario.nombre as estado",
+                "usr_app_usuarios.vendedor_id",
             )
             ->get();
         if (count($users) == 0) {
@@ -82,6 +107,7 @@ class UsuarioController extends Controller
                 ->select(
                     "usr_app_usuarios.nombres",
                     "usr_app_usuarios.apellidos",
+                    "usr_app_usuarios.usuario",
                     "usr_app_usuarios.email",
                     "usr_app_usuarios.id as id_user",
                     "usr_app_roles.nombre as rol",
@@ -107,12 +133,14 @@ class UsuarioController extends Controller
                 "usr_app_usuarios.nombres",
                 "usr_app_usuarios.apellidos",
                 "usr_app_usuarios.documento_identidad",
+                "usr_app_usuarios.usuario",
                 "usr_app_usuarios.email",
                 "usr_app_usuarios.id as id_user",
                 "usr_app_roles.nombre as rol",
                 "usr_app_roles.id as id_rol",
                 "usr_app_estados_usuario.nombre as estado",
                 "usr_app_estados_usuario.id as id_estado",
+
             )
             ->get();
         return response()->json($users);
@@ -200,16 +228,50 @@ class UsuarioController extends Controller
      */
     public function update(Request $request)
     {
-
         $user = user::find($request->id_user);
 
+        $archivos = $request->files->all();
+
+        if ($user->imagen_firma_1 != null && count($archivos) > 0) {
+            $rutaArchivo1 = base_path('public') . $user->imagen_firma_1;
+            if (file_exists($rutaArchivo1)) {
+                unlink($rutaArchivo1);
+            }
+        }
+
+        if ($user->imagen_firma_2 != null && count($archivos) > 1) {
+            $rutaArchivo2 = base_path('public') . $user->imagen_firma_2;
+            if (file_exists($rutaArchivo2)) {
+                unlink($rutaArchivo2);
+            }
+        }
+
+        $contador = 1;
+        foreach ($archivos as $archivo) {
+            if ($contador <= 2) {
+
+                $nombreArchivoOriginal = ($archivo)->getClientOriginalName();
+                $nuevoNombre = Carbon::now()->timestamp . "_" . $nombreArchivoOriginal;
+
+                $carpetaDestino = './upload/';
+                ($archivo)->move($carpetaDestino, $nuevoNombre);
+                $user->{'imagen_firma_' . $contador} = ltrim($carpetaDestino, '.') . $nuevoNombre;
+                $contador++;
+            }
+        }
+
         try {
-            $user->nombres = $request->nombres;
-            $user->apellidos = $request->apellidos;
-            $user->documento_identidad = $request->documento_identidad;
-            $user->email = $request->email;
-            $user->estado_id = $request->estado_id;
-            $user->rol_id = $request->rol_id;
+
+            $user->nombres = $request->nombres !== "null" ? $request->nombres : null;
+            $user->apellidos = $request->apellidos !== "null" ? $request->apellidos : null;
+            $user->documento_identidad = $request->documento_identidad !== "null" ? $request->documento_identidad : null;
+            $user->usuario = $request->usuario !== "null" ? $request->usuario : null;
+            $user->email = $request->email !== "null" ? $request->email : null;
+            $user->estado_id = $request->estado_id !== "null" ? $request->estado_id : null;
+            $user->rol_id = $request->rol_id !== "null" ? $request->rol_id : null;
+            if ($request->contrasena_correo != '') {
+                $user->contrasena_correo = Crypt::encryptString($request->contrasena_correo);
+            }
             if ($request->password != null || $request->password != "") {
                 $user->password = app('hash')->make($request->password);
             }
@@ -221,6 +283,22 @@ class UsuarioController extends Controller
         }
     }
 
+
+    public function update2(Request $request)
+    {
+        $user = user::find($request->id_user);
+
+        try {
+
+            $user->rol_usuario_interno_id = $request->rol_usuario_interno_id;
+
+            if ($user->save()) {
+                return response()->json(['status' => 'success', 'message' => 'Usuario actualizado exitosamente']);
+            }
+        } catch (\Exception $e) {
+            return $e;
+        }
+    }
 
 
 
@@ -241,5 +319,23 @@ class UsuarioController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Error al eliminar el usuario']);
         }
+    }
+    public function updateVendedorId(Request $request, $id)
+    {
+        $result = user::find($id);
+        $result->vendedor_id = $request->vendedor_id;
+        $result->save();
+    }
+
+    public function byRolInterno($rol)
+    {
+        $result = user::select(
+            'id',
+            DB::raw("CONCAT(nombres,' ',apellidos)  AS nombre"),
+            'usuario AS email',
+            'lider',
+        )->where('rol_usuario_interno_id', $rol)
+            ->get();
+        return response()->json($result);
     }
 }
