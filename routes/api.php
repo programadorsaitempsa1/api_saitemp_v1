@@ -731,6 +731,9 @@ Route::group([
 
   //Rutas para salidas no conformes DD
   Route::get('/sncdd/{cantidad}', [NovedadesDDController::class, 'index']);
+  Route::get('/sncddfiltro/{cadena}/{cantidad}', [NovedadesDDController::class, 'sncddfiltro']);
+  Route::get('/exportsncdd/{cadena}', [NovedadesDDController::class, 'exportsncdd']);
+
 
   //Rutas para el historico de estados DD
   Route::get('/consultaHistoricoEstadosDd/{cantidad}', [HistoricoEstadosDdController::class, 'index']);
