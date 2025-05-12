@@ -190,7 +190,7 @@ use App\Http\Controllers\MotivoCancelaServicioController;
 use App\Http\Controllers\PdfEditController;
 use App\Http\Controllers\EstadoResponsableOrdenServicioController;
 use App\Http\Controllers\EstadoCandidatoServioOrdenServicioController;
-
+use App\Http\Controllers\NovedadesDDController;
 
 /*
 |--------------------------------------------------------------------------
@@ -719,11 +719,8 @@ Route::group([
   Route::delete('/formulariocliente/{id}', [formularioDebidaDiligenciaController::class, 'destroy']);
   Route::get('/actualizaestadofirma/{item_id}/{estado_id}/{responsable_id}', [formularioDebidaDiligenciaController::class, 'actualizaestadofirma']);
   Route::get('/versiondebidadiligencia', [formularioDebidaDiligenciaController::class, 'versionformulario']);
-
   Route::get('/formularioclientenit/{nit}', [formularioDebidaDiligenciaController::class, 'formularioclientenit']);
-
   Route::get('/formulariocliente/generarpdf/{id}', [formularioDebidaDiligenciaController::class, 'generarPdf']);
-
   Route::get('/consultaformulariocliente/{cantidad}', [formularioDebidaDiligenciaController::class, 'consultacliente']);
   Route::get('/clientesactivos', [formularioDebidaDiligenciaController::class, 'clientesactivos']);
   Route::get('/consultaformularioclientefiltro/{cadena}', [formularioDebidaDiligenciaController::class, 'filtro']);
@@ -731,6 +728,9 @@ Route::group([
   Route::get('/contrato/{id}', [ContratoController::class, 'index']);
   Route::post('/enviarCorreoDD/{registro_id}', [enviarCorreoDDController::class, 'enviarCorreosDD']);
   Route::get('/formulariocliente/generarContratoDD/{id}', [formularioDebidaDiligenciaController::class, 'generarContrato2']);
+
+  //Rutas para salidas no conformes DD
+  Route::get('/sncdd/{cantidad}', [NovedadesDDController::class, 'index']);
 
   //Rutas para el historico de estados DD
   Route::get('/consultaHistoricoEstadosDd/{cantidad}', [HistoricoEstadosDdController::class, 'index']);
