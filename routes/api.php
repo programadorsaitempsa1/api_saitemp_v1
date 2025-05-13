@@ -1171,7 +1171,7 @@ Route::group([
 
   Route::get('/asignacionServicio', [AsignacionServicioController::class, 'index']);
   Route::post('/asignacionServicio', [AsignacionServicioController::class, 'ordenservicio']);
-  Route::post('/cancelaservicio/{id}', [AsignacionServicioController::class, 'cancelaservicio']);
+  Route::post('/cancelaservicio/{id}', [AsignacionServicioController::class, 'canordenserviciocelaservicio']);
   Route::get('/listaclienteservicio', [AsignacionServicioController::class, 'clienteservicio']);
   Route::post('/cancelacandidatoservicio/{servicio_id}/{candidato_id}', [AsignacionServicioController::class, 'cancelacandidatoservicio']);
   Route::get('/clienteresponsableservicio/{id}', [AsignacionServicioController::class, 'responsableservicio']);

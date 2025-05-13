@@ -20,7 +20,7 @@ class EstadoCandidatoServicioController extends Controller
 
     public function tabla()
     {
-        $result = EstadoCandidatoServicioModel::select('id', 'nombre', 'descripcion')->orderby('id')->paginate(10);
+        $result = EstadoCandidatoServicioModel::select('id', 'nombre', 'descripcion', 'clave')->orderby('id')->paginate(10);
         return response()->json($result);
     }
 
@@ -35,10 +35,11 @@ class EstadoCandidatoServicioController extends Controller
             $result = new EstadoCandidatoServicioModel;
             $result->nombre = $request->nombre;
             $result->descripcion = $request->descripcion;
+            $result->clave = $request->clave;
             $result->save();
-            return response()->json(['status' => 'success', 'message' => 'Registro actualizado exitosamente.']);
+            return response()->json(['status' => 'success', 'message' => 'Registro insertado exitosamente.']);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => 'Error al actualizar el registro.']);
+            return response()->json(['status' => 'error', 'message' => 'Error al insertar el registro.']);
         }
     }
 
@@ -88,6 +89,7 @@ class EstadoCandidatoServicioController extends Controller
             $result = EstadoCandidatoServicioModel::find($id);
             $result->nombre = $request->nombre;
             $result->descripcion = $request->descripcion;
+            $result->clave = $request->clave;
             $result->save();
             return response()->json(['status' => 'success', 'message' => 'Registro actualizado exitosamente.']);
         } catch (\Exception $e) {
@@ -105,7 +107,12 @@ class EstadoCandidatoServicioController extends Controller
     public function destroy($id)
     {
         try {
-            EstadoCandidatoServicioModel::find($id)->delete();
+            $result = EstadoCandidatoServicioModel::find($id);
+            if ($result->clave != '' && $result->clave != null) {
+                return response()->json(['status' => 'error', 'message' => 'Este registro no permite ser borrado, por favor comuniquese con el administrador del sistema.']);
+            } else {
+                $result->delete();
+            }
             return response()->json(['status' => 'success', 'message' => 'Registro actualizado exitosamente.']);
         } catch (\Exception $e) {
             return $e;

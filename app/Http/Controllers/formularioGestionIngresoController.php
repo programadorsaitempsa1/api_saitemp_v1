@@ -1729,7 +1729,7 @@ class formularioGestionIngresoController extends Controller
                             $subquery->where('usr_app_formulario_ingreso.numero_identificacion', 'like', '%' . $valorCompararActual . '%')
                                 ->orWhere('can.num_doc', 'like', '%' . $valorCompararActual . '%');
                         });
-                    }else {
+                    } else {
                         $query->where($prefijoCampo . $campoActual, 'like', '%' . $valorCompararActual . '%');
                     }
                     break;
@@ -2043,22 +2043,15 @@ class formularioGestionIngresoController extends Controller
                 'usr_app_candadato_servicio.usuario_id',
                 'usr_app_candadato_servicio.en_proceso',
             )->get();
-        // $tipo_servicio = $request->tipo_servicio_id;
-        // if ($tipo_servicio == 2) {
+    
         $replica = $candidatos->count();
-        // }
-        //  else if ($tipo_servicio == 3 ||  $tipo_servicio == 4) {
-        //     $replica = $request->replica;
-        //     if ($replica == "") {
-        //         $replica = 1;
-        //     }
-        // }
 
         DB::beginTransaction();
         $user = $this->getUserRelaciones();
         $user = $user->getData(true);
         $ids = [];
         $responsable_actual =  $user['nombres'] . ' ' . str_replace("null", "", $user['apellidos']);
+
         for ($i = 0; $i < $replica; $i++) {
             try {
                 $result = new formularioGestionIngreso;
@@ -2113,13 +2106,8 @@ class formularioGestionIngresoController extends Controller
                     $result->n_servicio = $request->n_servicio;
                 }
 
-                // if ($tipo_servicio == 2) {
+              
                 if ($candidatos[$i]['en_proceso'] != 1) {
-                    // $result->nombre_completo = $candidatos[$i]['nombre_candidato'] . ' ' . $candidatos[$i]['apellido_candidato'];
-                    // $result->numero_contacto = $candidatos[$i]['celular_candidato'];
-                    // $result->correo_notificacion_usuario = $candidatos[$i]['correo_candidato'];
-                    // $result->tipo_documento_id = $candidatos[$i]['tipo_identificacion_id'];
-                    // $result->numero_identificacion = $candidatos[$iF]['numero_documento_candidato'];
                     $result->candidato_id = $candidatos[$i]['usuario_id'];
                     $candidato = CandidatoServicioModel::where('usuario_id', '=', $candidatos[$i]['usuario_id'])->first();
                     if ($candidato) {
@@ -2129,22 +2117,16 @@ class formularioGestionIngresoController extends Controller
                 } else {
                     continue;
                 }
-                // } 
-                // else if ($tipo_servicio == 3 ||  $tipo_servicio == 4) {
-                //     $result->nombre_completo = $request->nombre_completo;
-                //     $result->numero_contacto = $request->numero_contacto;
-                //     $result->correo_notificacion_usuario = $request->correo_candidato;
-                //     $result->tipo_documento_id = $request->tipo_identificacion;
-                //     $result->numero_identificacion = $request->numero_identificacion;
-                // }
                 $result->save();
 
                 // TODO:
                 $orden_servicio = OrdenServcio::where('numero_radicado', '=', $result->n_servicio)->first();
                 $candidato_servicio = CandidatoServicioModel::where('servicio_id', '=', $orden_servicio->id)->first();
-                $estado_candidato = EstadoCandidatoServioOrdenServicioModel::where('estado_orden_servicio_id', '=', $result->estado_id)->first();
-                $candidato_servicio->estado_id =  $estado_candidato->estado_candidato_servicio_id;
-                $candidato_servicio->save();
+                $estado_candidato = EstadoCandidatoServioOrdenServicioModel::where('estado_orden_servicio_id', '=', $request->estado_id)->first();
+                if (isset($estado_candidato)) {
+                    $candidato_servicio->estado_id =  $estado_candidato->estado_candidato_servicio_id;
+                    $candidato_servicio->save();
+                }
 
                 $laboratorio = new RegistroIngresoLaboratorio;
                 $laboratorio->registro_ingreso_id  = $result->id;
@@ -2171,7 +2153,6 @@ class formularioGestionIngresoController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Error al guardar formulario, por favor intente nuevamente']);
             }
         }
-
         DB::commit();
         $numero_radicados_seiya = formularioGestionIngreso::select('id')->where('n_servicio', '=', $request->n_servicio)->first();
         $orden_servicio = OrdenServcio::where('numero_radicado', '=', $request->n_servicio)->first();
@@ -2407,7 +2388,7 @@ class formularioGestionIngresoController extends Controller
 
                 return response()->json(['status' => '200', 'message' => 'ok', 'registro_ingreso_id' => $ids]);
             }
-            $result->fecha_ingreso = $request->fecha_ingreo;
+            $result->fecha_ingreso = $request->fecha_ingreso;
             $result->eps = $request->eps;
             $result->afp_id = $request->afp_id;
             $result->estradata = $request->consulta_stradata;
