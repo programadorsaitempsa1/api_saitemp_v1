@@ -410,12 +410,15 @@ class RecepcionEmpleadoController extends Controller
                         $experiencia = ExperienciasLaboralesCandidatosModel::find($item['id']);
                         $experiencia->usuario_id = $usuario_id;
                         $experiencia->empresa = $item['empresa'];
+                        $experiencia->salario = $item['salario'];
+                        $experiencia->tel_contacto = $item['tel_contacto'];
                         $experiencia->funciones = $item['funciones'];
                         $experiencia->cargo = $item['cargo'];
                         $experiencia->sector_econimico_id = $item['sector_econimico_id'];
                         $experiencia->motivo_retiro = $item['motivo_retiro'];
                         $experiencia->fecha_inicio = $fecha_inicio;
                         $experiencia->fecha_fin = $fecha_fin;
+                        $experiencia->detalle_cargo = $item['detalle_cargo'];
                         $experiencia->tiempo = Carbon::parse($fecha_inicio)
                             ->diffInMonths(Carbon::parse($fecha_fin));
                         $experiencia->save();
@@ -426,9 +429,12 @@ class RecepcionEmpleadoController extends Controller
                         $experiencia->usuario_id = $usuario_id;
                         $experiencia->empresa = $item['empresa'];
                         $experiencia->funciones = $item['funciones'];
+                        $experiencia->salario = $item['salario'];
+                        $experiencia->tel_contacto = $item['tel_contacto'];
                         $experiencia->cargo = $item['cargo'];
                         $experiencia->sector_econimico_id = $item['sector_econimico_id'];
                         $experiencia->motivo_retiro = $item['motivo_retiro'];
+                        $experiencia->detalle_cargo = $item['detalle_cargo'];
                         $experiencia->fecha_inicio = $fecha_inicio;
                         $experiencia->fecha_fin = $fecha_fin;
                         $experiencia->tiempo = Carbon::parse($fecha_inicio)
