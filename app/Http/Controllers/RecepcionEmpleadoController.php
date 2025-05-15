@@ -351,6 +351,9 @@ class RecepcionEmpleadoController extends Controller
             $user->estatura = $request->estatura;
             $user->peso = $request->peso;
             $user->lentes = $request->lentes;
+            $user->talla_camisa = $request->talla_camisa;
+            $user->talla_pantalon = $request->talla_pantalon;
+            $user->talla_calzado = $request->talla_calzado;
             $user->eps_id = $request->eps_id;
             $user->afp_id = $request->afp_id;
             $user->descripcion_salud = $request->descripcion_salud;
