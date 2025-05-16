@@ -324,6 +324,7 @@ class RecepcionEmpleadoController extends Controller
             $fechaNacimientoFormated = Carbon::parse($request->fec_nac)->format('d-m-Y H:i:s');
             $fechaExpedicionFormated = Carbon::parse($request->fec_expdoc)->format('d-m-Y H:i:s');
             $user = UsuariosCandidatosModel::where('usuario_id', $usuario_id)->first();
+            $user->wapp = $request->wapp;
             $user->primer_nombre = $request->nom1_emp;
             $user->primer_apellido = $request->ap1_emp;
             $user->segundo_nombre = $request->nom2_emp ?? '';
