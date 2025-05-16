@@ -190,6 +190,7 @@ use App\Http\Controllers\MotivoCancelaServicioController;
 use App\Http\Controllers\PdfEditController;
 use App\Http\Controllers\EstadoResponsableOrdenServicioController;
 use App\Http\Controllers\EstadoCandidatoServioOrdenServicioController;
+use App\Http\Controllers\HabilidadesCandidatosController;
 use App\Http\Controllers\NovedadesDDController;
 
 /*
@@ -1062,6 +1063,8 @@ Route::group([
   Route::delete('/cumplerequisitocandidato/{id}', [CumpleRequisitosController::class, 'destroy']);
   Route::delete('/eliminarrefenciapersonal/{cod_emp}/{num_ref}', [RecepcionEmpleadoController::class, 'deleteReferencia']);
   Route::get('/buscardocumentolistacandidatos/{documento}', [RecepcionEmpleadoController::class, 'buscardocumentolistacandidato']);
+  Route::delete('/habilidadescandidato/{id}', [HabilidadesCandidatosController::class, 'deleteHabilidad']);
+
   //ruta para generar el archivo zip de seiya
   Route::get('/descargarZip/{idRadicado}/{idCliente}', [GenerarZipController::class, 'descargarArchivosById']);
   Route::post('/addcandidatoservicio', [RecepcionEmpleadoController::class, 'addCandidatoServicio']);

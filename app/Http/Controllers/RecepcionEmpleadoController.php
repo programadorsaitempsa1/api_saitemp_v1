@@ -22,6 +22,7 @@ use Illuminate\Support\Str;
 use App\Models\CandidatosRequisitosModel;
 use App\Models\HistoricoConceptosCandidatosModel;
 use App\Traits\AutenticacionGuard;
+use App\Models\HabilidadesCandidatosModel;
 
 class RecepcionEmpleadoController extends Controller
 {
@@ -447,6 +448,21 @@ class RecepcionEmpleadoController extends Controller
                 }
             }
 
+            if (count($request->habilidades) > 0) {
+                foreach ($request->habilidades as $item) {
+                    if (isset($item['id'])) {
+                        $habilidad = HabilidadesCandidatosModel::find($item['id']);
+                        $habilidad->candidato_id = $user->id;
+                        $habilidad->nombre = $item['nombre'];
+                        $habilidad->save();
+                    } else {
+                        $habilidad = new HabilidadesCandidatosModel;
+                        $habilidad->candidato_id = $user->id;
+                        $habilidad->nombre = $item['nombre'];
+                        $habilidad->save();
+                    }
+                }
+            }
             if (count($request->idiomas) > 0) {
 
                 foreach ($request->idiomas as $item) {
@@ -486,7 +502,7 @@ class RecepcionEmpleadoController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intenta nuevamente']);
             }
         } catch (\Exception $e) {
-
+            return $e;
             DB::rollback();
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intenta nuevamente']);
         }
@@ -536,6 +552,12 @@ class RecepcionEmpleadoController extends Controller
                 'sector_economico.nombre as nombre',
             )
             ->where('usuario_id', $usuario_id)->get();
+
+        $habilidades = HabilidadesCandidatosModel::select(
+            'usr_app_skills_candidatos_c.id',
+            'usr_app_skills_candidatos_c.nombre'
+        )->where('candidato_id', $user_candidato->id)->get();
+
 
         $historico_conceptos_servicios = CandidatoServicioModel::leftjoin(
             'usr_app_orden_servicio as orden_servicio',
@@ -594,6 +616,7 @@ class RecepcionEmpleadoController extends Controller
         $user_candidato['cumple_requisitos'] = $cumple_requisitos;
         $novasoft = $this->searchByCodEmp($user_candidato->num_doc, true);
         $user_candidato["novasoft"] = $novasoft;
+        $user_candidato["habilidades"] = $habilidades;
         return response()->json($user_candidato);
     }
 
