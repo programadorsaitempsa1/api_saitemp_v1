@@ -184,6 +184,8 @@ use App\Http\Controllers\AsignacionServicioController;
 use App\Http\Controllers\RolesUsuariosInternosController;
 use App\Http\Controllers\CumpleRequisitosController;
 use App\Http\Controllers\CargosCandidatoController;
+use App\Http\Controllers\ClientesAnalistaController;
+use App\Http\Controllers\ClientesProfesionalController;
 use App\Http\Controllers\EstadoServicioController;
 use App\Http\Controllers\EstadoCandidatoServicioController;
 use App\Http\Controllers\MotivoCancelaServicioController;
@@ -203,9 +205,6 @@ use App\Http\Controllers\NovedadesDDController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
-
-
 
 // TODO: Colocar los name a las rutas 
 
@@ -1163,14 +1162,27 @@ Route::group([
 
   Route::get('/asignacionUsuarios', [UsuarioController::class, 'asignacionUsuarios']);
 
-
+  //Profesionales por sector económico
   Route::get('/profesionalSector/{cantidad}', [SectorEconomicoProfesionalController::class, 'index']);
   Route::post('/profesionalsector', [SectorEconomicoProfesionalController::class, 'create']);
   Route::get('/profesionalSectorbyid/{id}', [SectorEconomicoProfesionalController::class, 'byid']);
   Route::delete('/profesionalSector/{id}', [SectorEconomicoProfesionalController::class, 'destroy']);
   Route::post('/profesionalSectorborradomasivo', [SectorEconomicoProfesionalController::class, 'borradomasivo']);
 
+  //Profesionales por empresa
+  Route::get('/profesionalempresa/{cantidad}', [ClientesProfesionalController::class, 'index']);
+  Route::post('/profesionalempresa', [ClientesProfesionalController::class, 'create']);
+  Route::get('/profesionalempresabyid/{id}', [ClientesProfesionalController::class, 'byid']);
+  Route::delete('/profesionalempresa/{id}', [ClientesProfesionalController::class, 'destroy']);
+  Route::post('/profesionalempresaborradomasivo', [ClientesProfesionalController::class, 'borradomasivo']);
+  Route::get('/profesionalempresabycliente/{id}', [ClientesProfesionalController::class, 'byCliente']);
 
+  //Analistas por empresa
+  Route::get('/analistaempresa/{cantidad}', [ClientesAnalistaController::class, 'index']);
+  Route::post('/analistaempresa', [ClientesAnalistaController::class, 'create']);
+  Route::get('/analistaempresabyid/{id}', [ClientesAnalistaController::class, 'byid']);
+  Route::delete('/analistaempresa/{id}', [ClientesAnalistaController::class, 'destroy']);
+  Route::post('/analistaempresaborradomasivo', [ClientesAnalistaController::class, 'borradomasivo']);
 
   Route::get('/usuariodisponibleservicio', [UsuarioDisponibleServicioController::class, 'index']);
   Route::post('/usuariodisponibleservicio', [UsuarioDisponibleServicioController::class, 'create']);
