@@ -40,6 +40,7 @@ class RecepcionEmpleadoController extends Controller
 
     public function createNovasoft(Request $request)
     {
+        DB::beginTransaction();
         try {
             $novasoft = new RecepcionEmpleado;
             $fechaNacimientoFormated = Carbon::parse($request->fec_nac)->format('d-m-Y H:i:s');
@@ -117,9 +118,10 @@ class RecepcionEmpleadoController extends Controller
 
 
 
-
+            DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Registro guardado de manera exitosa', 'id' => $novasoft]);
         } catch (\Exception $e) {
+            DB::rollback();
             throw $e;
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intenta nuevamente nova']);
         }
@@ -218,6 +220,7 @@ class RecepcionEmpleadoController extends Controller
     }
     public function updateByCodEmpNovasoft(Request $request, $cod_emp)
     {
+        DB::beginTransaction();
         try {
 
             $novasoft = RecepcionEmpleado::find($cod_emp);
@@ -297,20 +300,23 @@ class RecepcionEmpleadoController extends Controller
                     }
                 }
             }
+            DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Registro actualizado de manera exitosa', 'id' => $novasoft->cod_emp]);
         } catch (\Exception $e) {
+            DB::rollback();
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intenta nuevamente']);
         }
     }
 
     public function createSeiya(Request $request, $usuario_id)
     {
+
+        DB::beginTransaction();
         try {
 
             $user = $this->getUserRelaciones();
             $data = $user->getData(true);
 
-            DB::beginTransaction();
 
             $ciu_exp_formated = trim($request->ciu_exp, '0');
             $ciu_nac_formated = trim($request->cod_ciu, '0');
@@ -859,26 +865,34 @@ class RecepcionEmpleadoController extends Controller
 
     public function addCandidatoServicio(Request $request)
     {
-
-        $candidato = UsuariosCandidatosModel::find($request->id_candidato);
-        if (isset($candidato)) {
-            $validarCandidato = $this->validacandidato($candidato->num_doc, 0, $candidato->tip_doc_id, false);
-            $validarCandidato = $validarCandidato->getData(true);
-            if ($validarCandidato['status'] == 'success') {
-                //guardar orden de servicio
-                $ordenServiciolienteController = new OrdenServiciolienteController;
-                $ordenServicioCandidato = $ordenServiciolienteController->candidatoRegistradoServicio($candidato->usuario_id, $request->id_servicio, 14, true);
-                $formularioGestionIngresoController = new formularioGestionIngresoController;
-                $radicadoSeiya = $formularioGestionIngresoController->formularioingresoservicioCandidatoUnico($request, $ordenServicioCandidato)->getData();
-                if ($radicadoSeiya->status == '200') {
-                    return response()->json(["status" => "success", "message" => "Candidato registrado exitosamente en el servicio"]);
+        DB::beginTransaction();
+        try {
+            $candidato = UsuariosCandidatosModel::find($request->id_candidato);
+            if (isset($candidato)) {
+                $validarCandidato = $this->validacandidato($candidato->num_doc, 0, $candidato->tip_doc_id, false);
+                $validarCandidato = $validarCandidato->getData(true);
+                if ($validarCandidato['status'] == 'success') {
+                    //guardar orden de servicio
+                    $ordenServiciolienteController = new OrdenServiciolienteController;
+                    $ordenServicioCandidato = $ordenServiciolienteController->candidatoRegistradoServicio($candidato->usuario_id, $request->id_servicio, 14, true);
+                    $formularioGestionIngresoController = new formularioGestionIngresoController;
+                    $radicadoSeiya = $formularioGestionIngresoController->formularioingresoservicioCandidatoUnico($request, $ordenServicioCandidato)->getData();
+                    if ($radicadoSeiya->status == '200') {
+                        DB::commit();
+                        return response()->json(["status" => "success", "message" => "Candidato registrado exitosamente en el servicio"]);
+                    } else {
+                        DB::rollBack();
+                        return response()->json(["status" => "error", "message" => "Problema al intentar registrar usuario"]);
+                    }
                 } else {
-                    return response()->json(["status" => "error", "message" => "Problema al intentar registrar usuario"]);
+                    /*    $messageError = $validarCandidato->message; */
+                    return $validarCandidato;
+                    DB::commit();
                 }
-            } else {
-                /*    $messageError = $validarCandidato->message; */
-                return $validarCandidato;
             }
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json(['status' => 'error', 'message' => 'Error al añadir candidato, por favor intenta nuevamente']);
         }
     }
     public function deleteReferencia($cod_emp, $num_ref)
