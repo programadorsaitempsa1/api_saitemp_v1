@@ -8,6 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class ClientesAnalistaModel extends Model
 {
     use HasFactory;
-    protected $table = 'usr_app_clientes_profesional';
+    protected $table = 'usr_app_clientes_analista';
     protected $dateFormat = 'd-m-Y H:i:s';
 }

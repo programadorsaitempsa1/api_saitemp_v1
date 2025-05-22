@@ -1183,6 +1183,7 @@ Route::group([
   Route::get('/analistaempresabyid/{id}', [ClientesAnalistaController::class, 'byid']);
   Route::delete('/analistaempresa/{id}', [ClientesAnalistaController::class, 'destroy']);
   Route::post('/analistaempresaborradomasivo', [ClientesAnalistaController::class, 'borradomasivo']);
+  Route::get('/analistaempresabycliente/{id}', [ClientesAnalistaController::class, 'byCliente']);
 
   Route::get('/usuariodisponibleservicio', [UsuarioDisponibleServicioController::class, 'index']);
   Route::post('/usuariodisponibleservicio', [UsuarioDisponibleServicioController::class, 'create']);

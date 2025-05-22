@@ -12,24 +12,42 @@ class ClientesAnalistaController extends Controller
     {
         $result = ClientesAnalistaModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_clientes_analista.analista_id')
             ->join('usr_app_usuarios_internos as ui', 'ui.usuario_id', 'us.id')
-            ->join('select * from usr_app_clientes as cli', 'cli.id', 'usr_app_clientes_analista.cliente_id')
+            ->join('usr_app_clientes as cli', 'cli.id', 'usr_app_clientes_analista.cliente_id')
             ->select(
                 'usr_app_clientes_analista.id',
                 DB::raw("CONCAT(ui.nombres,' ',ui.apellidos)  AS nombres"),
-                'cli.razon_social as razon_social'
+                DB::raw('COALESCE(cli.nit, cli.numero_identificacion) as nit'),
+                'cli.razon_social'
             )->orderby('usr_app_clientes_analista.id', 'DESC')->paginate($cantidad);
         return response()->json($result);
     }
 
-    public function byid($id)
+    public function byCliente($id)
     {
-        $result = ClientesAnalistaModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_clientes_analista.profesional_id')
+        $result = ClientesAnalistaModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_clientes_analista.analista_id')
             ->join('usr_app_usuarios_internos as ui', 'ui.usuario_id', 'us.id')
-            ->join('usr_app_sector_clientes as cli', 'cli.id', 'usr_app_clientes_analista.cliente_id')
-            ->where('usr_app_clientes_analista.profesional_id', '=', $id)
+            ->join('usr_app_clientes as cli', 'cli.id', 'usr_app_clientes_analista.cliente_id')
+            ->where('usr_app_clientes_analista.cliente_id', '=', $id)
             ->select(
                 'usr_app_clientes_analista.id',
                 DB::raw("CONCAT(ui.nombres,' ',ui.apellidos)  AS nombres"),
+                DB::raw('COALESCE(cli.nit, cli.numero_identificacion) as nit'),
+                'cli.razon_social'
+            )->orderby('usr_app_clientes_analista.id', 'DESC')->paginate();
+        return response()->json($result);
+    }
+
+
+    public function byid($id)
+    {
+        $result = ClientesAnalistaModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_clientes_analista.analista_id')
+            ->join('usr_app_usuarios_internos as ui', 'ui.usuario_id', 'us.id')
+            ->join('usr_app_clientes as cli', 'cli.id', 'usr_app_clientes_analista.cliente_id')
+            ->where('usr_app_clientes_analista.analista_id', '=', $id)
+            ->select(
+                'usr_app_clientes_analista.id',
+                DB::raw("CONCAT(ui.nombres,' ',ui.apellidos)  AS nombres"),
+                DB::raw('COALESCE(cli.nit, cli.numero_identificacion) as nit'),
                 'cli.razon_social'
             )->orderby('usr_app_clientes_analista.id', 'DESC')->paginate();
         return response()->json($result);
@@ -37,20 +55,42 @@ class ClientesAnalistaController extends Controller
 
     public function create(Request $request)
     {
-        $asunto = 'Asignación sector económico';
-        $cuerpo_mensaje = 'Se le ha asignado un nuevo sector económico';
+        $asunto = 'Asignación empresa';
+        $cuerpo_mensaje = 'Se le ha asignado una nueva empresa: ';
         $profesionales = $request->profesionales;
         $cliente = $request->cliente;
-        foreach ($profesionales as $profesional) {
-            $profesional_sector = new ClientesAnalistaModel;
-            $profesional_sector->sector_economico_id = $cliente['id'];
-            $profesional_sector->profesional_id = $profesional['usuario_id'];
-            $profesional_sector->save();
-            $cuerpo_mensaje .= ' Sector: ' . $cliente['nombre'];
-            $resultado =  $this->notificaProfesional($asunto, $cuerpo_mensaje, $profesional['correo'], 62, $profesional_sector->id);
+        foreach ($cliente as $cliente) {
+            $profesional_cliente = new ClientesAnalistaModel;
+            $profesional_cliente->cliente_id = $cliente['id'];
+            $profesional_cliente->analista_id = $profesionales['usuario_id'];
+            $profesional_cliente->save();
+            $cuerpo_mensaje .= ' Empresa: ' . $cliente['nombre'];
+            $resultado =  $this->notificaProfesional($asunto, $cuerpo_mensaje, $profesionales['correo'], 62, $profesional_cliente->id);
         }
         // return response()->json(['status' => 'success', 'message' => 'Reguistro guardado de manera exitosa.']);
         return $resultado;
+    }
+
+
+    public function notificaProfesional($subject, $body, $destinatario, $modulo, $registro_id)
+    {
+        $correo = [
+            'subject' => $subject,
+            'body' => $body,
+            'formulario_ingreso' => "",
+            'to' => $destinatario,
+            'cc' => '',
+            'cco' => '',
+            'modulo' => $modulo,
+            'registro_id' => $registro_id
+        ];
+
+        // Instanciar el controlador de envío de correo
+        $EnvioCorreoController = new EnvioCorreoController();
+        $requestEmail = Request::createFromBase(new Request($correo));
+
+        // Enviar el correo
+        return $EnvioCorreoController->sendEmail($requestEmail);
     }
 
     public function borradomasivo(Request $request)
