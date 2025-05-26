@@ -186,6 +186,7 @@ use App\Http\Controllers\CumpleRequisitosController;
 use App\Http\Controllers\CargosCandidatoController;
 use App\Http\Controllers\ClientesAnalistaController;
 use App\Http\Controllers\ClientesProfesionalController;
+use App\Http\Controllers\ConceptosMedicosController;
 use App\Http\Controllers\EstadoServicioController;
 use App\Http\Controllers\EstadoCandidatoServicioController;
 use App\Http\Controllers\MotivoCancelaServicioController;
@@ -1069,7 +1070,8 @@ Route::group([
   Route::post('/addcandidatoservicio', [RecepcionEmpleadoController::class, 'addCandidatoServicio']);
 
 
-
+  //conceptos Medicos para SEIYA
+  Route::get('/conceptosmedicos', [ConceptosMedicosController::class, 'index']);
 
 
   //Indicadores SEIYA

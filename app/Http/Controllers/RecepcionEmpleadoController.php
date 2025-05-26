@@ -274,7 +274,7 @@ class RecepcionEmpleadoController extends Controller
                             $novasoftReferencia->parent = $referencia['parent'];
                             $novasoftReferencia->cel_ref = $referencia['cel_ref'];
                             $novasoftReferencia->nom_ref = $referencia['nom_ref'];
-                            $novasoftReferencia->ocu_ref = 0; // Si necesitas cambiar este valor, asegúrate de que sea correcto
+                            $novasoftReferencia->ocu_ref = 0;
                             $novasoftReferencia->save();
                         } else {
                             $novasoftReferencia = new ReferenciasFormularioEmpleado;

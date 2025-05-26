@@ -10,7 +10,7 @@ class PaisesFormualrioEmpleadoController extends Controller
 {
     public function index()
     {
-        $result = PaisesFormularioEmpleados::orderBy('nom_pai', 'asc')
+        $result = PaisesFormularioEmpleados::whereNotIn('cod_pai', ['734'])->orderBy('nom_pai', 'asc')
             ->get()
             ->map(function ($pais) {
                 $pais->nom_pai = Str::ucfirst(Str::lower($pais->nom_pai));
