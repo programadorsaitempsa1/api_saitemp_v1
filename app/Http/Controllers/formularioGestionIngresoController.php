@@ -321,8 +321,11 @@ class formularioGestionIngresoController extends Controller
             ->leftJoin('usr_app_candidatos_c as can', 'can.usuario_id', 'us.id')
             ->leftJoin('gen_tipide as ti2', 'ti2.cod_tip', '=', 'can.tip_doc_id')
             ->leftjoin('usr_app_historico_concepto_candidatos as historico_candidatos', 'historico_candidatos.formulario_ingreso_id', '=', 'usr_app_formulario_ingreso.id')
+            ->leftjoin('usr_app_conceptos_medicos as conceptos_medicos', 'conceptos_medicos.id', '=', 'usr_app_formulario_ingreso.concepto_medico_id')
             ->where('usr_app_formulario_ingreso.id', '=', $id)
             ->select(
+                'conceptos_medicos.nombre as concepto_medico',
+                'usr_app_formulario_ingreso.concepto_medico_id',
                 'historico_candidatos.id as historico_candidatos_id',
                 'usr_app_formulario_ingreso.id',
                 'esti.nombre as estado_ingreso',
@@ -1933,6 +1936,7 @@ class formularioGestionIngresoController extends Controller
         for ($i = 0; $i < $replica; $i++) {
             try {
                 $result = new formularioGestionIngreso;
+                $result->concepto_medico_id = $request->concepto_medico_id;
                 $result->fecha_ingreso = $request->fecha_ingreo;
                 $result->numero_identificacion = $request->numero_identificacion;
                 $result->nombre_completo = $request->nombre_completo;
@@ -2393,6 +2397,7 @@ class formularioGestionIngresoController extends Controller
 
                 return response()->json(['status' => '200', 'message' => 'ok', 'registro_ingreso_id' => $ids]);
             }
+            $result->concepto_medico_id = $request->concepto_medico_id;
             $result->fecha_ingreso = $request->fecha_ingreo;
             $result->eps = $request->eps;
             $result->afp_id = $request->afp_id;
