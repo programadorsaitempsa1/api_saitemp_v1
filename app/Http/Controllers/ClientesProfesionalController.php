@@ -161,7 +161,7 @@ class ClientesProfesionalController extends Controller
                                 ->orWhere('cli.numero_identificacion', '=', $valor);
                         });
                     } else if ($campo == "razon_social") {
-                        $query->where('cliente.razon_social', '=', $valor);
+                        $query->where('cli.razon_social', '=', $valor);
                     } else if ($campo == "nombres") {
                         $query->where('ui.nombres', '=', $valor);
                     } else {
@@ -173,7 +173,7 @@ class ClientesProfesionalController extends Controller
             $result = $query->paginate();
             return response()->json($result);
         } catch (\Exception $e) {
-            return response()->json($e);
+            return $e;
         }
     }
 }
