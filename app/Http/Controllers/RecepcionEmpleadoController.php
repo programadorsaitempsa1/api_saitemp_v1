@@ -86,9 +86,7 @@ class RecepcionEmpleadoController extends Controller
 
 
             foreach ($request->referencias as $referencia) {
-
-                if ($referencia['nom_ref'] == '' || $referencia['nom_ref'] == null) {
-                } else {
+                if ($referencia['nom_ref'] != '' || $referencia['nom_ref'] != null) {
                     $novasoftReferencia = new ReferenciasFormularioEmpleado;
                     $novasoftReferencia->cod_emp = $novasoft->cod_emp;
                     $novasoftReferencia->num_ref = $referencia['num_ref'];
@@ -263,8 +261,7 @@ class RecepcionEmpleadoController extends Controller
             $novasoft->num_ide = $request->cod_emp;
             $novasoft->save();
             foreach ($request->referencias as $referencia) {
-                if ($referencia['nom_ref'] == '' || $referencia['nom_ref'] == null) {
-                } else {
+                if ($referencia['nom_ref'] != '' || $referencia['nom_ref'] != null) {
                     if (isset($referencia['cod_emp']) && isset($referencia['num_ref'])) {
                         $novasoftReferencia = ReferenciasFormularioEmpleado::where('cod_emp', $referencia['cod_emp'])
                             ->where('num_ref', $referencia['num_ref'])
