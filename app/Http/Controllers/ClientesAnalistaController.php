@@ -118,4 +118,61 @@ class ClientesAnalistaController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Error al eliminar registro.']);
         }
     }
+
+    public function filtro($cadena)
+    {
+        try {
+            $cadenaJSON = base64_decode($cadena);
+            $cadenaUTF8 = mb_convert_encoding($cadenaJSON, 'UTF-8', 'ISO-8859-1');
+            $valores = explode("/", $cadenaUTF8);
+            $campo = $valores[0];
+            $operador = $valores[1];
+            $valor = $valores[2];
+            $valor2 = isset($valores[3]) ? $valores[3] : null;
+            $query = ClientesAnalistaModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_clientes_analista.analista_id')
+                ->join('usr_app_usuarios_internos as ui', 'ui.usuario_id', 'us.id')
+                ->join('usr_app_clientes as cli', 'cli.id', 'usr_app_clientes_analista.cliente_id')
+                ->select(
+                    'usr_app_clientes_analista.id',
+                    DB::raw("CONCAT(ui.nombres,' ',ui.apellidos)  AS nombres"),
+                    DB::raw('COALESCE(cli.nit, cli.numero_identificacion) as nit'),
+                    'cli.razon_social'
+                )->orderby('usr_app_clientes_analista.id', 'DESC');
+            switch ($operador) {
+                case 'Contiene':
+                    if ($campo == "nit") {
+                        $query->where(function ($q) use ($valor) {
+                            $q->where('cli.nit', 'like', '%' . $valor . '%')
+                                ->orWhere('cli.numero_identificacion', 'like', '%' . $valor . '%');
+                        });
+                    } else if ($campo == "razon_social") {
+                        $query->where('cli.razon_social', 'like', '%' . $valor . '%');
+                    } else if ($campo == "nombres") {
+                        $query->where('ui.nombres', 'like', '%' . $valor . '%');
+                    } else {
+                        $query->where($campo, 'like', '%' . $valor . '%');
+                    }
+                    break;
+                case 'Igual a':
+                    if ($campo == "nit") {
+                        $query->where(function ($q) use ($valor) {
+                            $q->where('cli.nit', '=', $valor)
+                                ->orWhere('cli.numero_identificacion', '=', $valor);
+                        });
+                    } else if ($campo == "razon_social") {
+                        $query->where('cliente.razon_social', '=', $valor);
+                    } else if ($campo == "nombres") {
+                        $query->where('ui.nombres', '=', $valor);
+                    } else {
+                        $query->where($campo, '=', $valor);
+                    }
+                    break;
+            }
+
+            $result = $query->paginate();
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json($e);
+        }
+    }
 }

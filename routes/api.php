@@ -1178,6 +1178,7 @@ Route::group([
   Route::delete('/profesionalempresa/{id}', [ClientesProfesionalController::class, 'destroy']);
   Route::post('/profesionalempresaborradomasivo', [ClientesProfesionalController::class, 'borradomasivo']);
   Route::get('/profesionalempresabycliente/{id}', [ClientesProfesionalController::class, 'byCliente']);
+  Route::get('/profesionalempresafiltro/{cadena}', [ClientesProfesionalController::class, 'filtro']);
 
   //Analistas por empresa
   Route::get('/analistaempresa/{cantidad}', [ClientesAnalistaController::class, 'index']);
@@ -1186,6 +1187,7 @@ Route::group([
   Route::delete('/analistaempresa/{id}', [ClientesAnalistaController::class, 'destroy']);
   Route::post('/analistaempresaborradomasivo', [ClientesAnalistaController::class, 'borradomasivo']);
   Route::get('/analistaempresabycliente/{id}', [ClientesAnalistaController::class, 'byCliente']);
+  Route::get('/analistaempresafiltro/{cadena}', [ClientesAnalistaController::class, 'filtro']);
 
   Route::get('/usuariodisponibleservicio', [UsuarioDisponibleServicioController::class, 'index']);
   Route::post('/usuariodisponibleservicio', [UsuarioDisponibleServicioController::class, 'create']);
