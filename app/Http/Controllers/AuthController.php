@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use App\Models\UsuariosInternosModel;
+use App\Models\Rol;
 
 
 class AuthController extends Controller
@@ -35,7 +36,98 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login(Request $request)
+    // public function login(Request $request)
+    // {
+    //     if ($request->password == '') {
+    //         return response()->json(['status' => 'error', 'message' => 'Por favor ingrese una contraseña correcta']);
+    //     }
+
+    //     // Extraer usuario del email (si tiene @)
+    //     $user = str_contains($request->email, '@') ? explode('@', $request->email)[0] : $request->email;
+
+    //     $ldapconn = ldap_connect('saitempsa.local');
+    //     ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
+
+    //     try {
+    //         if ($ldapconn) {
+    //             try {
+    //                 $ldapbind = ldap_bind($ldapconn, $user . '@saitempsa.local', $request->password);
+    //                 if ($ldapbind) {
+    //                     ldap_close($ldapconn);
+
+    //                     $user = User::where('email', $request->email)->first();
+
+    //                     if (!$user) {
+    //                         return response()->json(['status' => 'error', 'message' => 'Usuario no encontrado.']);
+    //                     }
+
+    //                     if ($user->estado_id == 2) {
+    //                         return response()->json(['status' => 'error', 'message' => 'Este usuario se encuentra inactivo, por favor consulte al administrador del sistema']);
+    //                     }
+
+    //                     // 🚨 Validación para usuarios tipo 3
+    //                     if ($user->tipo_usuario_id == 3 && ($user->confirma_correo == 0)) {
+    //                         return response()->json([
+    //                             'status' => 'error',
+    //                             'message' => 'Debe confirmar su correo y aceptar los términos para iniciar sesión.'
+    //                         ]);
+    //                     }
+
+    //                     // Generar marca de tiempo
+    //                     $uuid = $this->guadarMarcaTemporal($user->email);
+
+    //                     Auth::guard('no-password-validation')->login($user);
+    //                     $token = JWTAuth::fromUser($user);
+
+    //                     return response()->json([
+    //                         'access_token' => $token,
+    //                         'token_type' => 'bearer',
+    //                         'tipo_usuario_id' => $user->tipo_usuario_id,
+    //                         'expires_in' => auth()->factory()->getTTL() / 60 / 60 / 8,
+    //                         'marca' => $uuid
+    //                     ]);
+    //                 }
+    //             } catch (\Exception $e) {
+    //                 ldap_close($ldapconn);
+
+    //                 $user = User::where('email', $request->email)->first();
+
+    //                 if (!$user) {
+    //                     return response()->json(['status' => 'error', 'message' => 'Usuario no encontrado.']);
+    //                 }
+
+    //                 $validator = Validator::make($request->all(), [
+    //                     'email' => 'required',
+    //                     'password' => 'required|string|min:6',
+    //                 ]);
+
+    //                 if ($validator->fails()) {
+    //                     return response()->json($validator->errors(), 422);
+    //                 }
+
+    //                 // 🚨 Validación para usuarios tipo 3
+    //                 if ($user->tipo_usuario_id == 3 && ($user->confirma_correo == 0)) {
+    //                     return response()->json([
+    //                         'status' => 'error',
+    //                         'message' => 'Debe confirmar su correo y aceptar los términos para iniciar sesión.'
+    //                     ]);
+    //                 }
+
+    //                 $token = auth()->attempt($validator->validated());
+
+    //                 if (!$token) {
+    //                     return response()->json(['status' => 'error', 'message' => 'Por favor verifique sus datos de inicio de sesión e intente nuevamente']);
+    //                 }
+
+    //                 return $this->createNewToken($token, $user->tipo_usuario_id);
+    //             }
+    //         }
+    //     } catch (\Exception $e) {
+    //         return response()->json(['status' => 'error', 'message' => 'No se pudo establecer la conexión con el servidor LDAP.']);
+    //     }
+    // }
+
+      public function login(Request $request)
     {
         if ($request->password == '') {
             return response()->json(['status' => 'error', 'message' => 'Por favor ingrese una contraseña correcta']);
@@ -143,45 +235,36 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-
         try {
             DB::beginTransaction();
             $user = new User;
-            $user->email = $request->email;
+            $user->email = $request->usuario;
             $user->password = bcrypt($request->password);
-            if (is_numeric($request->email)) { // se verifica si el usuario a registrar es un número de documento para asignar el rol de cliente
-                $user->rol_id = 53;
-                $user->tipo_usuario_id = 2;
-            } else {
-                $user->rol_id = $request->rol_id == '' ? 3 : $request->rol_id;
-                $user->tipo_usuario_id = 1;
-            }
+            $user->rol_id = $request->rol_id;
             $user->save();
-            if ($user->tipo_usuario_id == 1) {
-                $user_interno = new UsuariosInternosModel;
-                $user_interno->nombres = $request->nombres;
-                $user_interno->rol_usuario_interno_id = 1;
-                $user_interno->apellidos = $request->apellidos;
-                $user_interno->documento_identidad = $request->documento_identidad;
-                $user_interno->correo = $request->usuario;
-                $user_interno->contrasena_correo = Crypt::encryptString($request->contrasena_correo);
-                $user_interno->usuario_id = $user->id;
-                $archivos = $request->files->all();
-                $contador = 1;
-                foreach ($archivos as $archivo) {
-                    if ($contador <= 2) {
+            $user_interno = new UsuariosInternosModel;
+            $user_interno->nombres = $request->nombres;
+            $user_interno->apellidos = $request->apellidos;
+            $user_interno->rol_usuario_interno_id = $request->rol_interno_id;
+            $user_interno->documento_identidad = $request->documento_identidad;
+            $user_interno->correo = $request->email;
+            $user_interno->contrasena_correo = Crypt::encryptString($request->contrasena_correo);
+            $user_interno->usuario_id = $user->id;
+            $archivos = $request->files->all();
+            $contador = 1;
+            foreach ($archivos as $archivo) {
+                if ($contador <= 2) {
 
-                        $nombreArchivoOriginal = ($archivo)->getClientOriginalName();
-                        $nuevoNombre = Carbon::now()->timestamp . "_" . $nombreArchivoOriginal;
+                    $nombreArchivoOriginal = ($archivo)->getClientOriginalName();
+                    $nuevoNombre = Carbon::now()->timestamp . "_" . $nombreArchivoOriginal;
 
-                        $carpetaDestino = './upload/';
-                        ($archivo)->move($carpetaDestino, $nuevoNombre);
-                        $user_interno->{'imagen_firma_' . $contador} = ltrim($carpetaDestino, '.') . $nuevoNombre;
-                        $contador++;
-                    }
+                    $carpetaDestino = './upload/';
+                    ($archivo)->move($carpetaDestino, $nuevoNombre);
+                    $user_interno->{'imagen_firma_' . $contador} = ltrim($carpetaDestino, '.') . $nuevoNombre;
+                    $contador++;
                 }
-                $user_interno->save();
             }
+            $user_interno->save();
             DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
         } catch (\Exception $e) {

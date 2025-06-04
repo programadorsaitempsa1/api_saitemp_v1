@@ -20,6 +20,7 @@ use  Illuminate\Support\Facades\Crypt;
 use App\Traits\Permisos;
 
 
+
 class OrdenServiciolienteController extends Controller
 {
 
@@ -159,7 +160,7 @@ class OrdenServiciolienteController extends Controller
             )->first();
         $candidatos = CandidatoServicioModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_candadato_servicio.usuario_id')
             ->join('usr_app_candidatos_c as can', 'can.usuario_id', 'usr_app_candadato_servicio.usuario_id')
-            ->join('gen_tipide as ti', 'ti.cod_tip', '=', 'can.tip_doc_id')
+            ->leftjoin('gen_tipide as ti', 'ti.cod_tip', '=', 'can.tip_doc_id')
             ->leftjoin('usr_app_estado_candidato_servicio as est', 'est.id', '=', 'usr_app_candadato_servicio.estado_id')
             ->where('usr_app_candadato_servicio.servicio_id', '=', $id,)
             ->select(
@@ -250,11 +251,13 @@ class OrdenServiciolienteController extends Controller
             $correos_candidatos = '';
             $valida_candidato = new RecepcionEmpleadoController();
             foreach ($request['candidatos'] as $item) {
-                $correo_candidato_validado = $valida_candidato->validaCorreoCandidato($item['correo_candidato']);
-                if (isset($correo_candidato_validado)) {
-                    $correo_candidato_validado = $correo_candidato_validado->getData(true);
-                    $correos_candidatos .= ' ' . $correo_candidato_validado['correo'] . ',';
-                    continue;
+                if (isset($item['correo_candidato'])) {
+                    $correo_candidato_validado = $valida_candidato->validaCorreoCandidato($item['correo_candidato']);
+                    if (isset($correo_candidato_validado)) {
+                        $correo_candidato_validado = $correo_candidato_validado->getData(true);
+                        $correos_candidatos .= ' ' . $correo_candidato_validado['correo'] . ',';
+                        continue;
+                    }
                 }
                 if ($item['registrado'] == 1) {
                     $result = $this->candidatoRegistradoServicio($item['usuario_id'], $ordenServicio->id, 1);
@@ -293,15 +296,18 @@ class OrdenServiciolienteController extends Controller
         }
     }
 
-    public function candidatoNoRegistradoServicio(array $usuario, string $ordenServicio_id)
+    public function candidatoNoRegistradoServicioCopia(array $usuario, string $ordenServicio_id)
     {
         try {
             DB::beginTransaction();
             $rol = Rol::select('id')->where('clave', 'candidato')->first();
             // Se registra el usuario que no está creado en la tabla de login
             $user = new User;
-            $user->email = $usuario['correo_candidato'];
-            $user->password =  Crypt::encryptString($usuario['numero_documento_candidato']);
+            // $user->email = $usuario['correo_candidato']; este campo es para regiatrar un nuevo usuario con correo no borrar
+            // $user->password =  Crypt::encryptString($usuario['numero_documento_candidato']);
+            $user->email = $usuario['celular_candidato'];
+            $user->password =  bcrypt($usuario['celular_candidato']);
+            $user->confirma_correo =  1;
             $user->rol_id = $rol->id;
             $user->tipo_usuario_id = 3;
             $user->save();
@@ -331,6 +337,67 @@ class OrdenServiciolienteController extends Controller
             DB::rollBack();
         }
     }
+
+    public function candidatoNoRegistradoServicio(array $usuario, string $ordenServicio_id)
+    {
+        try {
+            DB::beginTransaction();
+            $rol = Rol::select('id')->where('clave', 'candidato')->first();
+            // Se registra el usuario que no está creado en la tabla de login
+            $user = new User;
+            $user->email = $usuario['celular_candidato'];
+            $user->password =  bcrypt($usuario['celular_candidato']);
+            $user->confirma_correo =  1;
+            $user->rol_id = $rol->id;
+            $user->tipo_usuario_id = 3;
+            $user->save();
+            // Se registran otros detos de usuario en la tabla de candidatos
+            $candidato = new UsuariosCandidatosModel;
+            $candidato->usuario_id =  $user->id;
+            if (isset($usuario['nombre_candidato'])) {
+                $nombres = explode(" ", $usuario['nombre_candidato']);
+                $candidato->primer_nombre =  $nombres[0];
+                $candidato->segundo_nombre = isset($nombres[1]) ? $nombres[1] : '';
+            }
+            if (isset($usuario['apellido_candidato'])) {
+                $apellidos =  explode(" ", $usuario['apellido_candidato']);
+                $candidato->primer_apellido =  $apellidos[0];
+                $candidato->segundo_apellido =   isset($apellidos[1]) ? $apellidos[1] : '';
+            }
+            if (isset($usuario['numero_documento_candidato'])) {
+                $candidato->num_doc = $usuario['numero_documento_candidato'];
+            }
+            if (isset($usuario['celular_candidato'])) {
+                $candidato->celular = $usuario['celular_candidato'];
+            }
+            if (isset($usuario['tipo_identificacion_id'])) {
+                $candidato->tip_doc_id = $usuario['tipo_identificacion_id'];
+            }
+            $candidato->save();
+            // Se relaciona el usuario creado con el nuevo servicio creado
+            $estado_candidato = EstadoCandidatoServicioModel::select('id')->where('clave', 'radicado')->first();
+            $candidato = new CandidatoServicioModel;
+            $candidato->servicio_id = $ordenServicio_id;
+            $candidato->usuario_id =  $user->id;
+            $candidato->en_proceso = 0;
+            $candidato->estado_id = $estado_candidato->id;
+            $candidato->motivo_cancelacion = $usuario['celular_candidato'];
+            $candidato->descripcion_cancelacion = $usuario['celular_candidato'];
+            $candidato->usuario_cancela = $usuario['celular_candidato'];
+            $candidato->fecha_cancelacion = $usuario['celular_candidato'];
+            $candidato->ciudad_prestacion_servicio_id = $usuario['celular_candidato'];
+            $candidato->direccion_prestacion_servicio = $usuario['celular_candidato'];
+            $candidato->fecha_ingreso = $usuario['celular_candidato'];
+            $candidato->cargo_solicitado_id = $usuario['celular_candidato'];
+            $candidato->salario = $usuario['celular_candidato'];
+            $candidato->subsidio_transporte = $usuario['celular_candidato'];
+            $candidato->save();
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+        }
+    }
+
     public function candidatoRegistradoServicio(string $candidato_id, string $ordenServicio_id, int $estado_id, $retorna_respuesta = false)
     {
 
@@ -624,6 +691,64 @@ class OrdenServiciolienteController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+    public function updateCopia(Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+            $ordenServicio = OrdenServcio::find($id);
+            $ordenServicio->fecha_inicio = $request->fecha_inicio;
+            $ordenServicio->fecha_fin = $request->fecha_fin;
+            $ordenServicio->linea_servicio_id = $request->linea_servicio_id;
+            $ordenServicio->ciudad_prestacion_servicio_id = $request->ciudad_prestacion_servicio_id;
+            $ordenServicio->motivo_servicio_id = $request->motivo_servicio_id;
+            $ordenServicio->cantidad_contrataciones = $request->cantidad_contrataciones;
+            $ordenServicio->cargo_solicitado_id = $request->cargo_solicitado_id;
+            $ordenServicio->funciones_cargo = $request->funciones_cargo;
+            $ordenServicio->salario = $request->salario;
+            $ordenServicio->estado_servicio_id = $request->estado_servicio_id;
+            $ordenServicio->save();
+
+            $cantidad_errores = 0;
+            $numeros_documento = '';
+            $candidatos_con_servicio = '';
+            $valida_candidato = new RecepcionEmpleadoController();
+            foreach ($request['candidatos'] as $item) {
+                if ($item['registrado'] == 1) {
+                    $candiidato_en_proceso =  $this->candidatoRegistradoServicio($item['usuario_id'], $ordenServicio->id, $item['estado_candidato_id']);
+                    if ($candiidato_en_proceso) {
+                        $candidatos_con_servicio .= $item['numero_documento_candidato'] . ', ';
+                    }
+                } else if ($item['registrado'] == 0) {
+                    $this->candidatoNoRegistradoServicio($item, $ordenServicio->id);
+                } else if ($item['registrado'] == 2) {
+                    $candidato_validado = $valida_candidato->validacandidato($item['numero_documento_candidato'], 0, $item['tipo_identificacion_id'], true);
+                    $candidato_validado = $candidato_validado->getData(true);
+                    if ($candidato_validado['status'] == 'success' && $candidato_validado['motivo'] == '1') {
+                        $this->candidatoRegistradoServicio($candidato_validado['usuario']['usuario_id'], $ordenServicio->id, $item['estado_candidato_id']);
+                    } else if ($candidato_validado['status'] == 'success' && $candidato_validado['motivo'] == '2') {
+                        $this->candidatoNoRegistradoServicio($item, $ordenServicio->id);
+                    } else if ($candidato_validado['status'] == 'error') {
+                        $cantidad_errores++;
+                        $numeros_documento .= ' ' . $item['numero_documento_candidato'] . ',';
+                        if ($cantidad_errores == count($request['candidatos'])) {
+                            DB::rollback();
+                            return response()->json(["status" => "error", "message" => "Los candidatos con numero de documento de identidad $numeros_documento no pudieron ser registrados, para más innformación, por favor comuniquese con un asesor."]);
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+            if ($candidatos_con_servicio != '') {
+                return response()->json(["status" => "success", "message" => "Formulario guardado exitosamente, sin embargo los candidatos con numero de doucmento de identidad $candidatos_con_servicio no pudieron ser registrados ya que se encuentran en otro proceso."]);
+            }
+            return response()->json(["status" => "success", "message" => "Formulario guardado exitosamente"]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            // return $e;
+            return response()->json(["status" => "error", "message" => "Error al guadar los datos del formulario"]);
+        }
+    }
     public function update(Request $request, $id)
     {
         try {

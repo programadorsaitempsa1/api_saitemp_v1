@@ -14,7 +14,7 @@ class EstadoServicioController extends Controller
      */
     public function index()
     {
-        $result = EstadoServicioModel::select('id','nombre')->get();
+        $result = EstadoServicioModel::select('id','nombre','clave')->get();
         return response()->json($result);
     }
 
