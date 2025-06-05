@@ -195,6 +195,8 @@ use App\Http\Controllers\EstadoResponsableOrdenServicioController;
 use App\Http\Controllers\EstadoCandidatoServioOrdenServicioController;
 use App\Http\Controllers\HabilidadesCandidatosController;
 use App\Http\Controllers\NovedadesDDController;
+use App\Http\Controllers\AsignacionEstadosController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -1161,6 +1163,7 @@ Route::group([
 
 
   Route::get('/usuariointernorol/{id}', [SectorEconomicoProfesionalController::class, 'usuariointernorol']);
+  Route::get('/sectorEconomicoProfesional', [SectorEconomicoProfesionalController::class, 'sectorEconomicoProfesional']);
 
   Route::get('/asignacionUsuarios', [UsuarioController::class, 'asignacionUsuarios']);
 
@@ -1195,7 +1198,7 @@ Route::group([
 
   Route::get('/asignacionServicio', [AsignacionServicioController::class, 'index']);
   Route::post('/asignacionServicio', [AsignacionServicioController::class, 'ordenservicio']);
-  Route::post('/cancelaservicio/{id}', [AsignacionServicioController::class, 'cancelaservicio']);
+  Route::post('/cancelaservicio/{id}', [AsignacionServicioController::class, 'canordenserviciocelaservicio']);
   Route::get('/listaclienteservicio', [AsignacionServicioController::class, 'clienteservicio']);
   Route::post('/cancelacandidatoservicio/{servicio_id}/{candidato_id}', [AsignacionServicioController::class, 'cancelacandidatoservicio']);
   Route::get('/clienteresponsableservicio/{id}', [AsignacionServicioController::class, 'responsableservicio']);
@@ -1209,8 +1212,10 @@ Route::group([
   Route::get('/estadoservicio', [EstadoServicioController::class, 'index']);
   Route::get('/estadocandidatoservicio', [EstadoCandidatoServicioController::class, 'index']);
 
+  Route::post('/estadocandidatoservicio', [EstadoCandidatoServicioController::class, 'create']);
   Route::post('/estadocandidatoservicio/{id}', [EstadoCandidatoServicioController::class, 'update']);
-  Route::get('/estadocandidatoserviciotabla', [EstadoCandidatoServicioController::class, 'tabla']);
+  Route::get('/estadocandidatoservicio/{id}', [EstadoCandidatoServicioController::class, 'tabla']);
+  Route::delete('/estadocandidatoservicio/{id}', [EstadoCandidatoServicioController::class, 'destroy']);
 
   Route::get('/motivocancelaservicio', [MotivoCancelaServicioController::class, 'index']);
 
@@ -1227,6 +1232,12 @@ Route::group([
   Route::post('/estadocandidatoordenservicioborradomasivo', [EstadoCandidatoServioOrdenServicioController::class, 'borradomasivo']);
   Route::delete('/estadocandidatoordenservicio/{id}', [EstadoCandidatoServioOrdenServicioController::class, 'destroy']);
   Route::get('/estadocandidatoordenserviciofiltro/{cadena}/{cantidad}', [EstadoCandidatoServioOrdenServicioController::class, 'filtro']);
+
+  Route::get('/asignacionestados', [AsignacionEstadosController::class, 'index']);
+  Route::put('/asignacionestados', [AsignacionEstadosController::class, 'update']);
+
+
+
 
   //   EstadoServicioController
   // EstadoCandidatoServicioController

@@ -119,7 +119,7 @@ class EstadoCandidatoServioOrdenServicioController extends Controller
             return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
         } catch (\Exception $e) {
             DB::rollback();
-            // return $e->getMessage();
+            return $e;
             return response()->json(['status' => 'error', 'message' => 'ya existe uno de los estados ingresados.']);
         }
     }

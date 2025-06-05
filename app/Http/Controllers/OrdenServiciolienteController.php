@@ -12,6 +12,8 @@ use App\Models\TipoAsignacionServicioModel;
 use App\Models\UsuarioPermiso;
 use App\Models\User;
 use App\Models\UsuariosCandidatosModel;
+use App\Models\EstadoCandidatoServicioModel;
+use App\Models\Rol;
 use Illuminate\Support\Facades\DB;
 use App\Traits\AutenticacionGuard;
 use  Illuminate\Support\Facades\Crypt;
@@ -223,14 +225,21 @@ class OrdenServiciolienteController extends Controller
             $ordenServicio->estado_servicio_id = 1;
             if ($data['tipo_usuario_id'] == '2') { // asignación de servicios cuando lo registra un cliente
                 $responsable = $this->asignacionAutomatica($tipo_responsable, $request->sector_economico);
+                if (isset($responsable[0]) && $responsable[0] === 'error') {
+                    return response()->json(["status" => "error", "message" => "Los responsables no están parametrizados."]);
+                }
                 $ordenServicio->responsable_id = $responsable['responsable_id'];
                 $ordenServicio->responsable = $responsable['responsable'];
             } else if ($data['tipo_usuario_id'] == '1') {  // asignación de servicios cuando lo registra un usuario interno de saitemp
+
                 if ($asignacion_manual == 1) {
                     $ordenServicio->responsable_id = $request->responsable_id;
                     $ordenServicio->responsable = $request->responsable;
                 } else {
                     $responsable = $this->asignacionAutomatica($tipo_responsable, $request->sector_economico);
+                    if (isset($responsable[0]) && $responsable[0] === 'error') {
+                        return response()->json(["status" => "error", "message" => "Los responsables no están parametrizados."]);
+                    }
                     $ordenServicio->responsable_id = $responsable['responsable_id'];
                     $ordenServicio->responsable = $responsable['responsable'];
                 }
@@ -268,6 +277,7 @@ class OrdenServiciolienteController extends Controller
                     }
                 }
             }
+
             DB::commit();
             if ($correos_candidatos != '') {
                 return response()->json(["status" => "success", "message" => "Formulario guardado exitosamente, sin embargo los candidatos con correo electrónico. $correos_candidatos. no pudieron ser registrados ya que el correo se encuentra en uso por otro usuario.", 'id' => $ordenServicio->id]);
@@ -287,11 +297,12 @@ class OrdenServiciolienteController extends Controller
     {
         try {
             DB::beginTransaction();
+            $rol = Rol::select('id')->where('clave', 'candidato')->first();
             // Se registra el usuario que no está creado en la tabla de login
             $user = new User;
             $user->email = $usuario['correo_candidato'];
             $user->password =  Crypt::encryptString($usuario['numero_documento_candidato']);
-            $user->rol_id = 54;
+            $user->rol_id = $rol->id;
             $user->tipo_usuario_id = 3;
             $user->save();
             // Se registran otros detos de usuario en la tabla de candidatos
@@ -308,11 +319,12 @@ class OrdenServiciolienteController extends Controller
             $candidato->tip_doc_id = $usuario['tipo_identificacion_id'];
             $candidato->save();
             // Se relaciona el usuario creado con el nuevo servicio creado
+            $estado_candidato = EstadoCandidatoServicioModel::select('id')->where('clave', 'radicado')->first();
             $candidato = new CandidatoServicioModel;
             $candidato->servicio_id = $ordenServicio_id;
             $candidato->usuario_id =  $user->id;
             $candidato->en_proceso = 0;
-            $candidato->estado_id = 1;
+            $candidato->estado_id = $estado_candidato->id;
             $candidato->save();
             DB::commit();
         } catch (\Exception $e) {
@@ -322,8 +334,8 @@ class OrdenServiciolienteController extends Controller
     public function candidatoRegistradoServicio(string $candidato_id, string $ordenServicio_id, int $estado_id, $retorna_respuesta = false)
     {
 
-        $candidato_servicio = CandidatoServicioModel::where('servicio_id', $ordenServicio_id)->where('usuario_id', $candidato_id)->first();
         try {
+            $candidato_servicio = CandidatoServicioModel::where('servicio_id', $ordenServicio_id)->where('usuario_id', $candidato_id)->first();
             DB::beginTransaction();
             if (isset($candidato_servicio)) {
                 $candidato_servicio->estado_id = $estado_id;
@@ -362,10 +374,10 @@ class OrdenServiciolienteController extends Controller
         $usuarios = UsuarioDisponibleServicioModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_usuarios_disponibles_servicio.usuario_id')
             ->join('usr_app_usuarios_internos as ui', 'ui.usuario_id', 'us.id')
             ->where('usr_app_usuarios_disponibles_servicio.rol_usuario_interno_id', '=', $tipo_responsable)
-            ->when($tipo_responsable == 3 || $tipo_responsable == 4, function ($query) {
+            ->when($tipo_responsable == 4, function ($query) {
                 return $query->join('usr_app_sector_economico_profesional as sep', 'sep.profesional_id', 'us.id');
             })
-            ->when($tipo_responsable == 3 || $tipo_responsable == 4, function ($query) use ($sector_economico_id) {
+            ->when($tipo_responsable == 4, function ($query) use ($sector_economico_id) {
                 return $query->where('sep.sector_economico_id', '=', $sector_economico_id);
             })
             ->select(
@@ -376,7 +388,7 @@ class OrdenServiciolienteController extends Controller
             )->get();
         $numeroResponsables = $usuarios->count();
         if ($numeroResponsables === 0) {
-            return response()->json(['error' => 'No hay usuarios responsables disponibles'], 400);
+            return ["error"];
         }
         $orden_servicio = OrdenServcio::select()->orderby('id', 'DESC')
             ->first();
@@ -393,6 +405,9 @@ class OrdenServiciolienteController extends Controller
         $ordenServicio['responsable'] =  $responsable->nombres;
         return $ordenServicio;
     }
+
+
+
 
     // public function mensaje($bandera)
     // {
