@@ -56,6 +56,7 @@ trait AutenticacionGuard
                     "usr_app_usuarios_internos.correo",
                     "usr_app_usuarios.rol_id",
                     "rol_usuario.nombre as rol",
+                    "rol_usuario.clave as rol_clave",
                     "rol_interno.id as rol_usuario_interno_id",
                     "rol_interno.nombre as rol_usuario_interno",
                     "estado.nombre as estado",

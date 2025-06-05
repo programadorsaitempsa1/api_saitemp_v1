@@ -21,6 +21,8 @@ use App\Models\HistoricoConceptosCandidatosModel;
 use App\Models\UsuariosCandidatosModel;
 use App\Models\SalidaNoConformeseiya;
 use App\Models\EstadoCandidatoServioOrdenServicioModel;
+use App\Models\CandidatoSolicitudServicioModel;
+use App\Models\SolicitudServicioModel;
 use TCPDF;
 use Illuminate\Support\Facades\DB;
 use App\Traits\Permisos;
@@ -317,10 +319,15 @@ class formularioGestionIngresoController extends Controller
             ->leftJoin('usr_app_estados_ingreso as esti', 'esti.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
             ->leftJoin('usr_app_formulario_ingreso_tipo_servicio as tiser', 'tiser.id', 'usr_app_formulario_ingreso.tipo_servicio_id')
             ->leftJoin('gen_tipide as ti', 'ti.cod_tip', '=', 'usr_app_formulario_ingreso.tipo_documento_id')
-            ->leftJoin('usr_app_usuarios as us', 'us.id', 'usr_app_formulario_ingreso.candidato_id')
-            ->leftJoin('usr_app_candidatos_c as can', 'can.usuario_id', 'us.id')
-            ->leftJoin('gen_tipide as ti2', 'ti2.cod_tip', '=', 'can.tip_doc_id')
+            // ->leftJoin('usr_app_usuarios as us', 'us.id', 'usr_app_formulario_ingreso.candidato_id')
+            // ->leftJoin('usr_app_candidatos_c as can', 'can.usuario_id', 'us.id')
+            // ->leftJoin('gen_tipide as ti2', 'ti2.cod_tip', '=', 'can.tip_doc_id')
             ->leftjoin('usr_app_historico_concepto_candidatos as historico_candidatos', 'historico_candidatos.formulario_ingreso_id', '=', 'usr_app_formulario_ingreso.id')
+            ->leftjoin('usr_app_candadato_solicitud_servicio as cs', 'cs.id', '=', 'usr_app_formulario_ingreso.candidato_servicio_id')
+            ->leftjoin('usr_app_solicitud_servicio as sc', 'sc.id', '=', 'cs.servicio_id')
+            ->leftJoin('usr_app_usuarios as us1', 'us1.id', 'cs.usuario_id')
+            ->leftJoin('usr_app_candidatos_c as can1', 'can1.usuario_id', 'us1.id')
+            // ->leftJoin('gen_tipide as ti', 'ti.cod_tip', '=', 'can1.tip_doc_id')
             ->leftjoin('usr_app_conceptos_medicos as conceptos_medicos', 'conceptos_medicos.id', '=', 'usr_app_formulario_ingreso.concepto_medico_id')
             ->where('usr_app_formulario_ingreso.id', '=', $id)
             ->select(
@@ -331,11 +338,12 @@ class formularioGestionIngresoController extends Controller
                 'esti.nombre as estado_ingreso',
                 'esti.id as estado_ingreso_id',
                 'usr_app_formulario_ingreso.responsable as responsable_ingreso',
-                'usr_app_formulario_ingreso.fecha_ingreso',
+                DB::raw("COALESCE(usr_app_formulario_ingreso.fecha_ingreso, cs.fecha_ingreso) as fecha_ingreso"),
                 // 'usr_app_formulario_ingreso.numero_identificacion',
                 // 'usr_app_formulario_ingreso.nombre_completo',
-                DB::RAW("CONCAT(can.num_doc,'',usr_app_formulario_ingreso.numero_identificacion) as numero_identificacion"),
-                DB::RAW("CONCAT(usr_app_formulario_ingreso.nombre_completo,'',primer_nombre,' ',segundo_nombre,' ',primer_apellido,' ',segundo_apellido) as nombre_completo"),
+                
+                DB::RAW("COALESCE(can1.num_doc,'',usr_app_formulario_ingreso.numero_identificacion) as numero_identificacion"),
+                DB::RAW("CONCAT(can1.primer_apellido,' ',can1.segundo_apellido,' ',can1.primer_nombre,' ',can1.segundo_nombre) as nombre_completo"),
                 'usr_app_formulario_ingreso.cliente_id',
                 'cli.razon_social',
                 'usr_app_formulario_ingreso.cargo',
@@ -343,7 +351,7 @@ class formularioGestionIngresoController extends Controller
                 'usr_app_formulario_ingreso.municipio_id',
                 'mun.nombre as municipio',
                 // 'usr_app_formulario_ingreso.numero_contacto',
-                DB::RAW("CONCAT(can.celular,'',usr_app_formulario_ingreso.numero_contacto) as numero_contacto"),
+                DB::RAW("COALESCE(CS.celular_candidato,'',usr_app_formulario_ingreso.numero_contacto) as numero_contacto"),
                 'usr_app_formulario_ingreso.eps',
                 'usr_app_formulario_ingreso.afp_id',
                 'afp.nombre as afp',
@@ -372,7 +380,7 @@ class formularioGestionIngresoController extends Controller
                 'usr_app_formulario_ingreso.novedad_stradata',
                 'usr_app_formulario_ingreso.correo_notificacion_empresa',
                 // 'usr_app_formulario_ingreso.correo_notificacion_usuario',
-                DB::RAW("CONCAT(us.email,'',usr_app_formulario_ingreso.correo_notificacion_usuario) as correo_notificacion_usuario"),
+                DB::RAW("COALESCE(us1.email,'',usr_app_formulario_ingreso.correo_notificacion_usuario) as correo_notificacion_usuario"),
                 'usr_app_formulario_ingreso.novedades_examenes',
                 // 'ti.des_tip as tipo_identificacion',
                 'usr_app_formulario_ingreso.subsidio_transporte',
@@ -387,8 +395,8 @@ class formularioGestionIngresoController extends Controller
                 'usr_app_formulario_ingreso.nc_hora_cierre',
                 'usr_app_formulario_ingreso.n_servicio',
                 // 'ti.des_tip'
-                DB::RAW("CONCAT(ti.des_tip,'',ti2.des_tip) as tipo_identificacion"),
-                DB::RAW("CONCAT(ti.cod_tip,'',ti2.cod_tip) as tipo_identificacion_id")
+                // DB::RAW("COALESCE(ti.des_tip,'',ti2.des_tip) as tipo_identificacion"),
+                // DB::RAW("COALESCE(ti.cod_tip,'',ti2.cod_tip) as tipo_identificacion_id")
             )
             ->first();
 
@@ -2041,15 +2049,16 @@ class formularioGestionIngresoController extends Controller
 
     public function formularioingresoservicio(Request $request)
     {
-        set_time_limit(0);
-        $candidatos = CandidatoServicioModel::where('servicio_id', '=', $request->servicio_id)
-            ->select(
-                'usr_app_candadato_servicio.usuario_id',
-                'usr_app_candadato_servicio.en_proceso',
-            )->get();
-    
-        $replica = $candidatos->count();
 
+        set_time_limit(0);
+        $candidatos = CandidatoSolicitudServicioModel::where('servicio_id', '=', $request->servicio_id)->where('usuario_id', '!=', '')
+            ->select(
+                'usr_app_candadato_solicitud_servicio.usuario_id',
+                'usr_app_candadato_solicitud_servicio.en_proceso',
+                'usr_app_candadato_solicitud_servicio.id as candidato_id',
+            )->get();
+        // return $candidatos;
+        $replica = $candidatos->count();
         DB::beginTransaction();
         $user = $this->getUserRelaciones();
         $user = $user->getData(true);
@@ -2059,11 +2068,11 @@ class formularioGestionIngresoController extends Controller
         for ($i = 0; $i < $replica; $i++) {
             try {
                 $result = new formularioGestionIngreso;
-                $result->fecha_ingreso = $request->fecha_ingreo;
-                $result->cliente_id = $request->empresa_cliente_id;
-                $result->cargo = $request->cargo;
-                $result->salario = $request->salario;
-                $result->municipio_id = $request->municipio_id;
+                // $result->fecha_ingreso = $request->fecha_ingreo;
+                // $result->cliente_id = $request->empresa_cliente_id;
+                // $result->cargo = $request->cargo;
+                // $result->salario = $request->salario;
+                // $result->municipio_id = $request->municipio_id;
                 $result->eps = $request->eps;
                 $result->afp_id = $request->afp_id;
                 $result->estradata = $request->consulta_stradata;
@@ -2080,7 +2089,7 @@ class formularioGestionIngresoController extends Controller
                     $result->estado_ingreso_id = $request->estado_id;
                 }
                 $result->responsable = $user['nombres'] . ' ' . str_replace("null", "", $user['apellidos']);
-                $result->tipo_servicio_id = $request->tipo_servicio_id;
+                // $result->tipo_servicio_id = $request->tipo_servicio_id;
                 $result->numero_vacantes = $request->numero_vacantes;
                 $result->numero_contrataciones = $request->numero_contrataciones;
                 if ($request->citacion_entrevista != null) {
@@ -2091,7 +2100,7 @@ class formularioGestionIngresoController extends Controller
                 $result->responsable = $request->consulta_encargado;
                 $result->novedad_stradata = $request->novedades_stradata;
                 $result->correo_notificacion_empresa = $request->correo_empresa;
-                $result->direccion_empresa = $request->direccion_empresa;
+                // $result->direccion_empresa = $request->direccion_empresa;
                 $result->direccion_laboratorio = $request->direccion_laboratorio;
                 $result->recomendaciones_examen = $request->recomendaciones_examen;
                 $result->novedades_examenes = $request->novedades_examenes;
@@ -2101,7 +2110,7 @@ class formularioGestionIngresoController extends Controller
                 $result->observacion_estado = $request->consulta_categoria_snc;
                 $result->correo_laboratorio = $request->correo_laboratorio;
                 $result->contacto_empresa = $request->contacto_empresa;
-                $result->responsable_id = $request->encargado_id;
+                // $result->responsable_id = $request->encargado_id;
                 $result->responsable_corregir = $request->consulta_encargado_corregir;
                 if ($request->variableX == 1) {
                     $result->nc_hora_cierre = 'Servicio no conforme';
@@ -2110,10 +2119,11 @@ class formularioGestionIngresoController extends Controller
                     $result->n_servicio = $request->n_servicio;
                 }
 
-              
+
                 if ($candidatos[$i]['en_proceso'] != 1) {
-                    $result->candidato_id = $candidatos[$i]['usuario_id'];
-                    $candidato = CandidatoServicioModel::where('usuario_id', '=', $candidatos[$i]['usuario_id'])->first();
+                    // $result->candidato_id = $candidatos[$i]['usuario_id'];
+                    $result->candidato_servicio_id = $candidatos[$i]['candidato_id'];
+                    $candidato = CandidatoSolicitudServicioModel::where('usuario_id', '=', $candidatos[$i]['usuario_id'])->first();
                     if ($candidato) {
                         $candidato->en_proceso = 1;
                         $candidato->save();
@@ -2124,11 +2134,11 @@ class formularioGestionIngresoController extends Controller
                 $result->save();
 
                 // TODO:
-                $orden_servicio = OrdenServcio::where('numero_radicado', '=', $result->n_servicio)->first();
-                $candidato_servicio = CandidatoServicioModel::where('servicio_id', '=', $orden_servicio->id)->first();
+                $orden_servicio = SolicitudServicioModel::where('numero_radicado', '=', $result->n_servicio)->first();
+                $candidato_servicio = CandidatoSolicitudServicioModel::where('servicio_id', '=', $orden_servicio->id)->first();
                 $estado_candidato = EstadoCandidatoServioOrdenServicioModel::where('estado_orden_servicio_id', '=', $request->estado_id)->first();
                 if (isset($estado_candidato)) {
-                    $candidato_servicio->estado_id =  $estado_candidato->estado_candidato_servicio_id;
+                    $candidato_servicio->estado_candidato_id =  $estado_candidato->estado_candidato_servicio_id;
                     $candidato_servicio->save();
                 }
 

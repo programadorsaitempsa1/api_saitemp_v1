@@ -9,7 +9,12 @@ use App\Models\UsuarioDebidaDiligencia;
 use App\Models\cliente;
 use App\Models\OrdenServcio;
 use App\Models\CandidatoServicioModel;
+use App\Models\CandidatoSolicitudServicioModel;
 use App\Models\formularioGestionIngreso;
+use App\Models\EstadoServicioModel;
+use App\Models\estadosIngreso;
+use App\Models\EstadoCandidatoServicioModel;
+use App\Models\SolicitudServicioModel;
 use Illuminate\Support\Facades\DB;
 use App\Traits\AutenticacionGuard;
 use Illuminate\Support\Carbon;
@@ -61,34 +66,39 @@ class AsignacionServicioController extends Controller
     {
 
         try {
+
+            $fecha_actual =  Carbon::now();
             DB::beginTransaction();
             $result = $this->getUserRelaciones();
             $usuario = $result->getdata(true);
-            $orden_servicio = OrdenServcio::where('id', '=', $id)->first();
-            $orden_servicio->fecha_cancelacion =  Carbon::now();
+            $orden_servicio = SolicitudServicioModel::where('id', '=', $id)->first();
+            $estado_solicitud_servicio = EstadoServicioModel::where('clave', '=', 'cancelado')->first();
+            $orden_servicio->fecha_cancelacion =  $fecha_actual->format('d-m-Y H:i:s');
             $orden_servicio->usuario_cancela =  $usuario['usuario_id'];
             $orden_servicio->motivo_cancelacion =  $request->motivo_cancelacion_id;
             $orden_servicio->descripcion_cancelacion =  $request->descripcion_cancelacion;
-            $orden_servicio->estado_servicio_id = 2; // se coloca el registro en estado cancelado
+            $orden_servicio->estado_servicio_id = $estado_solicitud_servicio->id; // se coloca el registro en estado cancelado
 
             $candidatos_servicio = CandidatoServicioModel::where('servicio_id', '=', $id)->select()->get();
-            foreach ($candidatos_servicio as $candidato) {
-                $candidato->estado_id = 3;
-                $candidato->save();
+            $estado_candidato = EstadoCandidatoServicioModel::where('clave', '=', 'cancelado')->first();
 
+            $estado_orden_servicio = estadosIngreso::where('clave', '=', 'cancelado')->first();
+            foreach ($candidatos_servicio as $candidato) {
+                $candidato->estado_id = $estado_candidato->id;
+                $candidato->save();
                 $candidatos_seiya = formularioGestionIngreso::where('n_servicio', '=', $orden_servicio->numero_radicado)->where('candidato_id', '=', $candidato->usuario_id)->select()->get();
                 foreach ($candidatos_seiya as $candidato) {
-                    $candidato->estado_ingreso_id = 19;
+                    $candidato->estado_ingreso_id = $estado_orden_servicio->id;
                     $candidato->save();
                 }
             }
-
             if ($orden_servicio->save()) {
                 DB::commit();
                 return response()->json(["status" => "success", "message" => "Servicio cancelado de manera exitosa"]);
             }
         } catch (\Exception $e) {
             DB::rollBack();
+            return $e;
             return response()->json(["status" => "error", "message" => "Hubo un error al caneclar el servicio, por favor intente nuevamente"]);
         }
     }
@@ -99,16 +109,18 @@ class AsignacionServicioController extends Controller
             $fecha_actual =  Carbon::now();
             $result = $this->getUserRelaciones();
             $usuario = $result->getdata(true);
-            $candidato = CandidatoServicioModel::where('servicio_id', $servicio_id)->where('usuario_id', $candidato_id)->first();
+            $candidato = CandidatoSolicitudServicioModel::where('servicio_id', $servicio_id)->where('usuario_id', $candidato_id)->first();
+            $estado_candidato = EstadoCandidatoServicioModel::where('clave', '=', 'cancelado')->first();
             $candidato->fecha_cancelacion =  $fecha_actual->format('d-m-Y H:i:s');
             $candidato->usuario_cancela =  $usuario['usuario_id'];
             $candidato->motivo_cancelacion =  $request->motivo_cancelacion_id;
             $candidato->descripcion_cancelacion =  $request->descripcion_cancelacion;
-            $candidato->estado_id = 3; // se coloca el registro en estado cancelado
+            $candidato->estado_candidato_id = $estado_candidato->id; // se coloca el registro en estado cancelado
             if ($candidato->save()) {
                 return response()->json(["status" => "success", "message" => "Candidato cancelado de manera exitosa"]);
             }
         } catch (\Exception $e) {
+            return $e;
             return response()->json(["status" => "error", "message" => "Hubo un error al caneclar el candidato, por favor intente nuevamente"]);
         }
     }
@@ -174,7 +186,6 @@ class AsignacionServicioController extends Controller
             ->select(
                 'usr_app_clientes.id',
                 'usr_app_clientes.razon_social',
-                // 'usr_app_clientes.nit',
                 DB::raw('COALESCE(nit, numero_identificacion) as nit'),
                 'ac.codigo_actividad as actividad_ciiu',
                 'se.nombre as sector_economico',

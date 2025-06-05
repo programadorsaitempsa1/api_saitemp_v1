@@ -770,40 +770,40 @@ class RecepcionEmpleadoController extends Controller
             return response()->json(['status' => 'error', 'titulo' => 'Candidato laborando', 'message' => 'El candidato con número de documento ' . $numero_identificacion . ' se encuentra laborando actualmente, comuniquese con un asesor para más información.', 'documento' => $numero_identificacion]);
         }
 
-        $en_proceso = formularioGestionIngreso::join('usr_app_usuarios as us', 'us.id', 'usr_app_formulario_ingreso.candidato_id')
-            ->join('usr_app_candidatos_c as can', 'can.usuario_id', 'us.id')
-            ->join('usr_app_estados_ingreso as est', 'est.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
-            ->where('can.num_doc', '=', (string) $numero_identificacion)
-            ->where('can.tip_doc_id', '=', $tipo_documento)
-            ->select(
-                'us.id',
-                'est.nombre as nombre_estado',
-                'est.id as estado_id'
-            )
-            ->first();
-        $estados_id = array(1, 35, 2, 3, 4, 5, 6, 13, 33, 34, 14, 16, 36, 37, 9, 10); // estos son los id de los estados de seiya que son bloqueantes para registrar un candidato en un servicio
-        if (isset($en_proceso)) {
-            $estado = $en_proceso->estado_id;
-            if (in_array($estado, $estados_id)) {
-                if ($validacion_interna) {
-                    return  response()->json(['status' => 'error', 'motivo' => '1', 'documento' => $numero_identificacion]);
-                }
-                return response()->json(['status' => 'error', 'titulo' => 'Candidato en proceso', 'message' => 'El candidato con número de documento ' . $numero_identificacion . ' se encuentra en proceso de seleción o contratación actualmente, comuniquese con un asesor para más información.', 'documento' => $numero_identificacion]);
-            }
-        }
+        // $en_proceso = formularioGestionIngreso::join('usr_app_usuarios as us', 'us.id', 'usr_app_formulario_ingreso.candidato_id')
+        //     ->join('usr_app_candidatos_c as can', 'can.usuario_id', 'us.id')
+        //     ->join('usr_app_estados_ingreso as est', 'est.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
+        //     ->where('can.num_doc', '=', (string) $numero_identificacion)
+        //     ->where('can.tip_doc_id', '=', $tipo_documento)
+        //     ->select(
+        //         'us.id',
+        //         'est.nombre as nombre_estado',
+        //         'est.id as estado_id'
+        //     )
+        //     ->first();
+        // $estados_id = array(1, 35, 2, 3, 4, 5, 6, 13, 33, 34, 14, 16, 36, 37, 9, 10); // estos son los id de los estados de seiya que son bloqueantes para registrar un candidato en un servicio
+        // if (isset($en_proceso)) {
+        //     $estado = $en_proceso->estado_id;
+        //     if (in_array($estado, $estados_id)) {
+        //         if ($validacion_interna) {
+        //             return  response()->json(['status' => 'error', 'motivo' => '1', 'documento' => $numero_identificacion]);
+        //         }
+        //         return response()->json(['status' => 'error', 'titulo' => 'Candidato en proceso', 'message' => 'El candidato con número de documento ' . $numero_identificacion . ' se encuentra en proceso de seleción o contratación actualmente, comuniquese con un asesor para más información.', 'documento' => $numero_identificacion]);
+        //     }
+        // }
 
-        $candidato_servicio = CandidatoServicioModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_candadato_servicio.usuario_id')
-            ->join('usr_app_candidatos_c as can', 'can.usuario_id', 'us.id')
-            ->where('can.num_doc', $numero_identificacion)
-            ->select(
-                'can.usuario_id',
-                'usr_app_candadato_servicio.estado_id'
-            )->get();
-        foreach ($candidato_servicio as $candidato) {
-            if (in_array($candidato->estado_id, [1, 2])) {
-                return response()->json(['status' => 'error', 'titulo' => 'Candidato en proceso', 'message' => 'El candidato con número de documento ' . $numero_identificacion . ' se encuentra actualmente registrado en un servicio, comuniquese con un asesor para más información.', 'documento' => $numero_identificacion]);
-            }
-        }
+        // $candidato_servicio = CandidatoServicioModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_candadato_servicio.usuario_id')
+        //     ->join('usr_app_candidatos_c as can', 'can.usuario_id', 'us.id')
+        //     ->where('can.num_doc', $numero_identificacion)
+        //     ->select(
+        //         'can.usuario_id',
+        //         'usr_app_candadato_servicio.estado_id'
+        //     )->get();
+        // foreach ($candidato_servicio as $candidato) {
+        //     if (in_array($candidato->estado_id, [1, 2])) {
+        //         return response()->json(['status' => 'error', 'titulo' => 'Candidato en proceso', 'message' => 'El candidato con número de documento ' . $numero_identificacion . ' se encuentra actualmente registrado en un servicio, comuniquese con un asesor para más información.', 'documento' => $numero_identificacion]);
+        //     }
+        // }
 
         $usuario = UsuariosCandidatosModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_candidatos_c.usuario_id')
             ->where('num_doc', '=', (string) $numero_identificacion)
@@ -832,11 +832,15 @@ class RecepcionEmpleadoController extends Controller
 
     public function validaCorreoCandidato($correo)
     {
-        $usuario = User::where('email', '=', $correo)->first();
-        if ($usuario) {
-            return response()->json(['correo' => $correo]);
+        if ($correo != '') {
+            $usuario = User::where('email', '=', $correo)->first();
+            if ($usuario) {
+                return response()->json(['correo' => $correo, 'id' => $usuario->id]);
+            }
         }
     }
+   
+
     public function buscardocumentolistacandidato($documento)
     {
         $result = UsuariosCandidatosModel::leftjoin('usr_app_municipios as ciudad_residencia', 'ciudad_residencia.id', 'usr_app_candidatos_c.ciudad_residencia_id')
