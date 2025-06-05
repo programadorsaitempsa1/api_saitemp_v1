@@ -36,6 +36,20 @@ class SectorEconomicoProfesionalController extends Controller
         return $users;
     }
 
+    public function sectorEconomicoProfesional()
+    {
+        $result = SectorEconomicoProfesionalModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_sector_economico_profesional.profesional_id')
+            ->join('usr_app_usuarios_internos as ui', 'ui.usuario_id', 'us.id')
+            ->join('usr_app_sector_economico as se', 'se.id', 'usr_app_sector_economico_profesional.sector_economico_id')
+            ->select(
+                'usr_app_sector_economico_profesional.profesional_id as id',
+                DB::raw("CONCAT(ui.nombres,' ',ui.apellidos)  AS nombres"),
+            )
+            ->orderby('ui.nombres')
+            ->get()->unique('nombres')->values();
+        return response()->json($result);
+    }
+
     public function byid($id)
     {
         $result = SectorEconomicoProfesionalModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_sector_economico_profesional.profesional_id')
@@ -66,8 +80,8 @@ class SectorEconomicoProfesionalController extends Controller
             $profesional_sector->sector_economico_id = $sector['id'];
             $profesional_sector->profesional_id = $profesional['usuario_id'];
             $profesional_sector->save();
-            $cuerpo_mensaje .= ' Sector: '.$sector['nombre'];
-           $resultado =  $this->notificaProfesional($asunto, $cuerpo_mensaje, $profesional['correo'],62,$profesional_sector->id);
+            $cuerpo_mensaje .= ' Sector: ' . $sector['nombre'];
+            $resultado =  $this->notificaProfesional($asunto, $cuerpo_mensaje, $profesional['correo'], 62, $profesional_sector->id);
         }
         // return response()->json(['status' => 'success', 'message' => 'Reguistro guardado de manera exitosa.']);
         return $resultado;
@@ -140,7 +154,8 @@ class SectorEconomicoProfesionalController extends Controller
         //
     }
 
-    public function borradomasivo(Request $request){
+    public function borradomasivo(Request $request)
+    {
         $result = $request->all();
         for ($i = 0; $i < count($request->id); $i++) {
             $result = SectorEconomicoProfesionalModel::find($request->id[$i]);

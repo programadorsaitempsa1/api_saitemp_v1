@@ -12,10 +12,14 @@ use App\Models\TipoAsignacionServicioModel;
 use App\Models\UsuarioPermiso;
 use App\Models\User;
 use App\Models\UsuariosCandidatosModel;
+use App\Models\EstadoCandidatoServicioModel;
+use App\Models\Rol;
+use App\Models\CandidatoSolicitudServicioModel;
 use Illuminate\Support\Facades\DB;
 use App\Traits\AutenticacionGuard;
 use  Illuminate\Support\Facades\Crypt;
 use App\Traits\Permisos;
+
 
 
 class OrdenServiciolienteController extends Controller
@@ -157,7 +161,7 @@ class OrdenServiciolienteController extends Controller
             )->first();
         $candidatos = CandidatoServicioModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_candadato_servicio.usuario_id')
             ->join('usr_app_candidatos_c as can', 'can.usuario_id', 'usr_app_candadato_servicio.usuario_id')
-            ->join('gen_tipide as ti', 'ti.cod_tip', '=', 'can.tip_doc_id')
+            ->leftjoin('gen_tipide as ti', 'ti.cod_tip', '=', 'can.tip_doc_id')
             ->leftjoin('usr_app_estado_candidato_servicio as est', 'est.id', '=', 'usr_app_candadato_servicio.estado_id')
             ->where('usr_app_candadato_servicio.servicio_id', '=', $id,)
             ->select(
@@ -223,14 +227,21 @@ class OrdenServiciolienteController extends Controller
             $ordenServicio->estado_servicio_id = 1;
             if ($data['tipo_usuario_id'] == '2') { // asignación de servicios cuando lo registra un cliente
                 $responsable = $this->asignacionAutomatica($tipo_responsable, $request->sector_economico);
+                if (isset($responsable[0]) && $responsable[0] === 'error') {
+                    return response()->json(["status" => "error", "message" => "Los responsables no están parametrizados."]);
+                }
                 $ordenServicio->responsable_id = $responsable['responsable_id'];
                 $ordenServicio->responsable = $responsable['responsable'];
             } else if ($data['tipo_usuario_id'] == '1') {  // asignación de servicios cuando lo registra un usuario interno de saitemp
+
                 if ($asignacion_manual == 1) {
                     $ordenServicio->responsable_id = $request->responsable_id;
                     $ordenServicio->responsable = $request->responsable;
                 } else {
                     $responsable = $this->asignacionAutomatica($tipo_responsable, $request->sector_economico);
+                    if (isset($responsable[0]) && $responsable[0] === 'error') {
+                        return response()->json(["status" => "error", "message" => "Los responsables no están parametrizados."]);
+                    }
                     $ordenServicio->responsable_id = $responsable['responsable_id'];
                     $ordenServicio->responsable = $responsable['responsable'];
                 }
@@ -241,11 +252,13 @@ class OrdenServiciolienteController extends Controller
             $correos_candidatos = '';
             $valida_candidato = new RecepcionEmpleadoController();
             foreach ($request['candidatos'] as $item) {
-                $correo_candidato_validado = $valida_candidato->validaCorreoCandidato($item['correo_candidato']);
-                if (isset($correo_candidato_validado)) {
-                    $correo_candidato_validado = $correo_candidato_validado->getData(true);
-                    $correos_candidatos .= ' ' . $correo_candidato_validado['correo'] . ',';
-                    continue;
+                if (isset($item['correo_candidato'])) {
+                    $correo_candidato_validado = $valida_candidato->validaCorreoCandidato($item['correo_candidato']);
+                    if (isset($correo_candidato_validado)) {
+                        $correo_candidato_validado = $correo_candidato_validado->getData(true);
+                        $correos_candidatos .= ' ' . $correo_candidato_validado['correo'] . ',';
+                        continue;
+                    }
                 }
                 if ($item['registrado'] == 1) {
                     $result = $this->candidatoRegistradoServicio($item['usuario_id'], $ordenServicio->id, 1);
@@ -268,6 +281,7 @@ class OrdenServiciolienteController extends Controller
                     }
                 }
             }
+
             DB::commit();
             if ($correos_candidatos != '') {
                 return response()->json(["status" => "success", "message" => "Formulario guardado exitosamente, sin embargo los candidatos con correo electrónico. $correos_candidatos. no pudieron ser registrados ya que el correo se encuentra en uso por otro usuario.", 'id' => $ordenServicio->id]);
@@ -283,15 +297,19 @@ class OrdenServiciolienteController extends Controller
         }
     }
 
-    public function candidatoNoRegistradoServicio(array $usuario, string $ordenServicio_id)
+    public function candidatoNoRegistradoServicioCopia(array $usuario, string $ordenServicio_id)
     {
         try {
             DB::beginTransaction();
+            $rol = Rol::select('id')->where('clave', 'candidato')->first();
             // Se registra el usuario que no está creado en la tabla de login
             $user = new User;
-            $user->email = $usuario['correo_candidato'];
-            $user->password =  Crypt::encryptString($usuario['numero_documento_candidato']);
-            $user->rol_id = 54;
+            // $user->email = $usuario['correo_candidato']; este campo es para regiatrar un nuevo usuario con correo no borrar
+            // $user->password =  Crypt::encryptString($usuario['numero_documento_candidato']);
+            $user->email = $usuario['celular_candidato'];
+            $user->password =  bcrypt($usuario['celular_candidato']);
+            $user->confirma_correo =  1;
+            $user->rol_id = $rol->id;
             $user->tipo_usuario_id = 3;
             $user->save();
             // Se registran otros detos de usuario en la tabla de candidatos
@@ -308,22 +326,84 @@ class OrdenServiciolienteController extends Controller
             $candidato->tip_doc_id = $usuario['tipo_identificacion_id'];
             $candidato->save();
             // Se relaciona el usuario creado con el nuevo servicio creado
+            $estado_candidato = EstadoCandidatoServicioModel::select('id')->where('clave', 'radicado')->first();
             $candidato = new CandidatoServicioModel;
             $candidato->servicio_id = $ordenServicio_id;
             $candidato->usuario_id =  $user->id;
             $candidato->en_proceso = 0;
-            $candidato->estado_id = 1;
+            $candidato->estado_id = $estado_candidato->id;
             $candidato->save();
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
         }
     }
+
+    public function candidatoNoRegistradoServicio(array $usuario, string $ordenServicio_id)
+    {
+        try {
+            DB::beginTransaction();
+            $rol = Rol::select('id')->where('clave', 'candidato')->first();
+            // Se registra el usuario que no está creado en la tabla de login
+            $user = new User;
+            $user->email = $usuario['celular_candidato'];
+            $user->password =  bcrypt($usuario['celular_candidato']);
+            $user->confirma_correo =  1;
+            $user->rol_id = $rol->id;
+            $user->tipo_usuario_id = 3;
+            $user->save();
+            // Se registran otros detos de usuario en la tabla de candidatos
+            $candidato = new UsuariosCandidatosModel;
+            $candidato->usuario_id =  $user->id;
+            if (isset($usuario['nombre_candidato'])) {
+                $nombres = explode(" ", $usuario['nombre_candidato']);
+                $candidato->primer_nombre =  $nombres[0];
+                $candidato->segundo_nombre = isset($nombres[1]) ? $nombres[1] : '';
+            }
+            if (isset($usuario['apellido_candidato'])) {
+                $apellidos =  explode(" ", $usuario['apellido_candidato']);
+                $candidato->primer_apellido =  $apellidos[0];
+                $candidato->segundo_apellido =   isset($apellidos[1]) ? $apellidos[1] : '';
+            }
+            if (isset($usuario['numero_documento_candidato'])) {
+                $candidato->num_doc = $usuario['numero_documento_candidato'];
+            }
+            if (isset($usuario['celular_candidato'])) {
+                $candidato->celular = $usuario['celular_candidato'];
+            }
+            if (isset($usuario['tipo_identificacion_id'])) {
+                $candidato->tip_doc_id = $usuario['tipo_identificacion_id'];
+            }
+            $candidato->save();
+            // Se relaciona el usuario creado con el nuevo servicio creado
+            $estado_candidato = EstadoCandidatoServicioModel::select('id')->where('clave', 'radicado')->first();
+            $candidato = new CandidatoServicioModel;
+            $candidato->servicio_id = $ordenServicio_id;
+            $candidato->usuario_id =  $user->id;
+            $candidato->en_proceso = 0;
+            $candidato->estado_id = $estado_candidato->id;
+            $candidato->motivo_cancelacion = $usuario['celular_candidato'];
+            $candidato->descripcion_cancelacion = $usuario['celular_candidato'];
+            $candidato->usuario_cancela = $usuario['celular_candidato'];
+            $candidato->fecha_cancelacion = $usuario['celular_candidato'];
+            $candidato->ciudad_prestacion_servicio_id = $usuario['celular_candidato'];
+            $candidato->direccion_prestacion_servicio = $usuario['celular_candidato'];
+            $candidato->fecha_ingreso = $usuario['celular_candidato'];
+            $candidato->cargo_solicitado_id = $usuario['celular_candidato'];
+            $candidato->salario = $usuario['celular_candidato'];
+            $candidato->subsidio_transporte = $usuario['celular_candidato'];
+            $candidato->save();
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+        }
+    }
+
     public function candidatoRegistradoServicio(string $candidato_id, string $ordenServicio_id, int $estado_id, $retorna_respuesta = false)
     {
 
-        $candidato_servicio = CandidatoServicioModel::where('servicio_id', $ordenServicio_id)->where('usuario_id', $candidato_id)->first();
         try {
+            $candidato_servicio = CandidatoServicioModel::where('servicio_id', $ordenServicio_id)->where('usuario_id', $candidato_id)->first();
             DB::beginTransaction();
             if (isset($candidato_servicio)) {
                 $candidato_servicio->estado_id = $estado_id;
@@ -362,10 +442,10 @@ class OrdenServiciolienteController extends Controller
         $usuarios = UsuarioDisponibleServicioModel::join('usr_app_usuarios as us', 'us.id', 'usr_app_usuarios_disponibles_servicio.usuario_id')
             ->join('usr_app_usuarios_internos as ui', 'ui.usuario_id', 'us.id')
             ->where('usr_app_usuarios_disponibles_servicio.rol_usuario_interno_id', '=', $tipo_responsable)
-            ->when($tipo_responsable == 3 || $tipo_responsable == 4, function ($query) {
+            ->when($tipo_responsable == 4, function ($query) {
                 return $query->join('usr_app_sector_economico_profesional as sep', 'sep.profesional_id', 'us.id');
             })
-            ->when($tipo_responsable == 3 || $tipo_responsable == 4, function ($query) use ($sector_economico_id) {
+            ->when($tipo_responsable == 4, function ($query) use ($sector_economico_id) {
                 return $query->where('sep.sector_economico_id', '=', $sector_economico_id);
             })
             ->select(
@@ -376,7 +456,7 @@ class OrdenServiciolienteController extends Controller
             )->get();
         $numeroResponsables = $usuarios->count();
         if ($numeroResponsables === 0) {
-            return response()->json(['error' => 'No hay usuarios responsables disponibles'], 400);
+            return ["error"];
         }
         $orden_servicio = OrdenServcio::select()->orderby('id', 'DESC')
             ->first();
@@ -393,6 +473,9 @@ class OrdenServiciolienteController extends Controller
         $ordenServicio['responsable'] =  $responsable->nombres;
         return $ordenServicio;
     }
+
+
+
 
     // public function mensaje($bandera)
     // {
@@ -542,28 +625,58 @@ class OrdenServiciolienteController extends Controller
 
     public function ordenservicioseiya($id)
     {
-        $result = OrdenServcio::join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_orden_servicio.linea_servicio_id')
-            ->join('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_orden_servicio.motivo_servicio_id')
-            ->join('usr_app_municipios as ciu', 'ciu.id', '=', 'usr_app_orden_servicio.ciudad_prestacion_servicio_id')
+        // $result = OrdenServcio::join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_orden_servicio.linea_servicio_id')
+        //     ->join('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_orden_servicio.motivo_servicio_id')
+        //     ->join('usr_app_municipios as ciu', 'ciu.id', '=', 'usr_app_orden_servicio.ciudad_prestacion_servicio_id')
+        //     ->join('usr_app_departamentos as dep', 'dep.id', '=', 'ciu.departamento_id')
+        //     ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_orden_servicio.cargo_solicitado_id')
+        //     ->where('usr_app_orden_servicio.id', '=', $id)
+        //     ->select(
+        //         'usr_app_orden_servicio.id',
+        //         'usr_app_orden_servicio.numero_radicado',
+        //         'ts.nombre_servicio as linea_servicio',
+        //         'usr_app_orden_servicio.linea_servicio_id',
+        //         'ciu.nombre as ciudad_prestacion_servicio',
+        //         'ciu.id as ciudad_prestacion_servicio_id',
+        //         'dep.nombre as departamento_prestacion_servicio',
+        //         'dep.id as departamento_prestacion_servicio_id',
+        //         'usr_app_orden_servicio.razon_social',
+        //         'usr_app_orden_servicio.cliente_id',
+        //         'usr_app_orden_servicio.salario',
+        //         'lc.nombre as cargo_solicitado',
+        //         'usr_app_orden_servicio.responsable',
+        //         'usr_app_orden_servicio.responsable_id',
+        //         'usr_app_orden_servicio.cantidad_contrataciones',
+        //     )
+        //     ->first();
+        // return response()->json($result);
+        $result = CandidatoSolicitudServicioModel::leftJoin('usr_app_solicitud_servicio as ss', 'ss.id', '=', 'usr_app_candadato_solicitud_servicio.servicio_id')
+            ->LeftJoin('usr_app_clientes as cli', 'cli.id', '=', 'ss.cliente_id')
+            ->join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'ss.linea_servicio_id')
+            ->join('usr_app_municipios as ciu', 'ciu.id', '=', 'usr_app_candadato_solicitud_servicio.ciudad_prestacion_servicio_id')
             ->join('usr_app_departamentos as dep', 'dep.id', '=', 'ciu.departamento_id')
-            ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_orden_servicio.cargo_solicitado_id')
-            ->where('usr_app_orden_servicio.id', '=', $id)
+            ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_candadato_solicitud_servicio.cargo_solicitado_id')
+            ->where('ss.id', '=', $id)
             ->select(
-                'usr_app_orden_servicio.id',
-                'usr_app_orden_servicio.numero_radicado',
+                'ss.id',
+                'ss.numero_radicado',
                 'ts.nombre_servicio as linea_servicio',
-                'usr_app_orden_servicio.linea_servicio_id',
+                'ts.id as linea_servicio_id',
                 'ciu.nombre as ciudad_prestacion_servicio',
                 'ciu.id as ciudad_prestacion_servicio_id',
                 'dep.nombre as departamento_prestacion_servicio',
                 'dep.id as departamento_prestacion_servicio_id',
-                'usr_app_orden_servicio.razon_social',
-                'usr_app_orden_servicio.cliente_id',
-                'usr_app_orden_servicio.salario',
+                'ss.cliente_id',
+                'cli.razon_social',
+                'usr_app_candadato_solicitud_servicio.salario',
+                'usr_app_candadato_solicitud_servicio.subsidio_transporte',
                 'lc.nombre as cargo_solicitado',
-                'usr_app_orden_servicio.responsable',
-                'usr_app_orden_servicio.responsable_id',
-                'usr_app_orden_servicio.cantidad_contrataciones',
+                'lc.id as cargo_solicitado_id',
+                'usr_app_candadato_solicitud_servicio.fecha_ingreso',
+                'ss.responsable',
+                'ss.responsable_id',
+                'ss.cantidad_contrataciones',
+                'usr_app_candadato_solicitud_servicio.direccion_prestacion_servicio'
             )
             ->first();
         return response()->json($result);
@@ -609,6 +722,64 @@ class OrdenServiciolienteController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+    public function updateCopia(Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+            $ordenServicio = OrdenServcio::find($id);
+            $ordenServicio->fecha_inicio = $request->fecha_inicio;
+            $ordenServicio->fecha_fin = $request->fecha_fin;
+            $ordenServicio->linea_servicio_id = $request->linea_servicio_id;
+            $ordenServicio->ciudad_prestacion_servicio_id = $request->ciudad_prestacion_servicio_id;
+            $ordenServicio->motivo_servicio_id = $request->motivo_servicio_id;
+            $ordenServicio->cantidad_contrataciones = $request->cantidad_contrataciones;
+            $ordenServicio->cargo_solicitado_id = $request->cargo_solicitado_id;
+            $ordenServicio->funciones_cargo = $request->funciones_cargo;
+            $ordenServicio->salario = $request->salario;
+            $ordenServicio->estado_servicio_id = $request->estado_servicio_id;
+            $ordenServicio->save();
+
+            $cantidad_errores = 0;
+            $numeros_documento = '';
+            $candidatos_con_servicio = '';
+            $valida_candidato = new RecepcionEmpleadoController();
+            foreach ($request['candidatos'] as $item) {
+                if ($item['registrado'] == 1) {
+                    $candiidato_en_proceso =  $this->candidatoRegistradoServicio($item['usuario_id'], $ordenServicio->id, $item['estado_candidato_id']);
+                    if ($candiidato_en_proceso) {
+                        $candidatos_con_servicio .= $item['numero_documento_candidato'] . ', ';
+                    }
+                } else if ($item['registrado'] == 0) {
+                    $this->candidatoNoRegistradoServicio($item, $ordenServicio->id);
+                } else if ($item['registrado'] == 2) {
+                    $candidato_validado = $valida_candidato->validacandidato($item['numero_documento_candidato'], 0, $item['tipo_identificacion_id'], true);
+                    $candidato_validado = $candidato_validado->getData(true);
+                    if ($candidato_validado['status'] == 'success' && $candidato_validado['motivo'] == '1') {
+                        $this->candidatoRegistradoServicio($candidato_validado['usuario']['usuario_id'], $ordenServicio->id, $item['estado_candidato_id']);
+                    } else if ($candidato_validado['status'] == 'success' && $candidato_validado['motivo'] == '2') {
+                        $this->candidatoNoRegistradoServicio($item, $ordenServicio->id);
+                    } else if ($candidato_validado['status'] == 'error') {
+                        $cantidad_errores++;
+                        $numeros_documento .= ' ' . $item['numero_documento_candidato'] . ',';
+                        if ($cantidad_errores == count($request['candidatos'])) {
+                            DB::rollback();
+                            return response()->json(["status" => "error", "message" => "Los candidatos con numero de documento de identidad $numeros_documento no pudieron ser registrados, para más innformación, por favor comuniquese con un asesor."]);
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+            if ($candidatos_con_servicio != '') {
+                return response()->json(["status" => "success", "message" => "Formulario guardado exitosamente, sin embargo los candidatos con numero de doucmento de identidad $candidatos_con_servicio no pudieron ser registrados ya que se encuentran en otro proceso."]);
+            }
+            return response()->json(["status" => "success", "message" => "Formulario guardado exitosamente"]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            // return $e;
+            return response()->json(["status" => "error", "message" => "Error al guadar los datos del formulario"]);
+        }
+    }
     public function update(Request $request, $id)
     {
         try {

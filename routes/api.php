@@ -98,6 +98,7 @@ use App\Http\Controllers\BonificacionOrdenServicioController;
 use App\Http\Controllers\EstadoOrdenServicioController;
 use App\Http\Controllers\LaboratorioOrdenServicioController;
 use App\Http\Controllers\OrdenServiciolienteController;
+use App\Http\Controllers\SolicitudServicioController;
 use App\Http\Controllers\OrdenServicioServicioSolicitadoController;
 use App\Http\Controllers\OrdenServicioHojaVidaController;
 use App\Http\Controllers\OrdenServicioCargoController;
@@ -195,6 +196,8 @@ use App\Http\Controllers\EstadoResponsableOrdenServicioController;
 use App\Http\Controllers\EstadoCandidatoServioOrdenServicioController;
 use App\Http\Controllers\HabilidadesCandidatosController;
 use App\Http\Controllers\NovedadesDDController;
+use App\Http\Controllers\AsignacionEstadosController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -821,11 +824,14 @@ Route::group([
   Route::delete('/laboratorioos/{id}', [LaboratorioOrdenServicioController::class, 'destroy']);
 
   //   Orden Servicio 
-  Route::get('/ordenservicio/{cantidad}', [OrdenServiciolienteController::class, 'index']);
-  Route::get('/ordenserviciobyid/{id}', [OrdenServiciolienteController::class, 'byid']);
-  Route::post('/ordenservicio', [OrdenServiciolienteController::class, 'create']);
+  // Route::get('/ordenservicio/{cantidad}', [OrdenServiciolienteController::class, 'index']);
+  Route::get('/ordenservicio/{cantidad}', [SolicitudServicioController::class, 'index']);
+  Route::get('/ordenserviciobyid/{id}', [SolicitudServicioController::class, 'byid']);
+  Route::post('/ordenservicio', [SolicitudServicioController::class, 'create']);
+  // Route::post('/ordenservicio', [OrdenServiciolienteController::class, 'create']);
   Route::get('/ordenserviciofiltro/{cadena}', [OrdenServiciolienteController::class, 'filtro']);
-  Route::post('/ordenservicio/{id}', [OrdenServiciolienteController::class, 'update']);
+  Route::post('/ordenservicio/{id}', [SolicitudServicioController::class, 'update']);
+  // Route::post('/ordenservicio/{id}', [OrdenServiciolienteController::class, 'update']);
   Route::delete('/ordenservicio/{id}', [OrdenServiciolienteController::class, 'destroy']);
   Route::get('/ordenservicioseiya/{id}', [OrdenServiciolienteController::class, 'ordenservicioseiya']);
   Route::post('/cargamasivaservicio/{id}', [OrdenServiciolienteController::class, 'cargamasivaservicio']);
@@ -1161,6 +1167,7 @@ Route::group([
 
 
   Route::get('/usuariointernorol/{id}', [SectorEconomicoProfesionalController::class, 'usuariointernorol']);
+  Route::get('/sectorEconomicoProfesional', [SectorEconomicoProfesionalController::class, 'sectorEconomicoProfesional']);
 
   Route::get('/asignacionUsuarios', [UsuarioController::class, 'asignacionUsuarios']);
 
@@ -1209,8 +1216,10 @@ Route::group([
   Route::get('/estadoservicio', [EstadoServicioController::class, 'index']);
   Route::get('/estadocandidatoservicio', [EstadoCandidatoServicioController::class, 'index']);
 
+  Route::post('/estadocandidatoservicio', [EstadoCandidatoServicioController::class, 'create']);
   Route::post('/estadocandidatoservicio/{id}', [EstadoCandidatoServicioController::class, 'update']);
-  Route::get('/estadocandidatoserviciotabla', [EstadoCandidatoServicioController::class, 'tabla']);
+  Route::get('/estadocandidatoservicio/{id}', [EstadoCandidatoServicioController::class, 'tabla']);
+  Route::delete('/estadocandidatoservicio/{id}', [EstadoCandidatoServicioController::class, 'destroy']);
 
   Route::get('/motivocancelaservicio', [MotivoCancelaServicioController::class, 'index']);
 
@@ -1227,6 +1236,12 @@ Route::group([
   Route::post('/estadocandidatoordenservicioborradomasivo', [EstadoCandidatoServioOrdenServicioController::class, 'borradomasivo']);
   Route::delete('/estadocandidatoordenservicio/{id}', [EstadoCandidatoServioOrdenServicioController::class, 'destroy']);
   Route::get('/estadocandidatoordenserviciofiltro/{cadena}/{cantidad}', [EstadoCandidatoServioOrdenServicioController::class, 'filtro']);
+
+  Route::get('/asignacionestados', [AsignacionEstadosController::class, 'index']);
+  Route::put('/asignacionestados', [AsignacionEstadosController::class, 'update']);
+
+
+
 
   //   EstadoServicioController
   // EstadoCandidatoServicioController
