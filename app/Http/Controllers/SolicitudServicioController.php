@@ -259,11 +259,10 @@ class SolicitudServicioController extends Controller
     public function candidatoRegistradoServicio(array $candidato, string $ordenServicio_id)
     {
 
-        // VERFICAR CUANDO UN SERVICIO YA EXISTE Y HAY QUE ACTUALIZARLO :TODO
         try {
-            // se verifica si el candidato ya registrado tiene una orden de servcio creada, sino se crea una nueva
-            $candidato_servicio = CandidatoSolicitudServicioModel::where('servicio_id', $ordenServicio_id)->first();
-            if (empty($candidato_servicio)) {
+            if (!empty($candidato['usuario_id'])) {
+                $candidato_servicio = CandidatoSolicitudServicioModel::where('id', $candidato['candidato_id'])->first();
+            } else {
                 $candidato_servicio = new CandidatoSolicitudServicioModel;
             }
             $candidato_servicio->servicio_id = $ordenServicio_id;
@@ -284,7 +283,6 @@ class SolicitudServicioController extends Controller
             $candidato_servicio->whatsapp = $candidato['whatsapp'];
             $candidato_servicio->save();
             DB::commit();
-            // }
         } catch (\Exception $e) {
             DB::rollBack();
             return $e;

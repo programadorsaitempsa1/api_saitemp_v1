@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\UsuariosCandidatosModel;
 use App\Models\EstadoCandidatoServicioModel;
 use App\Models\Rol;
+use App\Models\CandidatoSolicitudServicioModel;
 use Illuminate\Support\Facades\DB;
 use App\Traits\AutenticacionGuard;
 use  Illuminate\Support\Facades\Crypt;
@@ -624,28 +625,58 @@ class OrdenServiciolienteController extends Controller
 
     public function ordenservicioseiya($id)
     {
-        $result = OrdenServcio::join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_orden_servicio.linea_servicio_id')
-            ->join('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_orden_servicio.motivo_servicio_id')
-            ->join('usr_app_municipios as ciu', 'ciu.id', '=', 'usr_app_orden_servicio.ciudad_prestacion_servicio_id')
+        // $result = OrdenServcio::join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_orden_servicio.linea_servicio_id')
+        //     ->join('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_orden_servicio.motivo_servicio_id')
+        //     ->join('usr_app_municipios as ciu', 'ciu.id', '=', 'usr_app_orden_servicio.ciudad_prestacion_servicio_id')
+        //     ->join('usr_app_departamentos as dep', 'dep.id', '=', 'ciu.departamento_id')
+        //     ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_orden_servicio.cargo_solicitado_id')
+        //     ->where('usr_app_orden_servicio.id', '=', $id)
+        //     ->select(
+        //         'usr_app_orden_servicio.id',
+        //         'usr_app_orden_servicio.numero_radicado',
+        //         'ts.nombre_servicio as linea_servicio',
+        //         'usr_app_orden_servicio.linea_servicio_id',
+        //         'ciu.nombre as ciudad_prestacion_servicio',
+        //         'ciu.id as ciudad_prestacion_servicio_id',
+        //         'dep.nombre as departamento_prestacion_servicio',
+        //         'dep.id as departamento_prestacion_servicio_id',
+        //         'usr_app_orden_servicio.razon_social',
+        //         'usr_app_orden_servicio.cliente_id',
+        //         'usr_app_orden_servicio.salario',
+        //         'lc.nombre as cargo_solicitado',
+        //         'usr_app_orden_servicio.responsable',
+        //         'usr_app_orden_servicio.responsable_id',
+        //         'usr_app_orden_servicio.cantidad_contrataciones',
+        //     )
+        //     ->first();
+        // return response()->json($result);
+        $result = CandidatoSolicitudServicioModel::leftJoin('usr_app_solicitud_servicio as ss', 'ss.id', '=', 'usr_app_candadato_solicitud_servicio.servicio_id')
+            ->LeftJoin('usr_app_clientes as cli', 'cli.id', '=', 'ss.cliente_id')
+            ->join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'ss.linea_servicio_id')
+            ->join('usr_app_municipios as ciu', 'ciu.id', '=', 'usr_app_candadato_solicitud_servicio.ciudad_prestacion_servicio_id')
             ->join('usr_app_departamentos as dep', 'dep.id', '=', 'ciu.departamento_id')
-            ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_orden_servicio.cargo_solicitado_id')
-            ->where('usr_app_orden_servicio.id', '=', $id)
+            ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_candadato_solicitud_servicio.cargo_solicitado_id')
+            ->where('ss.id', '=', $id)
             ->select(
-                'usr_app_orden_servicio.id',
-                'usr_app_orden_servicio.numero_radicado',
+                'ss.id',
+                'ss.numero_radicado',
                 'ts.nombre_servicio as linea_servicio',
-                'usr_app_orden_servicio.linea_servicio_id',
+                'ts.id as linea_servicio_id',
                 'ciu.nombre as ciudad_prestacion_servicio',
                 'ciu.id as ciudad_prestacion_servicio_id',
                 'dep.nombre as departamento_prestacion_servicio',
                 'dep.id as departamento_prestacion_servicio_id',
-                'usr_app_orden_servicio.razon_social',
-                'usr_app_orden_servicio.cliente_id',
-                'usr_app_orden_servicio.salario',
+                'ss.cliente_id',
+                'cli.razon_social',
+                'usr_app_candadato_solicitud_servicio.salario',
+                'usr_app_candadato_solicitud_servicio.subsidio_transporte',
                 'lc.nombre as cargo_solicitado',
-                'usr_app_orden_servicio.responsable',
-                'usr_app_orden_servicio.responsable_id',
-                'usr_app_orden_servicio.cantidad_contrataciones',
+                'lc.id as cargo_solicitado_id',
+                'usr_app_candadato_solicitud_servicio.fecha_ingreso',
+                'ss.responsable',
+                'ss.responsable_id',
+                'ss.cantidad_contrataciones',
+                'usr_app_candadato_solicitud_servicio.direccion_prestacion_servicio'
             )
             ->first();
         return response()->json($result);
