@@ -303,4 +303,39 @@ class UsuarioController extends Controller
             ->get();
         return response()->json($result);
     }
+
+    public function byRolSst()
+    {
+        $result = UsuariosInternosModel::select(
+            'id',
+            DB::raw("CONCAT(nombres,' ',apellidos)  AS nombre"),
+            'correo AS email',
+
+        )->where('rol_usuario_interno_id', 2)
+            ->get();
+        return response()->json($result);
+    }
+
+    public function byRolCartera()
+    {
+        $result = UsuariosInternosModel::select(
+            'id',
+            DB::raw("CONCAT(nombres,' ',apellidos)  AS nombre"),
+            'correo AS email',
+        )->where('rol_usuario_interno_id', 1)
+            ->get();
+        return response()->json($result);
+    }
+
+    public function byRolNomina()
+    {
+        $result = UsuariosInternosModel::select(
+            'id',
+            DB::raw("CONCAT(nombres,' ',apellidos)  AS nombre"),
+            'correo AS email',
+
+        )->where('rol_usuario_interno_id', 2)
+            ->get();
+        return response()->json($result);
+    }
 }

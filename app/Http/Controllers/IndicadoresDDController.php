@@ -98,7 +98,7 @@ class IndicadoresDDController extends Controller
                 }
 
                 // Combinar el array de nombres de estados con el array principal
-                $resultadoFinal = array_merge([$nombresEstadosArray], $registrosPorEstadoArray);
+                $resultadoFinal = array_values(array_merge([$nombresEstadosArray], $registrosPorEstadoArray));
 
                 return response()->json($resultadoFinal);
             } catch (\Exception $e) {

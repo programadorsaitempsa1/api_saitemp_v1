@@ -184,12 +184,17 @@ use App\Http\Controllers\AsignacionServicioController;
 use App\Http\Controllers\RolesUsuariosInternosController;
 use App\Http\Controllers\CumpleRequisitosController;
 use App\Http\Controllers\CargosCandidatoController;
+use App\Http\Controllers\ClientesAnalistaController;
+use App\Http\Controllers\ClientesProfesionalController;
+use App\Http\Controllers\ConceptosMedicosController;
 use App\Http\Controllers\EstadoServicioController;
 use App\Http\Controllers\EstadoCandidatoServicioController;
 use App\Http\Controllers\MotivoCancelaServicioController;
 use App\Http\Controllers\PdfEditController;
 use App\Http\Controllers\EstadoResponsableOrdenServicioController;
 use App\Http\Controllers\EstadoCandidatoServioOrdenServicioController;
+use App\Http\Controllers\HabilidadesCandidatosController;
+use App\Http\Controllers\NovedadesDDController;
 use App\Http\Controllers\AsignacionEstadosController;
 
 
@@ -203,9 +208,6 @@ use App\Http\Controllers\AsignacionEstadosController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
-
-
 
 // TODO: Colocar los name a las rutas 
 
@@ -266,6 +268,9 @@ Route::group([
   Route::get('/userlogued', [UsuarioController::class, 'userlogued']);
   Route::get('/userbyid/{id}', [UsuarioController::class, 'userById']);
   Route::delete('/user/{id}', [UsuarioController::class, 'destroy']);
+  Route::get('/usersbyrolinternosst', [UsuarioController::class, 'byRolSst']);
+  Route::get('/usersbyrolinternocartera', [UsuarioController::class, 'byRolCartera']);
+  Route::get('/usersbyrolinternonomina', [UsuarioController::class, 'byRolNomina']);
   // Route::post('/user', [UsuarioController::class, 'create']); 
   Route::post('/user', [UsuarioController::class, 'update']);
   Route::post('/user2', [UsuarioController::class, 'update2']);
@@ -717,11 +722,8 @@ Route::group([
   Route::delete('/formulariocliente/{id}', [formularioDebidaDiligenciaController::class, 'destroy']);
   Route::get('/actualizaestadofirma/{item_id}/{estado_id}/{responsable_id}', [formularioDebidaDiligenciaController::class, 'actualizaestadofirma']);
   Route::get('/versiondebidadiligencia', [formularioDebidaDiligenciaController::class, 'versionformulario']);
-
   Route::get('/formularioclientenit/{nit}', [formularioDebidaDiligenciaController::class, 'formularioclientenit']);
-
   Route::get('/formulariocliente/generarpdf/{id}', [formularioDebidaDiligenciaController::class, 'generarPdf']);
-
   Route::get('/consultaformulariocliente/{cantidad}', [formularioDebidaDiligenciaController::class, 'consultacliente']);
   Route::get('/clientesactivos', [formularioDebidaDiligenciaController::class, 'clientesactivos']);
   Route::get('/consultaformularioclientefiltro/{cadena}', [formularioDebidaDiligenciaController::class, 'filtro']);
@@ -729,6 +731,12 @@ Route::group([
   Route::get('/contrato/{id}', [ContratoController::class, 'index']);
   Route::post('/enviarCorreoDD/{registro_id}', [enviarCorreoDDController::class, 'enviarCorreosDD']);
   Route::get('/formulariocliente/generarContratoDD/{id}', [formularioDebidaDiligenciaController::class, 'generarContrato2']);
+
+  //Rutas para salidas no conformes DD
+  Route::get('/sncdd/{cantidad}', [NovedadesDDController::class, 'index']);
+  Route::get('/sncddfiltro/{cadena}/{cantidad}', [NovedadesDDController::class, 'sncddfiltro']);
+  Route::get('/exportsncdd/{cadena}', [NovedadesDDController::class, 'exportsncdd']);
+
 
   //Rutas para el historico de estados DD
   Route::get('/consultaHistoricoEstadosDd/{cantidad}', [HistoricoEstadosDdController::class, 'index']);
@@ -1057,12 +1065,15 @@ Route::group([
   Route::delete('/cumplerequisitocandidato/{id}', [CumpleRequisitosController::class, 'destroy']);
   Route::delete('/eliminarrefenciapersonal/{cod_emp}/{num_ref}', [RecepcionEmpleadoController::class, 'deleteReferencia']);
   Route::get('/buscardocumentolistacandidatos/{documento}', [RecepcionEmpleadoController::class, 'buscardocumentolistacandidato']);
+  Route::delete('/habilidadescandidato/{id}', [HabilidadesCandidatosController::class, 'deleteHabilidad']);
+
   //ruta para generar el archivo zip de seiya
   Route::get('/descargarZip/{idRadicado}/{idCliente}', [GenerarZipController::class, 'descargarArchivosById']);
   Route::post('/addcandidatoservicio', [RecepcionEmpleadoController::class, 'addCandidatoServicio']);
 
 
-
+  //conceptos Medicos para SEIYA
+  Route::get('/conceptosmedicos', [ConceptosMedicosController::class, 'index']);
 
 
   //Indicadores SEIYA
@@ -1156,14 +1167,30 @@ Route::group([
 
   Route::get('/asignacionUsuarios', [UsuarioController::class, 'asignacionUsuarios']);
 
-
+  //Profesionales por sector económico
   Route::get('/profesionalSector/{cantidad}', [SectorEconomicoProfesionalController::class, 'index']);
   Route::post('/profesionalsector', [SectorEconomicoProfesionalController::class, 'create']);
   Route::get('/profesionalSectorbyid/{id}', [SectorEconomicoProfesionalController::class, 'byid']);
   Route::delete('/profesionalSector/{id}', [SectorEconomicoProfesionalController::class, 'destroy']);
   Route::post('/profesionalSectorborradomasivo', [SectorEconomicoProfesionalController::class, 'borradomasivo']);
 
+  //Profesionales por empresa
+  Route::get('/profesionalempresa/{cantidad}', [ClientesProfesionalController::class, 'index']);
+  Route::post('/profesionalempresa', [ClientesProfesionalController::class, 'create']);
+  Route::get('/profesionalempresabyid/{id}', [ClientesProfesionalController::class, 'byid']);
+  Route::delete('/profesionalempresa/{id}', [ClientesProfesionalController::class, 'destroy']);
+  Route::post('/profesionalempresaborradomasivo', [ClientesProfesionalController::class, 'borradomasivo']);
+  Route::get('/profesionalempresabycliente/{id}', [ClientesProfesionalController::class, 'byCliente']);
+  Route::get('/profesionalempresafiltro/{cadena}', [ClientesProfesionalController::class, 'filtro']);
 
+  //Analistas por empresa
+  Route::get('/analistaempresa/{cantidad}', [ClientesAnalistaController::class, 'index']);
+  Route::post('/analistaempresa', [ClientesAnalistaController::class, 'create']);
+  Route::get('/analistaempresabyid/{id}', [ClientesAnalistaController::class, 'byid']);
+  Route::delete('/analistaempresa/{id}', [ClientesAnalistaController::class, 'destroy']);
+  Route::post('/analistaempresaborradomasivo', [ClientesAnalistaController::class, 'borradomasivo']);
+  Route::get('/analistaempresabycliente/{id}', [ClientesAnalistaController::class, 'byCliente']);
+  Route::get('/analistaempresafiltro/{cadena}', [ClientesAnalistaController::class, 'filtro']);
 
   Route::get('/usuariodisponibleservicio', [UsuarioDisponibleServicioController::class, 'index']);
   Route::post('/usuariodisponibleservicio', [UsuarioDisponibleServicioController::class, 'create']);
@@ -1241,5 +1268,5 @@ Route::group([
   // estos endpoint se usan para asignar a un empleado el lider correspondiente
   // Route::get('/examen/{cedula}', [ExamenPruebaController::class, 'examen']);
   // Route::get('/examenprueba', [ExamenPruebaController::class, 'create']);
-  Route::post('/lovepdf', [PdfEditController::class, 'compress']);
+  Route::post('/lovepdf', [PdfEditController::class, 'mergeToA4']);
 });

@@ -200,7 +200,10 @@ class CentrosDeTrabajoSeiyaController extends Controller
             switch ($operador) {
                 case 'Contiene':
                     if ($campo == "nit") {
-                        $query->where('cliente.nit', 'like', '%' . $valor . '%');
+                        $query->where(function ($q) use ($valor) {
+                            $q->where('cliente.nit', 'like', '%' . $valor . '%')
+                                ->orWhere('cliente.numero_identificacion', 'like', '%' . $valor . '%');
+                        });
                     } else if ($campo == "razon_social") {
                         $query->where('cliente.razon_social', 'like', '%' . $valor . '%');
                     } else if ($campo == "codigo_centro_trabajo") {
@@ -215,7 +218,10 @@ class CentrosDeTrabajoSeiyaController extends Controller
                     break;
                 case 'Igual a':
                     if ($campo == "nit") {
-                        $query->where('cliente.nit', '=',  $valor);
+                        $query->where(function ($q) use ($valor) {
+                            $q->where('cliente.nit', 'like', '%' . $valor . '%')
+                                ->orWhere('cliente.numero_identificacion', 'like', '%' . $valor . '%');
+                        });
                     } else if ($campo == "razon_social") {
                         $query->where('cliente.razon_social', '=', $valor);
                     } else if ($campo == "codigo_centro_trabajo") {

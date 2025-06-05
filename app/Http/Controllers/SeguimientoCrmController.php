@@ -817,6 +817,8 @@ class SeguimientoCrmController extends Controller
                 $result->observacion = $observacionFragmentada[0];
                 if (isset($observacionFragmentada[1])) {
                     $result->observacion2 = $observacionFragmentada[1];
+                } else {
+                    $result->observacion2 = "";
                 }
             }
 
@@ -826,78 +828,13 @@ class SeguimientoCrmController extends Controller
                 $result->usuario_guarda_cierre = $user->nombres . ' ' . $user->apellidos;
             }
 
-
             $result->save();
-            /*  $manager = new ImageManager(new Driver());
-            $zipNombre = $result->numero_radicado . '.zip';
-            $zipGeneral = public_path('./upload/evidenciasCrm/' . $zipNombre);
-            $zipCoincidencia = glob($zipGeneral); */
             foreach ($request->imagen as $item) {
                 for ($i = 0; $i < count($item); $i++) {
                     if ($i > 0) {
                         $evidencia = new Evidencia;
                         $evidencia->descripcion = $item[0] ? $item[0] : "";
                         $evidencia->registro_id = $result->id;
-                        /* $nombreArchivoOriginal = $item[$i]->getClientOriginalName();
-                        $nombreSinExtension = pathinfo($nombreArchivoOriginal, PATHINFO_FILENAME);
-                        $extension = pathinfo($nombreArchivoOriginal, PATHINFO_EXTENSION);
-                        $nombreLimpio = preg_replace('/[.\s]+/', '_', $nombreSinExtension) . '.' . $extension;
-                        $nuevoNombre = Carbon::now()->timestamp . "_" . $nombreLimpio;
-                        $carpetaDestino = './upload/evidenciasCrm/';
-                        $zipPath = $carpetaDestino . $zipNombre;
-                        if (in_array($extension, ['jpg', 'jpeg', 'png', 'pdf'])) {
-                            if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
-                                $image = $manager->read($item[$i]->getPathname());
-                                $image->resizeDown(800, 600, function ($constraint) {
-                                    $constraint->aspectRatio();
-                                })->save($carpetaDestino . $nuevoNombre, 70);
-                            } elseif ($extension === 'pdf') {
-                                $pdf = new Fpdi();
-                                $pageCount = $pdf->setSourceFile($item[$i]->getPathname());
-                                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                                    $pdf->AddPage();
-                                    $templateId = $pdf->importPage($pageNo);
-                                    $pdf->useTemplate($templateId);
-                                }
-                                $pdf->Output($carpetaDestino . $nuevoNombre, 'F');
-                            }
-                            if (count($zipCoincidencia) > 0) {
-                                $zip = new ZipArchive;
-                                $res = $zip->open($zipGeneral);
-                                if ($res === true) {
-                                    $zip->addFile($carpetaDestino . $nuevoNombre, $nuevoNombre);
-                                    $zip->close();
-                                } else {
-                                    throw new \Exception('No se pudo acceder al ZIP');
-                                }
-                            } else {
-                                $zip = new ZipArchive();
-                                if ($zip->open($zipPath, ZipArchive::CREATE) === true) {
-                                    $zip->addFile($carpetaDestino . $nuevoNombre, $nuevoNombre);
-                                    $zip->close();
-                                }
-                            }
-                            if (file_exists($carpetaDestino . $nuevoNombre)) {
-                                unlink($carpetaDestino . $nuevoNombre);
-                            }
-                        } else {
-                            if (count($zipCoincidencia) > 0) {
-                                $zip = new ZipArchive;
-                                $res = $zip->open($zipGeneral);
-                                if ($res === true) {
-                                    $zip->addFile($item[$i]->getPathname(), $nuevoNombre);
-                                    $zip->close();
-                                } else {
-                                    throw new \Exception('No se pudo acceder al ZIP');
-                                }
-                            } else {
-                                $zip = new ZipArchive();
-                                if ($zip->open($zipPath, ZipArchive::CREATE) === true) {
-                                    $zip->addFile($item[$i]->getPathname(), $nuevoNombre);
-                                    $zip->close();
-                                }
-                            }
-                        } */
                         $ruta = './upload/evidenciasCrm/';
                         $evidencia->archivo = $this->comprimirArchivos($result->numero_radicado, $item[$i], $ruta);
                         $evidencia->save();
@@ -1378,7 +1315,6 @@ class SeguimientoCrmController extends Controller
             if ((($formulario->nit_documento == "900032514" || $formulario->nit_documento == "811025401") && $formulario->correo == $destinatario) || (($formulario->nit_documento == "900032514" || $formulario->nit_documento == "811025401") && $booleanCompromiso == false)) {
                 $body = "Coordial saludo, Informamos que el acta de la reunion interna ha sido creada satisfactoriamente con radicado:  <b><i>$numeroRadicado</i></b>
                 \n\n<br> Para acceder al radicado ingrese al siguiente link: <a href='http://srv-saitemp03:8181/aplicaciones/?#/navbar/crm-intreraccion/$formulario->id'>Click aquí</a> *Debe encontrarse logueado con su usuario y contraseña en SEIYA.";
-
             } else {
                 $body = "Cordial saludo, esperamos se encuentren muy bien.\n\n Informamos que el registro de visita ha sido creado satisfactoriamente con número de radicado: <b><i>$numeroRadicado</i></b>, Cualquier información adicional puede comunicarse con:
                     Katerin Andrea Nuno: (+57) 311-437-0207
@@ -1592,7 +1528,7 @@ class SeguimientoCrmController extends Controller
             ->leftjoin('usr_app_estado_cierre_crm as cierre', 'cierre.id', 'usr_app_seguimiento_crm.estado_id')
             ->leftjoin('usr_app_pqrsf_crm as pqrsf', 'pqrsf.id', 'usr_app_seguimiento_crm.pqrsf_id')
             ->leftjoin('usr_app_solicitante_crm as soli', 'soli.id', 'usr_app_seguimiento_crm.solicitante_id')
-            ->where('usr_app_seguimiento_crm.tipo_atencion_id', 5) // Condición para excluir registros con pqrsf_id = 6
+            /*  ->where('usr_app_seguimiento_crm.tipo_atencion_id', 5) */ // Condición para excluir registros con pqrsf_id = 6
             /*  ->where('usr_app_seguimiento_crm.tipo_atencion_id', 5) */
             ->select(
                 'usr_app_seguimiento_crm.id',

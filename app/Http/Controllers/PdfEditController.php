@@ -212,13 +212,14 @@ class PdfEditController extends Controller
 
     public function mergeToA4(Request $request)
     {
+
+        /* 
         $request->validate([
             'pdfs'   => 'required|array|min:2',
             'pdfs.*' => 'required|mimes:pdf'
-        ]);
+        ]); */
 
         $paths = array_map(fn($file) => $file->getRealPath(), $request->file('pdfs'));
-
         try {
             $merged = $this->mergePdfsToA4($paths);
             return response()

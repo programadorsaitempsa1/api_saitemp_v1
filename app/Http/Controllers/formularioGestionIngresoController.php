@@ -321,8 +321,11 @@ class formularioGestionIngresoController extends Controller
             ->leftJoin('usr_app_candidatos_c as can', 'can.usuario_id', 'us.id')
             ->leftJoin('gen_tipide as ti2', 'ti2.cod_tip', '=', 'can.tip_doc_id')
             ->leftjoin('usr_app_historico_concepto_candidatos as historico_candidatos', 'historico_candidatos.formulario_ingreso_id', '=', 'usr_app_formulario_ingreso.id')
+            ->leftjoin('usr_app_conceptos_medicos as conceptos_medicos', 'conceptos_medicos.id', '=', 'usr_app_formulario_ingreso.concepto_medico_id')
             ->where('usr_app_formulario_ingreso.id', '=', $id)
             ->select(
+                'conceptos_medicos.nombre as concepto_medico',
+                'usr_app_formulario_ingreso.concepto_medico_id',
                 'historico_candidatos.id as historico_candidatos_id',
                 'usr_app_formulario_ingreso.id',
                 'esti.nombre as estado_ingreso',
@@ -1947,6 +1950,7 @@ class formularioGestionIngresoController extends Controller
         for ($i = 0; $i < $replica; $i++) {
             try {
                 $result = new formularioGestionIngreso;
+                $result->concepto_medico_id = $request->concepto_medico_id;
                 $result->fecha_ingreso = $request->fecha_ingreo;
                 $result->numero_identificacion = $request->numero_identificacion;
                 $result->nombre_completo = $request->nombre_completo;
@@ -2388,7 +2392,8 @@ class formularioGestionIngresoController extends Controller
 
                 return response()->json(['status' => '200', 'message' => 'ok', 'registro_ingreso_id' => $ids]);
             }
-            $result->fecha_ingreso = $request->fecha_ingreso;
+            $result->concepto_medico_id = $request->concepto_medico_id;
+            $result->fecha_ingreso = $request->fecha_ingreo;
             $result->eps = $request->eps;
             $result->afp_id = $request->afp_id;
             $result->estradata = $request->consulta_stradata;
@@ -2577,7 +2582,7 @@ class formularioGestionIngresoController extends Controller
         return response()->json($result);
     }
 
-    public function sncseiyafiltro($cadena, $cantidad)
+    public function sncseiyafiltro($cadena, $cantidad, $export = false)
     {
         $cadenaJSON = base64_decode($cadena);
         $cadenaUTF8 = mb_convert_encoding($cadenaJSON, 'UTF-8', 'ISO-8859-1');
@@ -2595,7 +2600,9 @@ class formularioGestionIngresoController extends Controller
             ->join('usr_app_categorias_snc_seiya as cat', 'cat.id', 'usr_app_salida_n_conforme_seiya.categoria_snc_id')
             ->join('usr_app_formulario_ingreso as fi', 'fi.id', 'usr_app_salida_n_conforme_seiya.orden_servicio_id')
             ->join('usr_app_clientes as cli', 'cli.id', 'fi.cliente_id')
-            ->select(
+            ->orderby('usr_app_salida_n_conforme_seiya.id', 'DESC');
+        if ($export) {
+            $query->select(
                 'usr_app_salida_n_conforme_seiya.id',
                 'cli.razon_social',
                 'fi.numero_radicado',
@@ -2607,10 +2614,24 @@ class formularioGestionIngresoController extends Controller
                 'usr_app_salida_n_conforme_seiya.created_at',
                 'usr_app_salida_n_conforme_seiya.updated_at',
                 'usr_app_salida_n_conforme_seiya.correcion_aplicada',
-                'usr_app_salida_n_conforme_seiya.corrigio_novedad',
-            )
-            ->orderby('usr_app_salida_n_conforme_seiya.id', 'DESC');
-
+                'usr_app_salida_n_conforme_seiya.corrigio_novedad'
+            );
+        } else {
+            $query->select(
+                'usr_app_salida_n_conforme_seiya.id',
+                'cli.razon_social',
+                'fi.numero_radicado',
+                'usr_app_salida_n_conforme_seiya.responsable_corregir',
+                'usr_app_salida_n_conforme_seiya.descripcion',
+                'usr_app_salida_n_conforme_seiya.subsanado',
+                'pro.nombre as proceso',
+                'cat.nombre as categoria',
+                'usr_app_salida_n_conforme_seiya.created_at',
+                'usr_app_salida_n_conforme_seiya.updated_at',
+                'usr_app_salida_n_conforme_seiya.correcion_aplicada',
+                'usr_app_salida_n_conforme_seiya.corrigio_novedad'
+            );
+        }
 
         $numElementos = count($campo);
 
@@ -2680,12 +2701,15 @@ class formularioGestionIngresoController extends Controller
             $item->subsanado = $item->subsanado == 1 ? 'Sí' : 'No';
             return $item;
         });
+        if ($export) {
+            return $result;
+        }
         return response()->json($result);
     }
 
-    public function exportsncseiya($cadena, $cantidad = 10)
+    public function exportsncseiya($cadena, $cantidad = 10,)
     {
-        $cadenaJSON = base64_decode($cadena);
+        /*  $cadenaJSON = base64_decode($cadena);
         $cadenaUTF8 = mb_convert_encoding($cadenaJSON, 'UTF-8', 'ISO-8859-1');
         $arrays = explode('/', $cadenaUTF8);
         $arraysDecodificados = array_map('json_decode', $arrays);
@@ -2780,7 +2804,8 @@ class formularioGestionIngresoController extends Controller
             }
         }
 
-        $result = $query->get();
+        $result = $query->get(); */
+        $result = $this->sncseiyafiltro($cadena, $cantidad, true);
         return (new SalidasNoConformeExport($result))->download('exportData.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
@@ -3071,4 +3096,7 @@ class formularioGestionIngresoController extends Controller
         $orden_servicio->save();
         return response()->json(['status' => '200', 'message' => 'ok']);
     }
+
 }
+}
+
