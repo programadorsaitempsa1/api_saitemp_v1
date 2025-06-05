@@ -341,7 +341,7 @@ class formularioGestionIngresoController extends Controller
                 DB::raw("COALESCE(usr_app_formulario_ingreso.fecha_ingreso, cs.fecha_ingreso) as fecha_ingreso"),
                 // 'usr_app_formulario_ingreso.numero_identificacion',
                 // 'usr_app_formulario_ingreso.nombre_completo',
-                
+
                 DB::RAW("COALESCE(can1.num_doc,'',usr_app_formulario_ingreso.numero_identificacion) as numero_identificacion"),
                 DB::RAW("CONCAT(can1.primer_apellido,' ',can1.segundo_apellido,' ',can1.primer_nombre,' ',can1.segundo_nombre) as nombre_completo"),
                 'usr_app_formulario_ingreso.cliente_id',
@@ -3106,7 +3106,4 @@ class formularioGestionIngresoController extends Controller
         $orden_servicio->save();
         return response()->json(['status' => '200', 'message' => 'ok']);
     }
-
 }
-}
-
