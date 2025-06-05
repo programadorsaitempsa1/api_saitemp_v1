@@ -21,7 +21,7 @@ class RequisitoController extends Controller
 
     public function index2()
     {
-        $result = Requisito::whereNotIn('id', ['1', '4'])->get();
+        $result = Requisito::whereNotIn('id', ['1', '4'])->orderBy('nombre', 'asc')->get();
         return response()->json($result);
     }
     /**

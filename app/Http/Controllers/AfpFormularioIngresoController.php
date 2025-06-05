@@ -14,11 +14,11 @@ class AfpFormularioIngresoController extends Controller
      */
     public function index()
     {
-        $result = AfpFormularioIngreso::select(
-            'id',
-            'nombre',
-        )
-        ->get();
+        $result = AfpFormularioIngreso::select('id', 'nombre')
+            ->whereIn('id', [2, 3, 4, 5, 6, 7, 8, 9])
+            ->orderByRaw('CASE WHEN id = 8 THEN 0 ELSE 1 END ASC')
+            ->orderBy('nombre', 'asc')
+            ->get();
         return response()->json($result);
     }
 

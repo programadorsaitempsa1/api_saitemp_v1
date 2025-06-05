@@ -22,6 +22,7 @@ use Illuminate\Support\Str;
 use App\Models\CandidatosRequisitosModel;
 use App\Models\HistoricoConceptosCandidatosModel;
 use App\Traits\AutenticacionGuard;
+use App\Models\HabilidadesCandidatosModel;
 
 class RecepcionEmpleadoController extends Controller
 {
@@ -39,6 +40,7 @@ class RecepcionEmpleadoController extends Controller
 
     public function createNovasoft(Request $request)
     {
+        DB::beginTransaction();
         try {
             $novasoft = new RecepcionEmpleado;
             $fechaNacimientoFormated = Carbon::parse($request->fec_nac)->format('d-m-Y H:i:s');
@@ -84,9 +86,7 @@ class RecepcionEmpleadoController extends Controller
 
 
             foreach ($request->referencias as $referencia) {
-
-                if ($referencia['nom_ref'] == '' || $referencia['nom_ref'] == null) {
-                } else {
+                if ($referencia['nom_ref'] != '' || $referencia['nom_ref'] != null) {
                     $novasoftReferencia = new ReferenciasFormularioEmpleado;
                     $novasoftReferencia->cod_emp = $novasoft->cod_emp;
                     $novasoftReferencia->num_ref = $referencia['num_ref'];
@@ -116,9 +116,10 @@ class RecepcionEmpleadoController extends Controller
 
 
 
-
+            DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Registro guardado de manera exitosa', 'id' => $novasoft]);
         } catch (\Exception $e) {
+            DB::rollback();
             throw $e;
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intenta nuevamente nova']);
         }
@@ -217,6 +218,7 @@ class RecepcionEmpleadoController extends Controller
     }
     public function updateByCodEmpNovasoft(Request $request, $cod_emp)
     {
+        DB::beginTransaction();
         try {
 
             $novasoft = RecepcionEmpleado::find($cod_emp);
@@ -259,8 +261,7 @@ class RecepcionEmpleadoController extends Controller
             $novasoft->num_ide = $request->cod_emp;
             $novasoft->save();
             foreach ($request->referencias as $referencia) {
-                if ($referencia['nom_ref'] == '' || $referencia['nom_ref'] == null) {
-                } else {
+                if ($referencia['nom_ref'] != '' || $referencia['nom_ref'] != null) {
                     if (isset($referencia['cod_emp']) && isset($referencia['num_ref'])) {
                         $novasoftReferencia = ReferenciasFormularioEmpleado::where('cod_emp', $referencia['cod_emp'])
                             ->where('num_ref', $referencia['num_ref'])
@@ -270,7 +271,7 @@ class RecepcionEmpleadoController extends Controller
                             $novasoftReferencia->parent = $referencia['parent'];
                             $novasoftReferencia->cel_ref = $referencia['cel_ref'];
                             $novasoftReferencia->nom_ref = $referencia['nom_ref'];
-                            $novasoftReferencia->ocu_ref = 0; // Si necesitas cambiar este valor, asegúrate de que sea correcto
+                            $novasoftReferencia->ocu_ref = 0;
                             $novasoftReferencia->save();
                         } else {
                             $novasoftReferencia = new ReferenciasFormularioEmpleado;
@@ -296,20 +297,23 @@ class RecepcionEmpleadoController extends Controller
                     }
                 }
             }
+            DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Registro actualizado de manera exitosa', 'id' => $novasoft->cod_emp]);
         } catch (\Exception $e) {
+            DB::rollback();
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intenta nuevamente']);
         }
     }
 
     public function createSeiya(Request $request, $usuario_id)
     {
+
+        DB::beginTransaction();
         try {
 
             $user = $this->getUserRelaciones();
             $data = $user->getData(true);
 
-            DB::beginTransaction();
 
             $ciu_exp_formated = trim($request->ciu_exp, '0');
             $ciu_nac_formated = trim($request->cod_ciu, '0');
@@ -323,6 +327,7 @@ class RecepcionEmpleadoController extends Controller
             $fechaNacimientoFormated = Carbon::parse($request->fec_nac)->format('d-m-Y H:i:s');
             $fechaExpedicionFormated = Carbon::parse($request->fec_expdoc)->format('d-m-Y H:i:s');
             $user = UsuariosCandidatosModel::where('usuario_id', $usuario_id)->first();
+            $user->wapp = $request->wapp;
             $user->primer_nombre = $request->nom1_emp;
             $user->primer_apellido = $request->ap1_emp;
             $user->segundo_nombre = $request->nom2_emp ?? '';
@@ -351,6 +356,9 @@ class RecepcionEmpleadoController extends Controller
             $user->estatura = $request->estatura;
             $user->peso = $request->peso;
             $user->lentes = $request->lentes;
+            $user->talla_camisa = $request->talla_camisa;
+            $user->talla_pantalon = $request->talla_pantalon;
+            $user->talla_calzado = $request->talla_calzado;
             $user->eps_id = $request->eps_id;
             $user->afp_id = $request->afp_id;
             $user->descripcion_salud = $request->descripcion_salud;
@@ -410,12 +418,15 @@ class RecepcionEmpleadoController extends Controller
                         $experiencia = ExperienciasLaboralesCandidatosModel::find($item['id']);
                         $experiencia->usuario_id = $usuario_id;
                         $experiencia->empresa = $item['empresa'];
+                        $experiencia->salario = $item['salario'];
+                        $experiencia->tel_contacto = $item['tel_contacto'];
                         $experiencia->funciones = $item['funciones'];
                         $experiencia->cargo = $item['cargo'];
                         $experiencia->sector_econimico_id = $item['sector_econimico_id'];
                         $experiencia->motivo_retiro = $item['motivo_retiro'];
                         $experiencia->fecha_inicio = $fecha_inicio;
                         $experiencia->fecha_fin = $fecha_fin;
+                        $experiencia->detalle_cargo = $item['detalle_cargo'];
                         $experiencia->tiempo = Carbon::parse($fecha_inicio)
                             ->diffInMonths(Carbon::parse($fecha_fin));
                         $experiencia->save();
@@ -426,9 +437,12 @@ class RecepcionEmpleadoController extends Controller
                         $experiencia->usuario_id = $usuario_id;
                         $experiencia->empresa = $item['empresa'];
                         $experiencia->funciones = $item['funciones'];
+                        $experiencia->salario = $item['salario'];
+                        $experiencia->tel_contacto = $item['tel_contacto'];
                         $experiencia->cargo = $item['cargo'];
                         $experiencia->sector_econimico_id = $item['sector_econimico_id'];
                         $experiencia->motivo_retiro = $item['motivo_retiro'];
+                        $experiencia->detalle_cargo = $item['detalle_cargo'];
                         $experiencia->fecha_inicio = $fecha_inicio;
                         $experiencia->fecha_fin = $fecha_fin;
                         $experiencia->tiempo = Carbon::parse($fecha_inicio)
@@ -438,6 +452,21 @@ class RecepcionEmpleadoController extends Controller
                 }
             }
 
+            if (count($request->habilidades) > 0) {
+                foreach ($request->habilidades as $item) {
+                    if (isset($item['id'])) {
+                        $habilidad = HabilidadesCandidatosModel::find($item['id']);
+                        $habilidad->candidato_id = $user->id;
+                        $habilidad->nombre = $item['nombre'];
+                        $habilidad->save();
+                    } else {
+                        $habilidad = new HabilidadesCandidatosModel;
+                        $habilidad->candidato_id = $user->id;
+                        $habilidad->nombre = $item['nombre'];
+                        $habilidad->save();
+                    }
+                }
+            }
             if (count($request->idiomas) > 0) {
 
                 foreach ($request->idiomas as $item) {
@@ -477,7 +506,7 @@ class RecepcionEmpleadoController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intenta nuevamente']);
             }
         } catch (\Exception $e) {
-
+            return $e;
             DB::rollback();
             return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intenta nuevamente']);
         }
@@ -527,6 +556,12 @@ class RecepcionEmpleadoController extends Controller
                 'sector_economico.nombre as nombre',
             )
             ->where('usuario_id', $usuario_id)->get();
+
+        $habilidades = HabilidadesCandidatosModel::select(
+            'usr_app_skills_candidatos_c.id',
+            'usr_app_skills_candidatos_c.nombre'
+        )->where('candidato_id', $user_candidato->id)->get();
+
 
         $historico_conceptos_servicios = CandidatoServicioModel::leftjoin(
             'usr_app_orden_servicio as orden_servicio',
@@ -585,6 +620,7 @@ class RecepcionEmpleadoController extends Controller
         $user_candidato['cumple_requisitos'] = $cumple_requisitos;
         $novasoft = $this->searchByCodEmp($user_candidato->num_doc, true);
         $user_candidato["novasoft"] = $novasoft;
+        $user_candidato["habilidades"] = $habilidades;
         return response()->json($user_candidato);
     }
 
@@ -830,26 +866,34 @@ class RecepcionEmpleadoController extends Controller
 
     public function addCandidatoServicio(Request $request)
     {
-
-        $candidato = UsuariosCandidatosModel::find($request->id_candidato);
-        if (isset($candidato)) {
-            $validarCandidato = $this->validacandidato($candidato->num_doc, 0, $candidato->tip_doc_id, false);
-            $validarCandidato = $validarCandidato->getData(true);
-            if ($validarCandidato['status'] == 'success') {
-                //guardar orden de servicio
-                $ordenServiciolienteController = new OrdenServiciolienteController;
-                $ordenServicioCandidato = $ordenServiciolienteController->candidatoRegistradoServicio($candidato->usuario_id, $request->id_servicio, 2, true);
-                $formularioGestionIngresoController = new formularioGestionIngresoController;
-                $radicadoSeiya = $formularioGestionIngresoController->formularioingresoservicioCandidatoUnico($request, $ordenServicioCandidato)->getData();
-                if ($radicadoSeiya->status == '200') {
-                    return response()->json(["status" => "success", "message" => "Candidato registrado exitosamente en el servicio"]);
+        DB::beginTransaction();
+        try {
+            $candidato = UsuariosCandidatosModel::find($request->id_candidato);
+            if (isset($candidato)) {
+                $validarCandidato = $this->validacandidato($candidato->num_doc, 0, $candidato->tip_doc_id, false);
+                $validarCandidato = $validarCandidato->getData(true);
+                if ($validarCandidato['status'] == 'success') {
+                    //guardar orden de servicio
+                    $ordenServiciolienteController = new OrdenServiciolienteController;
+                    $ordenServicioCandidato = $ordenServiciolienteController->candidatoRegistradoServicio($candidato->usuario_id, $request->id_servicio, 14, true);
+                    $formularioGestionIngresoController = new formularioGestionIngresoController;
+                    $radicadoSeiya = $formularioGestionIngresoController->formularioingresoservicioCandidatoUnico($request, $ordenServicioCandidato)->getData();
+                    if ($radicadoSeiya->status == '200') {
+                        DB::commit();
+                        return response()->json(["status" => "success", "message" => "Candidato registrado exitosamente en el servicio"]);
+                    } else {
+                        DB::rollBack();
+                        return response()->json(["status" => "error", "message" => "Problema al intentar registrar usuario"]);
+                    }
                 } else {
-                    return response()->json(["status" => "error", "message" => "Problema al intentar registrar usuario"]);
+                    /*    $messageError = $validarCandidato->message; */
+                    return $validarCandidato;
+                    DB::commit();
                 }
-            } else {
-                /*    $messageError = $validarCandidato->message; */
-                return $validarCandidato;
             }
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json(['status' => 'error', 'message' => 'Error al añadir candidato, por favor intenta nuevamente']);
         }
     }
     public function deleteReferencia($cod_emp, $num_ref)
