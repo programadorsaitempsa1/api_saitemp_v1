@@ -583,7 +583,7 @@ class SolicitudServicioController extends Controller
             return response()->json(["status" => "success", "message" => "Formulario guardado exitosamente", 'id' => $ordenServicio->id]);
         } catch (\Exception $e) {
             DB::rollback();
-            return $e;
+
             return response()->json(["status" => "error", "message" => "Error al guadar los datos del formulario"]);
         }
     }
