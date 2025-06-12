@@ -566,7 +566,7 @@ class SolicitudServicioController extends Controller
                 }
                 if (isset($candidato_validado)) {
                     if ($candidato_validado['status'] == 'error') {
-                        return;
+                        $candidatos_con_servicio .= $candidato['confirma_numero_documento_candidato'] . ', ';
                     }
                 }
                 if ($candidato['registrado'] == 0) {
