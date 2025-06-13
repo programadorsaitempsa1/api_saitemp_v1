@@ -46,7 +46,7 @@ class formularioGestionIngresoController extends Controller
         $user = $this->getUserRelaciones();
         $user = $user->getData(true);
 
-        $result = formularioGestionIngreso::leftJoin('usr_app_clientes as cli', 'cli.id', 'usr_app_formulario_ingreso.cliente_id')
+        $result = formularioGestionIngreso::leftJoin('usr_app_conceptos_medicos as concepto_medico', 'concepto_medico.id', 'usr_app_formulario_ingreso.concepto_medico_id')
             ->leftJoin('usr_app_municipios as mun', 'mun.id', 'usr_app_formulario_ingreso.municipio_id')
             ->LeftJoin('usr_app_estados_ingreso as est', 'est.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
             ->leftJoin('usr_app_formulario_ingreso_tipo_servicio as tiser', 'tiser.id', 'usr_app_formulario_ingreso.tipo_servicio_id')
@@ -54,6 +54,7 @@ class formularioGestionIngresoController extends Controller
             ->leftJoin('usr_app_ciudad_laboraorio as ciulab', 'ciulab.id', 'ilab.laboratorio_medico_id')
             ->leftJoin('usr_app_usuarios as us', 'us.id', 'usr_app_formulario_ingreso.candidato_id')
             ->leftJoin('usr_app_candidatos_c as can', 'can.usuario_id', 'us.id')
+            ->leftJoin('usr_app_clientes as cli', 'cli.id', 'usr_app_formulario_ingreso.cliente_id')
             ->when(!in_array('42', $permisos), function ($query) {
                 return $query->where(function ($query) {
                     $query->whereNotIn('cli.nit', ['811025401', '900032514'])
@@ -88,6 +89,7 @@ class formularioGestionIngresoController extends Controller
                 'est.color as color_estado',
                 'cli.contratacion_hora_confirmacion as hora_confirmacion',
                 'usr_app_formulario_ingreso.responsable_id',
+                'concepto_medico.nombre as concepto_medico'
             )
             ->orderby('usr_app_formulario_ingreso.id', 'DESC')
             ->paginate($cantidad);

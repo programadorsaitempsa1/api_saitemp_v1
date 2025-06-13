@@ -743,7 +743,7 @@ class RecepcionEmpleadoController extends Controller
             if ($validacion_interna) {
                 return  response()->json(['status' => 'error', 'motivo' => '1', 'documento' => $numero_identificacion]);
             }
-            return response()->json(['status' => 'error', 'titulo' => 'Error', 'message' => 'El candidato con número de documento ' . $numero_identificacion . ' no pudo ser registrado, por favor ponsagase en contacto con un asesor',  'documento' => $numero_identificacion]);
+            return response()->json(['status' => 'error', 'titulo' => 'Error', 'message' => 'El candidato con número de documento ' . $numero_identificacion . ' no pudo ser registrado, por favor póngase en contacto con un asesor',  'documento' => $numero_identificacion]);
         }
 
         $activo = DashboardActivos::where('cod_emp', '=',  (string) $numero_identificacion)
