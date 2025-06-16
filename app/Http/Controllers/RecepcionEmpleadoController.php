@@ -18,6 +18,7 @@ use App\Models\ListaTrump;
 use App\Models\formularioGestionIngreso;
 use App\Models\User;
 use App\Models\CandidatoServicioModel;
+use App\Models\CandidatoSolicitudServicioModel;
 use Illuminate\Support\Str;
 use App\Models\CandidatosRequisitosModel;
 use App\Models\HistoricoConceptosCandidatosModel;
@@ -549,11 +550,11 @@ class RecepcionEmpleadoController extends Controller
         )->where('candidato_id', $user_candidato->id)->get();
 
 
-        $historico_conceptos_servicios = CandidatoServicioModel::leftjoin(
+        $historico_conceptos_servicios = CandidatoSolicitudServicioModel::leftjoin(
             'usr_app_orden_servicio as orden_servicio',
             'orden_servicio.id',
             '=',
-            'usr_app_candadato_servicio.servicio_id'
+            'usr_app_candadato_solicitud_servicio.servicio_id'
         )
             ->leftjoin(
                 'usr_app_clientes as cliente',
@@ -565,7 +566,7 @@ class RecepcionEmpleadoController extends Controller
                 'usr_app_motivo_cancela_servicio as motivo',
                 'motivo.id',
                 '=',
-                'usr_app_candadato_servicio.motivo_cancelacion'
+                'usr_app_candadato_solicitud_servicio.motivo_cancelacion'
             )
             ->leftjoin(
                 'usr_app_lista_cargos as cargo',
@@ -574,14 +575,14 @@ class RecepcionEmpleadoController extends Controller
                 'cargo.id'
             )
             ->select(
-                'usr_app_candadato_servicio.*',
+                'usr_app_candadato_solicitud_servicio.*',
                 'cargo.nombre as cargo',
                 'cliente.razon_social as razon_social',
                 'orden_servicio.numero_radicado',
                 'motivo.nombre as motivo'
             )
-            ->where('usr_app_candadato_servicio.usuario_id', $usuario_id)
-            ->where('usr_app_candadato_servicio.estado_id', 3)
+            ->where('usr_app_candadato_solicitud_servicio.usuario_id', $usuario_id)
+            ->whereNotNull('usr_app_candadato_solicitud_servicio.fecha_cancelacion')
             ->get();
 
         $historico_conceptos_servicios_generales = HistoricoConceptosCandidatosModel::select(
@@ -742,7 +743,7 @@ class RecepcionEmpleadoController extends Controller
             if ($validacion_interna) {
                 return  response()->json(['status' => 'error', 'motivo' => '1', 'documento' => $numero_identificacion]);
             }
-            return response()->json(['status' => 'error', 'titulo' => 'Error', 'message' => 'El candidato con número de documento ' . $numero_identificacion . ' no pudo ser registrado, por favor ponsagase en contacto con un asesor',  'documento' => $numero_identificacion]);
+            return response()->json(['status' => 'error', 'titulo' => 'Error', 'message' => 'El candidato con número de documento ' . $numero_identificacion . ' no pudo ser registrado, por favor póngase en contacto con un asesor',  'documento' => $numero_identificacion]);
         }
 
         $activo = DashboardActivos::where('cod_emp', '=',  (string) $numero_identificacion)
@@ -825,7 +826,7 @@ class RecepcionEmpleadoController extends Controller
             }
         }
     }
-   
+
 
     public function buscardocumentolistacandidato($documento)
     {

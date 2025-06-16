@@ -45,7 +45,8 @@ class formularioGestionIngresoController extends Controller
         $user = $this->getUserRelaciones();
         $user = $user->getData(true);
 
-        $result = formularioGestionIngreso::leftJoin('usr_app_afp as afp', 'afp.id', 'usr_app_formulario_ingreso.afp_id')
+        $result = formularioGestionIngreso::leftJoin('usr_app_conceptos_medicos as concepto_medico', 'concepto_medico.id', 'usr_app_formulario_ingreso.concepto_medico_id')
+            ->leftJoin('usr_app_afp as afp', 'afp.id', 'usr_app_formulario_ingreso.afp_id')
             ->leftJoin('usr_app_estados_ingreso as esti', 'esti.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
             ->leftjoin('usr_app_historico_concepto_candidatos as historico_candidatos', 'historico_candidatos.formulario_ingreso_id', '=', 'usr_app_formulario_ingreso.id')
             ->leftjoin('usr_app_candadato_solicitud_servicio as cs', 'cs.id', '=', 'usr_app_formulario_ingreso.candidato_servicio_id')
@@ -105,6 +106,7 @@ class formularioGestionIngresoController extends Controller
                 'esti.color as color_estado',
                 'cli.contratacion_hora_confirmacion as hora_confirmacion',
                 'usr_app_formulario_ingreso.responsable_id',
+                'concepto_medico.nombre as concepto_medico'
             )
             ->orderby('usr_app_formulario_ingreso.id', 'DESC')
             ->paginate($cantidad);
