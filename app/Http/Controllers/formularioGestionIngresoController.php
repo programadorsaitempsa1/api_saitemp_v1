@@ -45,8 +45,7 @@ class formularioGestionIngresoController extends Controller
         $user = $this->getUserRelaciones();
         $user = $user->getData(true);
 
-        $result = formularioGestionIngreso::leftJoin('usr_app_conceptos_medicos as concepto_medico', 'concepto_medico.id', 'usr_app_formulario_ingreso.concepto_medico_id')
-            ->leftJoin('usr_app_afp as afp', 'afp.id', 'usr_app_formulario_ingreso.afp_id')
+        $result = formularioGestionIngreso::leftJoin('usr_app_afp as afp', 'afp.id', 'usr_app_formulario_ingreso.afp_id')
             ->leftJoin('usr_app_estados_ingreso as esti', 'esti.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
             ->leftjoin('usr_app_historico_concepto_candidatos as historico_candidatos', 'historico_candidatos.formulario_ingreso_id', '=', 'usr_app_formulario_ingreso.id')
             ->leftjoin('usr_app_candadato_solicitud_servicio as cs', 'cs.id', '=', 'usr_app_formulario_ingreso.candidato_servicio_id')
@@ -106,7 +105,6 @@ class formularioGestionIngresoController extends Controller
                 'esti.color as color_estado',
                 'cli.contratacion_hora_confirmacion as hora_confirmacion',
                 'usr_app_formulario_ingreso.responsable_id',
-                'concepto_medico.nombre as concepto_medico'
             )
             ->orderby('usr_app_formulario_ingreso.id', 'DESC')
             ->paginate($cantidad);
@@ -1572,14 +1570,25 @@ class formularioGestionIngresoController extends Controller
         // $user = auth()->user();
         $user = $this->getUserRelaciones();
         $user = $user->getData(true);
-        $result = formularioGestionIngreso::leftJoin('usr_app_clientes as cli', 'cli.id', 'usr_app_formulario_ingreso.cliente_id')
-            ->leftJoin('usr_app_municipios as mun', 'mun.id', 'usr_app_formulario_ingreso.municipio_id')
-            ->LeftJoin('usr_app_estados_ingreso as est', 'est.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
-            ->leftJoin('usr_app_formulario_ingreso_tipo_servicio as tiser', 'tiser.id', 'usr_app_formulario_ingreso.tipo_servicio_id')
+        $result = formularioGestionIngreso::leftJoin('usr_app_afp as afp', 'afp.id', 'usr_app_formulario_ingreso.afp_id')
+            ->leftJoin('usr_app_estados_ingreso as esti', 'esti.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
+            ->leftjoin('usr_app_historico_concepto_candidatos as historico_candidatos', 'historico_candidatos.formulario_ingreso_id', '=', 'usr_app_formulario_ingreso.id')
+            ->leftjoin('usr_app_candadato_solicitud_servicio as cs', 'cs.id', '=', 'usr_app_formulario_ingreso.candidato_servicio_id')
+            ->leftjoin('usr_app_solicitud_servicio as sc', 'sc.id', '=', 'cs.servicio_id')
+            ->leftJoin('usr_app_usuarios as us1', 'us1.id', 'cs.usuario_id')
+            ->leftJoin('usr_app_candidatos_c as can1', 'can1.usuario_id', 'us1.id')
+            ->leftJoin('usr_app_clientes as cli', 'cli.id', 'sc.cliente_id')
+            ->leftJoin('usr_app_clientes as cli2', 'cli2.id', 'usr_app_formulario_ingreso.cliente_id')
+            ->leftJoin('usr_app_municipios as mun', 'mun.id', 'cs.ciudad_prestacion_servicio_id')
+            ->leftJoin('usr_app_departamentos as dep', 'dep.id', 'mun.departamento_id')
+            ->leftJoin('usr_app_paises as pais', 'pais.id', 'dep.pais_id')
+            ->leftJoin('gen_tipide as ti', 'ti.cod_tip', '=', 'can1.tip_doc_id')
+            ->leftJoin('gen_tipide as ti2', 'ti2.cod_tip', '=', 'usr_app_formulario_ingreso.tipo_documento_id')
+            ->leftJoin('usr_app_formulario_ingreso_tipo_servicio as tiser', 'tiser.id', 'sc.linea_servicio_id')
+            ->leftJoin('usr_app_formulario_ingreso_tipo_servicio as tiser2', 'tiser2.id', 'usr_app_formulario_ingreso.tipo_servicio_id')
+            ->leftJoin('usr_app_lista_cargos as car', 'car.id', 'cs.cargo_solicitado_id')
             ->leftJoin('usr_app_registro_ingreso_laboraorio as ilab', 'ilab.registro_ingreso_id', 'usr_app_formulario_ingreso.id')
             ->leftJoin('usr_app_ciudad_laboraorio as ciulab', 'ciulab.id', 'ilab.laboratorio_medico_id')
-            ->leftJoin('usr_app_usuarios as us', 'us.id', 'usr_app_formulario_ingreso.candidato_id')
-            ->leftJoin('usr_app_candidatos_c as can', 'can.usuario_id', 'us.id')
             ->when(!in_array('42', $permisos), function ($query) {
                 return $query->where(function ($query) {
                     $query->whereNotIn('cli.nit', ['811025401', '900032514'])
@@ -1589,33 +1598,42 @@ class formularioGestionIngresoController extends Controller
             ->select(
                 'usr_app_formulario_ingreso.id',
                 'usr_app_formulario_ingreso.numero_radicado',
-                'usr_app_formulario_ingreso.n_servicio',
-                'tiser.nombre_servicio',
+                DB::raw("COALESCE(usr_app_formulario_ingreso.n_servicio, sc.numero_radicado) as n_servicio"),
+                DB::raw("COALESCE(tiser.nombre_servicio, tiser2.nombre_servicio) as nombre_servicio"),
                 'usr_app_formulario_ingreso.updated_at',
                 'usr_app_formulario_ingreso.created_at',
-                DB::RAW("CONCAT(can.num_doc,'',usr_app_formulario_ingreso.numero_identificacion) as numero_documento"),
-                DB::RAW("CONCAT(primer_nombre,' ',segundo_nombre,' ',primer_apellido,' ',segundo_apellido,' ',usr_app_formulario_ingreso.nombre_completo) as nombre_completo"),
-                'usr_app_formulario_ingreso.cargo',
-                'cli.razon_social',
-                'mun.nombre as ciudad',
+                DB::RAW("COALESCE(can1.num_doc,usr_app_formulario_ingreso.numero_identificacion) as numero_identificacion"),
+                DB::raw("COALESCE(usr_app_formulario_ingreso.nombre_completo,CONCAT(
+                            ISNULL(can1.primer_apellido, ''), ' ',
+                            ISNULL(can1.segundo_apellido, ''), ' ',
+                            ISNULL(can1.primer_nombre, ''), ' ',
+                            ISNULL(can1.segundo_nombre, '')
+                        )
+                    ) as nombre_completo
+                "),
+                DB::RAW("COALESCE(car.nombre,usr_app_formulario_ingreso.cargo) as cargo"),
+                DB::raw("COALESCE(cli.razon_social, cli2.razon_social) as razon_social"),
+                'mun.nombre as municipio',
                 'ciulab.laboratorio',
                 'usr_app_formulario_ingreso.laboratorio as otro_laboratorio',
                 'usr_app_formulario_ingreso.fecha_examen',
-                DB::raw("FORMAT(CAST(usr_app_formulario_ingreso.fecha_ingreso AS DATE), 'dd/MM/yyyy') as fecha_ingreso"),
+                'cs.fecha_ingreso as fecha_hora_ingreso',
                 'usr_app_formulario_ingreso.estado_vacante',
                 'usr_app_formulario_ingreso.novedades',
                 'usr_app_formulario_ingreso.observacion_estado',
                 'usr_app_formulario_ingreso.profesional',
                 'usr_app_formulario_ingreso.afectacion_servicio',
                 'usr_app_formulario_ingreso.responsable_corregir',
-                'est.nombre as estado_ingreso',
+                'esti.nombre as estado_ingreso',
                 'usr_app_formulario_ingreso.responsable',
-                'est.id as estado_ingreso_id',
-                'est.color as color_estado',
+                'esti.id as estado_ingreso_id',
+                'esti.color as color_estado',
                 'cli.contratacion_hora_confirmacion as hora_confirmacion',
                 'usr_app_formulario_ingreso.responsable_id',
             );
-
+        foreach ($result as $item) {
+            $item->fecha_examen = $item->fecha_examen ? date('d/m/Y H:i', strtotime($item->fecha_examen)) : null;
+        }
         if ($request['ordenar_prioridad'] == true) {
             $result->whereNotNull('usr_app_formulario_ingreso.fecha_ingreso');
             $result->orderByRaw("CAST(usr_app_formulario_ingreso.fecha_ingreso AS DATE) DESC")
@@ -1773,8 +1791,7 @@ class formularioGestionIngresoController extends Controller
                             $subquery->where('tiser.nombre_servicio', $valorCompararActual)
                                 ->orWhere('tiser2.nombre_servicio', $valorCompararActual);
                         });
-                    }
-                    else if ($campoActual === 'nombre_completo') {
+                    } else if ($campoActual === 'nombre_completo') {
                         $query->where(function ($subquery) use ($valorCompararActual) {
                             $subquery->where('usr_app_formulario_ingreso.nombre_completo', $valorCompararActual)
                                 ->orWhere('tiser2.nombre_servicio', $valorCompararActual);
