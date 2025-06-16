@@ -45,30 +45,48 @@ class SolicitudServicioController extends Controller
 
         $result = SolicitudServicioModel::join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_solicitud_servicio.linea_servicio_id')
             ->join('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_solicitud_servicio.motivo_servicio_id')
+            ->join('usr_app_clientes as cli', 'cli.id', '=', 'usr_app_solicitud_servicio.cliente_id')
             ->when($tipo_usuario == '2', function ($query) use ($nit) {
                 return $query->where('usr_app_solicitud_servicio.nit', $nit);
             })
             ->when($tipo_usuario == '1' && !in_array('46', $permisos), function ($query) use ($usuario_id) {
                 return $query->where('usr_app_solicitud_servicio.responsable_id', $usuario_id);
-            })
-            ->select(
+            });
+        if ($tipo_usuario == '1') {
+            $result->select(
                 'usr_app_solicitud_servicio.id',
                 'usr_app_solicitud_servicio.numero_radicado',
                 'usr_app_solicitud_servicio.created_at',
+                'cli.razon_social',
+                'usr_app_solicitud_servicio.nit',
+                'usr_app_solicitud_servicio.responsable as responsable_servicio',
                 'usr_app_solicitud_servicio.radicador',
                 'usr_app_solicitud_servicio.fecha_fin',
                 'ts.nombre_servicio as linea_servicio',
                 'ms.nombre as motivo_servicio',
                 'usr_app_solicitud_servicio.cantidad_contrataciones',
-            )
-            ->orderby('usr_app_solicitud_servicio.id', 'DESC')
+            );
+        }
+        if ($tipo_usuario == '2') {
+            $result->select(
+                'usr_app_solicitud_servicio.id',
+                'usr_app_solicitud_servicio.numero_radicado',
+                'usr_app_solicitud_servicio.created_at',
+                'usr_app_solicitud_servicio.fecha_fin',
+                'ts.nombre_servicio as linea_servicio',
+                'ms.nombre as motivo_servicio',
+                'usr_app_solicitud_servicio.cantidad_contrataciones',
+            );
+        }
+        $result = $result->orderBy('usr_app_solicitud_servicio.id', 'DESC')
             ->paginate($cantidad);
+
         return response()->json($result);
     }
 
+
     public function byid($id)
     {
-
         $result = SolicitudServicioModel::leftJoin('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_solicitud_servicio.linea_servicio_id')
             ->leftJoin('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_solicitud_servicio.motivo_servicio_id')
             ->leftJoin('usr_app_estado_servicio as est', 'est.id', '=', 'usr_app_solicitud_servicio.estado_servicio_id')
@@ -80,6 +98,7 @@ class SolicitudServicioController extends Controller
                 'usr_app_solicitud_servicio.created_at',
                 'usr_app_solicitud_servicio.radicador',
                 'usr_app_solicitud_servicio.fecha_fin',
+                'usr_app_solicitud_servicio.fecha_acuerdo_fin',
                 'ts.nombre_servicio as linea_servicio',
                 'ts.id as linea_servicio_id',
                 'ms.nombre as motivo_servicio',
@@ -122,7 +141,6 @@ class SolicitudServicioController extends Controller
                 'usr_app_candadato_solicitud_servicio.numero_documento_identidad as confirma_numero_documento_candidato',
                 'usr_app_candadato_solicitud_servicio.tipo_identificacion_id',
                 'usr_app_candadato_solicitud_servicio.subsidio_transporte',
-                // 'usr_app_candadato_solicitud_servicio.salario as salario_candidato',
                 'usr_app_candadato_solicitud_servicio.cargo_solicitado_id',
                 'car.nombre as cargo_solicitado',
                 'usr_app_candadato_solicitud_servicio.whatsapp',
@@ -133,17 +151,6 @@ class SolicitudServicioController extends Controller
                 'est.id as estado_candidato_id',
                 'est.clave as estado_candidato_clave',
                 'est.nombre as estado_candidato',
-                // DB::RAW("CONCAT(can.primer_nombre,' ',can.segundo_nombre) as nombre_candidato"),
-                // DB::RAW("CONCAT(can.primer_apellido,' ',can.segundo_apellido) as apellido_candidato"),
-                // 'can.num_doc as numero_documento_candidato',
-                // 'can.num_doc as confirma_numero_documento_candidato',
-                // 'can.celular as celular_candidato',
-                // 'us.email as correo_candidato',
-                // 'can.tip_doc_id as tipo_identificacion_id',
-                // 'ti.des_tip as consulta_tipo_identificacion',
-                // 'usr_app_candadato_solicitud_servicio.en_proceso',
-                // 'est.id as estado_candidato_id',
-                // 'est.nombre as estado_candidato',
             )->get();
         $candidatos->transform(function ($item) {
             $item->registrado = !empty($item->usuario_id) ? 1 : 0;
@@ -254,6 +261,25 @@ class SolicitudServicioController extends Controller
             return $e;
             return response()->json(["status" => "error", "message" => "Error al guadar los datos del formulario."]);
         }
+    }
+
+    public function responsable(Request $request)
+    {
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->registros as $id) {
+                $result = SolicitudServicioModel::find($id);
+                $result->responsable_id = $request->responsable_id;
+                $result->responsable = $request->responsable;
+                $result->save();
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(["status" => "error", "message" => "Hubo un error al asignar un nuevo responsable, por favor intente nuevamente."]);
+        }
+        DB::commit();
+        return response()->json(["status" => "success", "message" => "Asignación realizada de manera exitosa."]);
     }
 
     public function candidatoRegistradoServicio(array $candidato, string $ordenServicio_id)
@@ -398,77 +424,133 @@ class SolicitudServicioController extends Controller
         return $ordenServicio;
     }
 
-    public function filtro($cadena)
+    public function filtro($cadena, $cantidad)
     {
         try {
             $cadenaJSON = base64_decode($cadena);
             $cadenaUTF8 = mb_convert_encoding($cadenaJSON, 'UTF-8', 'ISO-8859-1');
-            $valores = explode("/", $cadenaUTF8);
-            $campo = $valores[0];
-            $operador = $valores[1];
-            $valor = $valores[2];
-            $valor2 = isset($valores[3]) ? $valores[3] : null;
+            $arrays = explode('/', $cadenaUTF8);
+            $arraysDecodificados = array_map('json_decode', $arrays);
+
+            $campo = $arraysDecodificados[0];
+            $operador = $arraysDecodificados[1];
+            $valor_comparar = $arraysDecodificados[2];
+            $valor_comparar2 = $arraysDecodificados[3];
+
+            // return $campo;
 
             $user = $this->getUserRelaciones();
             $data = $user->getData(true);
             $tipo_usuario = $data['tipo_usuario_id'];
             $nit = null;
+            $usuario_id = null;
+            if (isset($data['id'])) {
+                $usuario_id = $data['id'];
+            }
             if (isset($data['nit'])) {
                 $nit = $data['nit'];
             }
 
-            $query = SolicitudServicioModel::join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_orden_servicio.linea_servicio_id')
-                ->join('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_orden_servicio.motivo_servicio_id')
-                ->when($tipo_usuario == '2' && $nit != null, function ($query) use ($nit) {
-                    return $query->where('usr_app_orden_servicio.nit', $nit);
+            $permisos = $this->permisos();
+
+            $query = SolicitudServicioModel::join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_solicitud_servicio.linea_servicio_id')
+                ->join('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_solicitud_servicio.motivo_servicio_id')
+                ->join('usr_app_clientes as cli', 'cli.id', '=', 'usr_app_solicitud_servicio.cliente_id')
+                ->when($tipo_usuario == '2', function ($query) use ($nit) {
+                    return $query->where('usr_app_solicitud_servicio.nit', $nit);
                 })
-                ->select(
-                    'usr_app_orden_servicio.id',
-                    'usr_app_orden_servicio.numero_radicado',
-                    'usr_app_orden_servicio.created_at',
-                    'usr_app_orden_servicio.radicador',
-                    'usr_app_orden_servicio.fecha_inicio',
-                    'usr_app_orden_servicio.fecha_fin',
+                ->when($tipo_usuario == '1' && !in_array('46', $permisos), function ($query) use ($usuario_id) {
+                    return $query->where('usr_app_solicitud_servicio.responsable_id', $usuario_id);
+                });
+            if ($tipo_usuario == '1') {
+                $query->select(
+                    'usr_app_solicitud_servicio.id',
+                    'usr_app_solicitud_servicio.numero_radicado',
+                    'usr_app_solicitud_servicio.created_at',
+                    'cli.razon_social',
+                    'usr_app_solicitud_servicio.nit',
+                    'usr_app_solicitud_servicio.responsable as responsable_servicio',
+                    'usr_app_solicitud_servicio.radicador',
+                    'usr_app_solicitud_servicio.fecha_fin',
                     'ts.nombre_servicio as linea_servicio',
                     'ms.nombre as motivo_servicio',
-                    'usr_app_orden_servicio.cantidad_contrataciones',
-                    'usr_app_orden_servicio.salario',
-                )
-                ->orderby('usr_app_orden_servicio.id', 'DESC');
-
-            switch ($operador) {
-                case 'Contiene':
-                    if ($campo == "linea_servicio") {
-                        $query->where('ts.nombre_servicio', 'like', '%' . $valor . '%');
-                    } else if ($campo == "ciudad_prestacion_servicio") {
-                        $query->where('ciu.nombre', 'like', '%' . $valor . '%');
-                    } else if ($campo == "motivo_servicio") {
-                        $query->where('ms.nombre', 'like', '%' . $valor . '%');
-                    } else {
-                        $query->where('usr_app_orden_servicio.' . $campo, 'like', '%' . $valor . '%');
-                    }
-                    break;
-                case 'Igual a':
-                    if ($campo == "linea_servicio") {
-                        $query->where('ts.nombre_servicio', '=', $valor);
-                    } else if ($campo == "ciudad_prestacion_servicio") {
-                        $query->where('ciu.nombre', '=', $valor);
-                    } else if ($campo == "motivo_servicio") {
-                        $query->where('ms.nombre', '=', $valor);
-                    } else {
-                        $query->where('usr_app_orden_servicio.' . $campo, '=', $valor);
-                    }
-                    break;
-                case 'Igual a fecha':
-                    $query->whereDate('usr_app_orden_servicio.' . $campo, '=', $valor);
-                    break;
-                case 'Entre':
-                    $query->whereDate('usr_app_orden_servicio.' . $campo, '>=', $valor)
-                        ->whereDate('usr_app_orden_servicio.' . $campo, '<=', $valor2);
-                    break;
+                    'usr_app_solicitud_servicio.cantidad_contrataciones',
+                );
+            }
+            if ($tipo_usuario == '2') {
+                $query->select(
+                    'usr_app_solicitud_servicio.id',
+                    'usr_app_solicitud_servicio.numero_radicado',
+                    'usr_app_solicitud_servicio.created_at',
+                    'usr_app_solicitud_servicio.fecha_fin',
+                    'ts.nombre_servicio as linea_servicio',
+                    'ms.nombre as motivo_servicio',
+                    'usr_app_solicitud_servicio.cantidad_contrataciones',
+                );
             }
 
-            $result = $query->paginate();
+            $numElementos = count($campo);
+
+            for ($i = 0; $i < $numElementos; $i++) {
+                $campoActual = $campo[$i];
+                $operadorActual = $operador[$i];
+                $valorCompararActual = $valor_comparar[$i];
+
+                $prefijoCampo = '';
+                if ($campoActual === 'razon_social') {
+                    $prefijoCampo = 'cli.';
+                    $campoActual = 'razon_social';
+                } elseif ($campoActual === 'linea_servicio') {
+                    $prefijoCampo = 'ts.';
+                    $campoActual = 'nombre_servicio';
+                } elseif ($campoActual === 'motivo_servicio') {
+                    $prefijoCampo = 'ms.';
+                    $campoActual = 'nombre';
+                } elseif ($campoActual === 'responsable_servicio') {
+                    $prefijoCampo = 'usr_app_solicitud_servicio.';
+                    $campoActual = 'responsable';
+                } else {
+                    $prefijoCampo = 'usr_app_solicitud_servicio.';
+                }
+
+                switch ($operadorActual) {
+                    case 'Menor que':
+                        $query->where($prefijoCampo . $campoActual, '<', $valorCompararActual);
+                        break;
+                    case 'Mayor que':
+                        $query->where($prefijoCampo . $campoActual, '>', $valorCompararActual);
+                        break;
+                    case 'Menor o igual que':
+                        $query->where($prefijoCampo . $campoActual, '<=', $valorCompararActual);
+                        break;
+                    case 'Mayor o igual que':
+                        $query->where($prefijoCampo . $campoActual, '>=', $valorCompararActual);
+                        break;
+                    case 'Igual a número':
+                        $query->where($prefijoCampo . $campoActual, '=', $valorCompararActual);
+                        break;
+                    case 'Entre':
+                        $valorComparar2Actual = $valor_comparar2[$i];
+                        $query->whereDate($prefijoCampo . $campoActual, '>=', $valorCompararActual);
+                        $query->whereDate($prefijoCampo . $campoActual, '<=', $valorComparar2Actual);
+                        break;
+                    case 'Igual a':
+                        $query->where($prefijoCampo . $campoActual, '=', $valorCompararActual);
+                        break;
+                    case 'Igual a fecha':
+                        $query->whereDate($prefijoCampo . $campoActual, '=', $valorCompararActual);
+                        break;
+                    case 'Contiene':
+                        $query->where($prefijoCampo . $campoActual, 'like', '%' . $valorCompararActual . '%');
+                        break;
+                }
+            }
+
+            $result = $query->paginate($cantidad);
+            $result->getCollection()->transform(function ($item) {
+                $item->subsanado = $item->subsanado == 1 ? 'Sí' : 'No';
+                return $item;
+            });
             return response()->json($result);
         } catch (\Exception $e) {
             return $e;
@@ -477,29 +559,34 @@ class SolicitudServicioController extends Controller
 
     public function ordenservicioseiya($id)
     {
-        return 'prueba2';
-        $result = SolicitudServicioModel::join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_orden_servicio.linea_servicio_id')
-            ->join('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_orden_servicio.motivo_servicio_id')
-            // ->join('usr_app_municipios as ciu', 'ciu.id', '=', 'usr_app_orden_servicio.ciudad_prestacion_servicio_id')
-            // ->join('usr_app_departamentos as dep', 'dep.id', '=', 'ciu.departamento_id')
-            ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_orden_servicio.cargo_solicitado_id')
-            ->where('usr_app_orden_servicio.id', '=', $id)
+
+        $result = CandidatoSolicitudServicioModel::leftJoin('usr_app_solicitud_servicio as ss', 'ss.id', '=', 'usr_app_candadato_solicitud_servicio.servicio_id')
+            ->LeftJoin('usr_app_clientes as cli', 'cli.id', '=', 'ss.cliente_id')
+            ->join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'ss.linea_servicio_id')
+            ->join('usr_app_municipios as ciu', 'ciu.id', '=', 'usr_app_candadato_solicitud_servicio.ciudad_prestacion_servicio_id')
+            ->join('usr_app_departamentos as dep', 'dep.id', '=', 'ciu.departamento_id')
+            ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_candadato_solicitud_servicio.cargo_solicitado_id')
+            ->where('ss.id', '=', $id)
             ->select(
-                'usr_app_orden_servicio.id',
-                'usr_app_orden_servicio.numero_radicado',
+                'ss.id',
+                'ss.numero_radicado',
                 'ts.nombre_servicio as linea_servicio',
-                'usr_app_orden_servicio.linea_servicio_id',
-                // 'ciu.nombre as ciudad_prestacion_servicio',
-                // 'ciu.id as ciudad_prestacion_servicio_id',
-                // 'dep.nombre as departamento_prestacion_servicio',
-                // 'dep.id as departamento_prestacion_servicio_id',
-                'usr_app_orden_servicio.razon_social',
-                'usr_app_orden_servicio.cliente_id',
-                'usr_app_orden_servicio.salario',
+                'ts.id as linea_servicio_id',
+                'ciu.nombre as ciudad_prestacion_servicio',
+                'ciu.id as ciudad_prestacion_servicio_id',
+                'dep.nombre as departamento_prestacion_servicio',
+                'dep.id as departamento_prestacion_servicio_id',
+                'ss.cliente_id',
+                'cli.razon_social',
+                'usr_app_candadato_solicitud_servicio.salario',
+                'usr_app_candadato_solicitud_servicio.subsidio_transporte',
                 'lc.nombre as cargo_solicitado',
-                'usr_app_orden_servicio.responsable',
-                'usr_app_orden_servicio.responsable_id',
-                'usr_app_orden_servicio.cantidad_contrataciones',
+                'lc.id as cargo_solicitado_id',
+                'usr_app_candadato_solicitud_servicio.fecha_ingreso',
+                'ss.responsable',
+                'ss.responsable_id',
+                'ss.cantidad_contrataciones',
+                'usr_app_candadato_solicitud_servicio.direccion_prestacion_servicio'
             )
             ->first();
         return response()->json($result);
@@ -566,7 +653,7 @@ class SolicitudServicioController extends Controller
                 }
                 if (isset($candidato_validado)) {
                     if ($candidato_validado['status'] == 'error') {
-                        return;
+                        $candidatos_con_servicio .= $candidato['confirma_numero_documento_candidato'] . ', ';
                     }
                 }
                 if ($candidato['registrado'] == 0) {
@@ -578,7 +665,7 @@ class SolicitudServicioController extends Controller
 
             DB::commit();
             if ($candidatos_con_servicio != '') {
-                return response()->json(["status" => "success", "message" => "Formulario guardado exitosamente, sin embargo los candidatos con numero de doucmento de identidad $candidatos_con_servicio no pudieron ser registrados ya que se encuentran en otro proceso.", 'id' => $ordenServicio->id]);
+                return response()->json(["status" => "success", "message" => "Formulario guardado exitosamente, sin embargo los candidatos con numero de doucmento de identidad $candidatos_con_servicio no pudieron ser registrados, por favor comuniquese con su asesor para mas información.", 'id' => $ordenServicio->id]);
             }
             return response()->json(["status" => "success", "message" => "Formulario guardado exitosamente", 'id' => $ordenServicio->id]);
         } catch (\Exception $e) {

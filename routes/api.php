@@ -823,18 +823,15 @@ Route::group([
   Route::post('/laboratorioos/{id}', [LaboratorioOrdenServicioController::class, 'update']);
   Route::delete('/laboratorioos/{id}', [LaboratorioOrdenServicioController::class, 'destroy']);
 
-  //   Orden Servicio 
-  // Route::get('/ordenservicio/{cantidad}', [OrdenServiciolienteController::class, 'index']);
+  //   Solicitud Servicio 
   Route::get('/ordenservicio/{cantidad}', [SolicitudServicioController::class, 'index']);
   Route::get('/ordenserviciobyid/{id}', [SolicitudServicioController::class, 'byid']);
   Route::post('/ordenservicio', [SolicitudServicioController::class, 'create']);
-  // Route::post('/ordenservicio', [OrdenServiciolienteController::class, 'create']);
-  Route::get('/ordenserviciofiltro/{cadena}', [OrdenServiciolienteController::class, 'filtro']);
+  Route::post('/ordenservicio/responsable', [SolicitudServicioController::class, 'responsable']);
+  Route::get('/ordenserviciofiltro/{cadena}/{cantidad}', [SolicitudServicioController::class, 'filtro']);
   Route::post('/ordenservicio/{id}', [SolicitudServicioController::class, 'update']);
-  // Route::post('/ordenservicio/{id}', [OrdenServiciolienteController::class, 'update']);
-  Route::delete('/ordenservicio/{id}', [OrdenServiciolienteController::class, 'destroy']);
-  Route::get('/ordenservicioseiya/{id}', [OrdenServiciolienteController::class, 'ordenservicioseiya']);
-  Route::post('/cargamasivaservicio/{id}', [OrdenServiciolienteController::class, 'cargamasivaservicio']);
+  Route::get('/ordenservicioseiya/{id}', [SolicitudServicioController::class, 'ordenservicioseiya']);
+  // Route::post('/cargamasivaservicio/{id}', [OrdenServiciolienteController::class, 'cargamasivaservicio']);
 
 
   //   Motivo servicio 
