@@ -262,28 +262,14 @@ class RecepcionEmpleadoController extends Controller
             $novasoft->save();
             foreach ($request->referencias as $referencia) {
                 if ($referencia['nom_ref'] != '' || $referencia['nom_ref'] != null) {
-                    if (isset($referencia['cod_emp']) && isset($referencia['num_ref'])) {
-                        $novasoftReferencia = ReferenciasFormularioEmpleado::where('cod_emp', $referencia['cod_emp'])
-                            ->where('num_ref', $referencia['num_ref'])
-                            ->first();
-
-                        if ($novasoftReferencia) {
-                            $novasoftReferencia->parent = $referencia['parent'];
-                            $novasoftReferencia->cel_ref = $referencia['cel_ref'];
-                            $novasoftReferencia->nom_ref = $referencia['nom_ref'];
-                            $novasoftReferencia->ocu_ref = 0;
-                            $novasoftReferencia->save();
-                        } else {
-                            $novasoftReferencia = new ReferenciasFormularioEmpleado;
-                            $novasoftReferencia->cod_emp = $novasoft->cod_emp;
-                            $novasoftReferencia->num_ref = $referencia['num_ref'];
-                            $novasoftReferencia->parent = $referencia['parent'];
-                            $novasoftReferencia->cel_ref = $referencia['cel_ref'];
-                            $novasoftReferencia->nom_ref = $referencia['nom_ref'];
-                            $novasoftReferencia->tip_ref = $referencia['tip_ref'];
-                            $novasoftReferencia->ocu_ref = 0;
-                            $novasoftReferencia->save();
-                        }
+                    if (isset($referencia['cod_emp']) && isset($referencia['num_ref']) && ($novasoftReferencia = ReferenciasFormularioEmpleado::where('cod_emp', $referencia['cod_emp'])
+                        ->where('num_ref', $referencia['num_ref'])
+                        ->first())) {
+                        $novasoftReferencia->parent = $referencia['parent'];
+                        $novasoftReferencia->cel_ref = $referencia['cel_ref'];
+                        $novasoftReferencia->nom_ref = $referencia['nom_ref'];
+                        $novasoftReferencia->ocu_ref = 0;
+                        $novasoftReferencia->save();
                     } else {
                         $novasoftReferencia = new ReferenciasFormularioEmpleado;
                         $novasoftReferencia->cod_emp = $novasoft->cod_emp;
