@@ -225,4 +225,103 @@ class CargoClienteController extends Controller
     {
         //
     }
+
+    public function cargoById($id, $cliente_id)
+    {
+        // $result = CargoCliente::select()
+        //     ->get();
+        // return response()->json($result);
+        $cargos = Cargo2::join('usr_app_riesgos_laborales as rl2', 'rl2.id', '=', 'usr_app_cargos2.riesgo_laboral_id')
+            ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_cargos2.cargo_id')
+            ->join('usr_app_subcategoria_cargos as sc', 'sc.id', '=', 'lc.subcategoria_cargo_id')
+            ->join('usr_app_categoria_cargos as cc', 'cc.id', '=', 'sc.categoria_cargo_id')
+            ->join('usr_app_cargos2_recomendaciones as cr', 'cr.cargo_id', '=', 'usr_app_cargos2.id')
+            ->join('usr_app_lista_recomendaciones as recom', 'recom.id', '=', 'cr.recomendacion_id')
+            ->join('usr_app_cargos2_examenes as cx', 'cx.cargo_id', '=', 'usr_app_cargos2.id')
+            ->join('usr_app_lista_examenes as exam', 'exam.id', '=', 'cx.examen_id')
+            ->select(
+                'usr_app_cargos2.cargo_id as cargo_id',
+                'lc.nombre as cargo',
+                'lc.subcategoria_cargo_id as categoria_cargo_id',
+                'sc.categoria_cargo_id as tipo_cargo_id',
+                'sc.nombre as categoria',
+                'cc.nombre as tipo_cargo',
+                'usr_app_cargos2.funcion_cargo as funcion_cargo',
+                'usr_app_cargos2.riesgo_laboral_id',
+                'rl2.nombre as riesgo_laboral',
+                'cr.recomendacion_id',
+                'recom.recomendacion1 as recomendacion1',
+                'recom.recomendacion2 as recomendacion2',
+                'cx.examen_id',
+                'exam.nombre as examen',
+
+            )
+            ->where('usr_app_cargos2.cargo_id', '=', $id)
+            ->where('cliente_id', '=', $cliente_id)
+            ->distinct('exam.nombre as examen')
+            ->get();
+
+        // Array para almacenar los resultados
+        $resultados = [];
+
+
+        // Recorrer el array original
+        foreach ($cargos as $objeto) {
+            // Extraer los datos del objeto
+
+            $funcion_cargo = $objeto['funcion_cargo'];
+            $idCargo = $objeto['cargo_id'];
+            $cargo = $objeto['cargo'];
+            $idSubcategoria = $objeto['categoria_cargo_id'];
+            $subcategoria = $objeto['categoria'];
+            $idCategoria = $objeto['tipo_cargo_id'];
+            $categoria = $objeto['tipo_cargo'];
+            $idRiesgoLaboral = $objeto['riesgo_laboral_id'];
+            $riesgoLaboral = $objeto['riesgo_laboral'];
+            $idRequisito = $objeto['recomendacion_id'];
+            $recomendacion1 = $objeto['recomendacion1'];
+            $recomendacion2 = $objeto['recomendacion2'];
+            $idExamen = $objeto['examen_id'];
+            $examen = $objeto['examen'];
+
+            // Verificar si el cargo ya existe en los resultados
+            if (!isset($resultados[$idCargo])) {
+                // Si no existe, crear un nuevo objeto para el cargo
+                $resultados[$idCargo] = [
+                    'cargo_id' => $idCargo,
+                    'cargo' => $cargo,
+                    'riesgo_laboral_id' => $idRiesgoLaboral,
+                    'riesgo_laboral' => $riesgoLaboral,
+                    'examenes' => [],
+                    'recomendaciones' => [],
+                    'categoria_cargo_id' => $idSubcategoria,
+                    'categoria' => $subcategoria,
+                    'tipo_cargo_id' => $idCategoria,
+                    'tipo_cargo' => $categoria,
+                    'funcion_cargo' => $funcion_cargo
+                ];
+            }
+
+            // Verificar si el examen ya existe en los resultados del cargo
+            if (!in_array($idExamen, array_column($resultados[$idCargo]['examenes'], 'id'))) {
+                $resultados[$idCargo]['examenes'][] = [
+                    'id' => $idExamen,
+                    'nombre' => $examen,
+                ];
+            }
+
+            // Verificar si el requisito ya existe en los resultados del cargo
+            if (!in_array($idRequisito, array_column($resultados[$idCargo]['recomendaciones'], 'id'))) {
+                $resultados[$idCargo]['recomendaciones'][] = [
+                    'id' => $idRequisito,
+                    'recomendacion1' => $recomendacion1,
+                    'recomendacion2' => $recomendacion2,
+                ];
+            }
+        }
+
+        // Resultado: Array final con cargos, exámenes y requisitos sin duplicados
+        $resultados = array_values($resultados);
+        return response()->json($resultados[0]);
+    }
 }
