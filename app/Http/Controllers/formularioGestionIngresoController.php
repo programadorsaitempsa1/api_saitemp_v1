@@ -64,6 +64,7 @@ class formularioGestionIngresoController extends Controller
             ->leftJoin('usr_app_lista_cargos as car', 'car.id', 'cs.cargo_solicitado_id')
             ->leftJoin('usr_app_registro_ingreso_laboraorio as ilab', 'ilab.registro_ingreso_id', 'usr_app_formulario_ingreso.id')
             ->leftJoin('usr_app_ciudad_laboraorio as ciulab', 'ciulab.id', 'ilab.laboratorio_medico_id')
+            ->leftJoin('usr_app_conceptos_medicos as concepto_medico', 'concepto_medico.id', 'usr_app_formulario_ingreso.concepto_medico_id')
             ->when(!in_array('42', $permisos), function ($query) {
                 return $query->where(function ($query) {
                     $query->whereNotIn('cli.nit', ['811025401', '900032514'])
@@ -77,6 +78,7 @@ class formularioGestionIngresoController extends Controller
                 DB::raw("COALESCE(tiser.nombre_servicio, tiser2.nombre_servicio) as nombre_servicio"),
                 'usr_app_formulario_ingreso.updated_at',
                 'usr_app_formulario_ingreso.created_at',
+                'concepto_medico.nombre as concepto_medico',
                 DB::RAW("COALESCE(can1.num_doc,usr_app_formulario_ingreso.numero_identificacion) as numero_identificacion"),
                 DB::raw("COALESCE(usr_app_formulario_ingreso.nombre_completo,CONCAT(
                             ISNULL(can1.primer_apellido, ''), ' ',
@@ -105,6 +107,8 @@ class formularioGestionIngresoController extends Controller
                 'esti.color as color_estado',
                 'cli.contratacion_hora_confirmacion as hora_confirmacion',
                 'usr_app_formulario_ingreso.responsable_id',
+                'concepto_medico.clave as concepto_medico_clave',
+
             )
             ->orderby('usr_app_formulario_ingreso.id', 'DESC')
             ->paginate($cantidad);
