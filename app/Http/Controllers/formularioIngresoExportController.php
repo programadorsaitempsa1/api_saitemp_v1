@@ -10,12 +10,20 @@ use Illuminate\Support\Facades\DB;
 use App\Models\RegistroIngresoLaboratorio;
 use App\Models\FormularioIngresoSeguimiento;
 use App\Models\FormularioIngresoSeguimientoEstado;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\OrdenServicioExport;
+
 
 
 class formularioIngresoExportController extends Controller
 {
     public function export3($cadena)
     {
+
+        ini_set('memory_limit', '2048M');
+
+        // Aumenta el tiempo de ejecución a 5 minutos
+        set_time_limit(300);
 
         $cadenaJSON = base64_decode($cadena);
         $cadenaUTF8 = mb_convert_encoding($cadenaJSON, 'UTF-8', 'ISO-8859-1');
@@ -139,93 +147,168 @@ class formularioIngresoExportController extends Controller
             }
         }
 
-        $resultados = $query->get(); 
+        $resultados = $query->get();
 
-        foreach ($resultados as $item) {
-            $item->fecha_examen = $item->fecha_examen ? date('d/m/Y H:i', strtotime($item->fecha_examen)) : null;
+        // $ids = $resultados->pluck('id')->all();
+        $ids = $resultados->pluck('id');
+        $loteSize = 2000;
+        $chunks = $ids->chunk($loteSize);
+        $allSeguimiento_estados = collect();
+        $allSeguimiento_guardado = collect();
+        $allLaboratorios = collect();
 
-            $laboratorios = RegistroIngresoLaboratorio::join('usr_app_ciudad_laboraorio as ciulab', 'ciulab.id', '=', 'usr_app_registro_ingreso_laboraorio.laboratorio_medico_id')
+        foreach ($chunks as $chunk) {
+            $seguimiento_estados = DB::table('usr_app_formulario_ingreso_seguimiento_estado AS see')
+                ->join('usr_app_estados_ingreso AS ei', 'ei.id', '=', 'see.estado_ingreso_inicial')
+                ->join('usr_app_estados_ingreso AS ef', 'ef.id', '=', 'see.estado_ingreso_final')
+                ->whereIn('see.formulario_ingreso_id', $chunk->all())
+                ->select(
+                    'see.formulario_ingreso_id',
+                    'see.responsable_inicial',
+                    'see.responsable_final',
+                    'ei.nombre AS estado_ingreso_inicial',
+                    'ef.nombre AS estado_ingreso_final',
+                    'see.actualiza_registro',
+                    'see.created_at'
+                )
+                ->orderBy('see.id', 'desc')
+                ->get();
+
+            $allSeguimiento_estados = $allSeguimiento_estados->merge($seguimiento_estados);
+
+            $seguimiento_guardado = DB::table('usr_app_formulario_ingreso_seguimiento as se')
+                ->join('usr_app_estados_ingreso as ei', 'ei.id', '=', 'se.estado_ingreso_id')
+                ->whereIn('se.formulario_ingreso_id', $chunk->all())
+                ->select(
+                    'se.formulario_ingreso_id',
+                    'se.usuario',
+                    'ei.nombre as estado',
+                    'se.created_at',
+
+                )
+                ->orderby('se.id', 'desc')
+                ->get();
+            $allSeguimiento_guardado = $allSeguimiento_guardado->merge($seguimiento_guardado);
+
+
+
+            $laboratorios = DB::table('usr_app_registro_ingreso_laboraorio as lab') //RegistroIngresoLaboratorio::
+                ->join('usr_app_ciudad_laboraorio as ciulab', 'ciulab.id', '=', 'lab.laboratorio_medico_id')
                 ->join('usr_app_municipios as mun', 'mun.id', '=', 'ciulab.ciudad_id')
                 ->join('usr_app_departamentos as dep', 'dep.id', '=', 'mun.departamento_id')
-                ->where('usr_app_registro_ingreso_laboraorio.registro_ingreso_id', '=', $item->id)
+                ->whereIn('lab.registro_ingreso_id', $chunk->all())
                 ->select(
-                    'ciulab.id',
+                    'lab.registro_ingreso_id',
                     'ciulab.laboratorio as nombre',
-                    'mun.id as municipio_id',
                     'mun.nombre as municipio',
-                    'dep.id as departamento_id',
                     'dep.nombre as departamento',
                 )
                 ->get();
-
-            foreach ($laboratorios as $laboratorio) {
-                $item->departamento_lab = $laboratorio->departamento;
-                $item->municipio_lab = $laboratorio->municipio;
-                $item->nombre_lab = $laboratorio->nombre;
-            }
-
-            if ($item->nombre_lab == '') {
-                $item->departamento_lab = ' ';
-                $item->municipio_lab = ' ';
-                $item->nombre_lab = ' ';
-            }
-
-            $seguimiento_estados = FormularioIngresoSeguimientoEstado::join('usr_app_estados_ingreso as ei', 'ei.id', '=', 'usr_app_formulario_ingreso_seguimiento_estado.estado_ingreso_inicial')
-                ->join('usr_app_estados_ingreso as ef', 'ef.id', '=', 'usr_app_formulario_ingreso_seguimiento_estado.estado_ingreso_final')
-                ->where('usr_app_formulario_ingreso_seguimiento_estado.formulario_ingreso_id',  $item->id)
-                ->select(
-                    'usr_app_formulario_ingreso_seguimiento_estado.responsable_inicial',
-                    'usr_app_formulario_ingreso_seguimiento_estado.responsable_final',
-                    'ei.nombre as estado_ingreso_inicial',
-                    'ef.nombre as estado_ingreso_final',
-                    'usr_app_formulario_ingreso_seguimiento_estado.actualiza_registro',
-                    'usr_app_formulario_ingreso_seguimiento_estado.created_at',
-
-
-                )
-                ->orderby('usr_app_formulario_ingreso_seguimiento_estado.id', 'desc')
-                ->get();
-
-            $item->seguimiento_e = '';
-
-            foreach ($seguimiento_estados as $seguimientos_estado) {
-                $fecha_original = $seguimientos_estado->created_at;
-                $fecha = $fecha_original->format('d-m-Y, H:i:s');
-
-                $seguimiento_e = $seguimientos_estado->estado_ingreso_final . "\n" .
-                    $seguimientos_estado->responsable_final . "\n\n" .
-                    '↑ : Fecha: ' . $fecha . "\n\n" .
-                    $seguimientos_estado->estado_ingreso_inicial . "\n" .
-                    $seguimientos_estado->responsable_inicial . "\n\n" . '-----------------------------------------------' . "\n\n";
-
-                $item->seguimiento_e .= $seguimiento_e;
-            }
-
-            $item->espacio1 = ' ';
-
-            $seguimiento = FormularioIngresoSeguimiento::join('usr_app_estados_ingreso as ei', 'ei.id', '=', 'usr_app_formulario_ingreso_seguimiento.estado_ingreso_id')
-                ->where('usr_app_formulario_ingreso_seguimiento.formulario_ingreso_id', $item->id)
-                ->select(
-                    'usr_app_formulario_ingreso_seguimiento.usuario',
-                    'ei.nombre as estado',
-                    'usr_app_formulario_ingreso_seguimiento.created_at',
-
-                )
-                ->orderby('usr_app_formulario_ingreso_seguimiento.id', 'desc')
-                ->get();
-            unset($item->id);
-
-            $item->nuevaVariable = '';
-
-            foreach ($seguimiento as $seguimientos) {
-                $nuevaVariable = $seguimientos->usuario . ' | ' . $seguimientos->estado . ' | ' . $seguimientos->created_at . "\n" . "\n" . "\n";
-                $item->nuevaVariable .= $nuevaVariable;
-            }
-
-            $item->espacio2 = ' ';
+                 $allLaboratorios = $allLaboratorios->merge($laboratorios);
         }
 
+        $data1 = $resultados;
+        $data2 = $allSeguimiento_estados;
+        $data3 = $allSeguimiento_guardado;
+        $data4 = $allLaboratorios;
 
-        return (new FormularioIngresoExport($resultados))->download('exportData.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        // // return  $resultados;
+        return Excel::download(new OrdenServicioExport($data1, $data2, $data3, $data4), 'exporte_multiple.xlsx');
+
+        // 5) Agrupa por formulario para tener un arreglo de seguimientos por ID
+        // $allSeguimientos = $allSeguimientos->groupBy('formulario_ingreso_id');
+
+        // foreach ($resultados as $item) {
+        //     $item->fecha_examen = $item->fecha_examen ? date('d/m/Y H:i', strtotime($item->fecha_examen)) : null;
+
+        // $laboratorios = RegistroIngresoLaboratorio::join('usr_app_ciudad_laboraorio as ciulab', 'ciulab.id', '=', 'usr_app_registro_ingreso_laboraorio.laboratorio_medico_id')
+        //     ->join('usr_app_municipios as mun', 'mun.id', '=', 'ciulab.ciudad_id')
+        //     ->join('usr_app_departamentos as dep', 'dep.id', '=', 'mun.departamento_id')
+        //     ->where('usr_app_registro_ingreso_laboraorio.registro_ingreso_id', '=', $item->id)
+        //     ->select(
+        //         'ciulab.id',
+        //         'ciulab.laboratorio as nombre',
+        //         'mun.id as municipio_id',
+        //         'mun.nombre as municipio',
+        //         'dep.id as departamento_id',
+        //         'dep.nombre as departamento',
+        //     )
+        //     ->get();
+
+        // foreach ($laboratorios as $laboratorio) {
+        //     $item->departamento_lab = $laboratorio->departamento;
+        //     $item->municipio_lab = $laboratorio->municipio;
+        //     $item->nombre_lab = $laboratorio->nombre;
+        // }
+
+        // if ($item->nombre_lab == '') {
+        //     $item->departamento_lab = ' ';
+        //     $item->municipio_lab = ' ';
+        //     $item->nombre_lab = ' ';
+        // }
+
+        // $seguimiento_estados = FormularioIngresoSeguimientoEstado::join('usr_app_estados_ingreso as ei', 'ei.id', '=', 'usr_app_formulario_ingreso_seguimiento_estado.estado_ingreso_inicial')
+        //     ->join('usr_app_estados_ingreso as ef', 'ef.id', '=', 'usr_app_formulario_ingreso_seguimiento_estado.estado_ingreso_final')
+        //     ->whereIn('usr_app_formulario_ingreso_seguimiento_estado.formulario_ingreso_id',  $ids)
+        //     ->select(
+        //         'formulario_ingreso_id',
+        //         'usr_app_formulario_ingreso_seguimiento_estado.responsable_inicial',
+        //         'usr_app_formulario_ingreso_seguimiento_estado.responsable_final',
+        //         'ei.nombre as estado_ingreso_inicial',
+        //         'ef.nombre as estado_ingreso_final',
+        //         'usr_app_formulario_ingreso_seguimiento_estado.actualiza_registro',
+        //         'usr_app_formulario_ingreso_seguimiento_estado.created_at',
+
+
+        //     )
+        //     ->orderby('usr_app_formulario_ingreso_seguimiento_estado.id', 'desc')
+        //     ->get();
+
+        // $item->seguimiento_e = '';
+
+        // foreach ($seguimiento_estados as $seguimientos_estado) {
+        //     $fecha_original = $seguimientos_estado->created_at;
+        //     $fecha = $fecha_original->format('d-m-Y, H:i:s');
+
+        //     $seguimiento_e = $seguimientos_estado->estado_ingreso_final . "\n" .
+        //         $seguimientos_estado->responsable_final . "\n\n" .
+        //         '↑ : Fecha: ' . $fecha . "\n\n" .
+        //         $seguimientos_estado->estado_ingreso_inicial . "\n" .
+        //         $seguimientos_estado->responsable_inicial . "\n\n" . '-----------------------------------------------' . "\n\n";
+
+        //     $item->seguimiento_e .= $seguimiento_e;
+        // }
+
+        // $item->espacio1 = ' ';
+
+        // $seguimiento = FormularioIngresoSeguimiento::join('usr_app_estados_ingreso as ei', 'ei.id', '=', 'usr_app_formulario_ingreso_seguimiento.estado_ingreso_id')
+        //     ->where('usr_app_formulario_ingreso_seguimiento.formulario_ingreso_id', $item->id)
+        //     ->select(
+        //         'usr_app_formulario_ingreso_seguimiento.usuario',
+        //         'ei.nombre as estado',
+        //         'usr_app_formulario_ingreso_seguimiento.created_at',
+
+        //     )
+        //     ->orderby('usr_app_formulario_ingreso_seguimiento.id', 'desc')
+        //     ->get();
+        // unset($item->id);
+
+        // $item->nuevaVariable = '';
+
+        // foreach ($seguimiento as $seguimientos) {
+        //     $nuevaVariable = $seguimientos->usuario . ' | ' . $seguimientos->estado . ' | ' . $seguimientos->created_at . "\n" . "\n" . "\n";
+        //     $item->nuevaVariable .= $nuevaVariable;
+        // }
+
+        // $item->espacio2 = ' ';
+        // }
+
+        // $data1 = collect([$resultados]);
+        // $data2 = collect([$allSeguimientos]);
+
+        // // // return  $resultados;
+        // return Excel::download(new OrdenServicioExport($data1, $data2), 'exporte_multiple.xlsx');
+
+        // return (new FormularioIngresoExport($resultados))->download('exportData.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 }

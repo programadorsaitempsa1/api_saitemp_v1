@@ -7,10 +7,11 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 
-class FormularioIngresoExport implements FromCollection, WithStyles, ShouldAutoSize,WithHeadings
+class FormularioIngresoExport implements FromCollection, WithStyles, ShouldAutoSize,WithHeadings, WithTitle
 {
 
     use Exportable;
@@ -20,6 +21,11 @@ class FormularioIngresoExport implements FromCollection, WithStyles, ShouldAutoS
     public function __construct($exportData = null)
     {
         $this->exportData = $exportData;
+    }
+
+    public function title(): string
+    {
+        return 'Orden de servicio';
     }
 
 
