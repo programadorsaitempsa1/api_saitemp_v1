@@ -17,6 +17,7 @@ class FormularioIngresoTipoServicioController extends Controller
         $result = FormularioIngresoTipoServicio::select(
             'id',
             'nombre_servicio as nombre',
+            'clave',
         )
             ->get();
         return response()->json($result);

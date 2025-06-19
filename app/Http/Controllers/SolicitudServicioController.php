@@ -90,6 +90,9 @@ class SolicitudServicioController extends Controller
         $result = SolicitudServicioModel::leftJoin('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_solicitud_servicio.linea_servicio_id')
             ->leftJoin('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_solicitud_servicio.motivo_servicio_id')
             ->leftJoin('usr_app_estado_servicio as est', 'est.id', '=', 'usr_app_solicitud_servicio.estado_servicio_id')
+            ->leftJoin('usr_app_municipios as mun', 'mun.id', '=', 'usr_app_solicitud_servicio.ciudad_prestacion_servicio_id')
+            ->leftJoin('usr_app_departamentos as dep', 'dep.id', '=', 'mun.departamento_id')
+            ->leftJoin('usr_app_lista_cargos as car', 'car.id', '=', 'usr_app_solicitud_servicio.cargo_solicitado_id')
             ->where('usr_app_solicitud_servicio.id', '=', $id)
             ->select(
                 'usr_app_solicitud_servicio.id',
@@ -101,6 +104,7 @@ class SolicitudServicioController extends Controller
                 'usr_app_solicitud_servicio.fecha_acuerdo_fin',
                 'ts.nombre_servicio as linea_servicio',
                 'ts.id as linea_servicio_id',
+                'ts.clave as linea_servicio_clave',
                 'ms.nombre as motivo_servicio',
                 'usr_app_solicitud_servicio.motivo_servicio_id',
                 'usr_app_solicitud_servicio.cantidad_contrataciones',
@@ -116,6 +120,17 @@ class SolicitudServicioController extends Controller
                 'usr_app_solicitud_servicio.descripcion_cancelacion',
                 'usr_app_solicitud_servicio.usuario_cancela',
                 'usr_app_solicitud_servicio.fecha_cancelacion',
+                'mun.nombre as municipio_prestacion_servicio',
+                'usr_app_solicitud_servicio.ciudad_prestacion_servicio_id',
+                'dep.nombre as departamento_prestacion_servicio',
+                'dep.id as departamento_prestacion_servicio_id',
+                'car.nombre as consulta_cargo_solicitado',
+                'usr_app_solicitud_servicio.cargo_solicitado_id',
+                'usr_app_solicitud_servicio.direccion_presentacion',
+                'usr_app_solicitud_servicio.fecha_hora_ingreso',
+                'usr_app_solicitud_servicio.salario',
+                'usr_app_solicitud_servicio.subsidio_transporte',
+    
             )->first();
         $candidatos = CandidatoSolicitudServicioModel:: //LeftJoin('usr_app_usuarios as us', 'us.id', 'usr_app_candadato_solicitud_servicio.usuario_id')
             // ->leftJoin('usr_app_candidatos_c as can', 'can.usuario_id', 'usr_app_candadato_solicitud_servicio.usuario_id')
@@ -204,6 +219,12 @@ class SolicitudServicioController extends Controller
             $ordenServicio->cantidad_contrataciones = $request->cantidad_contrataciones;
             $ordenServicio->fecha_acuerdo_fin = $request->fecha_acuerdo_fin;
             $ordenServicio->estado_servicio_id = 1;
+            $ordenServicio->cargo_solicitado_id = $request->cargo_solicitado_id;
+            $ordenServicio->ciudad_prestacion_servicio_id = $request->ciudad_prestacion_servicio_id;
+            $ordenServicio->direccion_presentacion = $request->direccion_presentacion;
+            $ordenServicio->fecha_hora_ingreso = Carbon::parse($request->fecha_hora_ingreso)->format('d-m-Y H:i:s');
+            $ordenServicio->salario = $request->salario;
+            $ordenServicio->subsidio_transporte = $request->subsidio_transporte;
             if ($data['tipo_usuario_id'] == '2') { // asignación de servicios cuando lo registra un cliente
                 $responsable = $this->asignacionAutomatica($tipo_responsable, $request->sector_economico);
                 if (isset($responsable[0]) && $responsable[0] === 'error') {
