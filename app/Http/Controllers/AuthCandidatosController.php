@@ -273,7 +273,7 @@ class AuthCandidatosController extends Controller
         // Generar token
         $resetUrl = $urlFront . "/logincandidatos?token=$token&email={$user->email}";
         /*    $resetUrl = $urlFront . "/logincandidatos"; */
-        $subject = 'Bienvenido al portal Saitemp';
+        $subject = 'Bienvenido(a) al portal Saitemp';
         $nomb_membrete = 'Informe de servicio';
         $nombre = ucwords(strtolower($candidato->primer_nombre));
 
