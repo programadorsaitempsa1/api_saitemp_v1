@@ -832,6 +832,7 @@ Route::group([
   Route::get('/ordenserviciofiltro/{cadena}/{cantidad}', [SolicitudServicioController::class, 'filtro']);
   Route::post('/ordenservicio/{id}', [SolicitudServicioController::class, 'update']);
   Route::get('/ordenservicioseiya/{id}', [SolicitudServicioController::class, 'ordenservicioseiya']);
+  Route::get('/ordenservicioseiyaseleccion', [SolicitudServicioController::class, 'ordenServicioSeleccionbyPro']);
   // Route::post('/cargamasivaservicio/{id}', [OrdenServiciolienteController::class, 'cargamasivaservicio']);
 
 

@@ -3152,9 +3152,9 @@ class formularioGestionIngresoController extends Controller
     public function formularioingresoservicioCandidatoUnico(Request $request, $orden_servicio_candidato_id)
     {
         set_time_limit(0);
-        $ordenServicioCandidato = CandidatoServicioModel::find($orden_servicio_candidato_id);
-        $OrdenServiciolienteController = new OrdenServiciolienteController;
-        $ordenServicio = $OrdenServiciolienteController->byid($request->id_servicio)->getData();
+        $ordenServicioCandidato = CandidatoSolicitudServicioModel::find($orden_servicio_candidato_id);
+        $SolicitudServiciolienteController = new SolicitudServicioController;
+        $solicitud_servicio = $SolicitudServiciolienteController->byid($request->id_servicio)->getData();
         $RecepcionEmpleadoController = new RecepcionEmpleadoController;
         $candidato = $RecepcionEmpleadoController->searchByIdOnUsuariosCandidato($ordenServicioCandidato->usuario_id)->getData();
         $nombre_completo = $candidato->primer_nombre . " " . $candidato->primer_apellido;
@@ -3169,21 +3169,21 @@ class formularioGestionIngresoController extends Controller
             /* $result->correo_notificacion_usuario = $candidato->email; */
             /* $result->tipo_documento_id = $candidato->tip_doc_id; */
             /* $result->numero_contacto = $candidato->celular; */
-            $result->cliente_id = $ordenServicio->cliente_id;
-            $result->cargo = $ordenServicio->cargo_solicitado;
-            $result->salario = $ordenServicio->salario;
-            $result->municipio_id = $ordenServicio->ciudad_prestacion_servicio_id;
+            $result->cliente_id = $solicitud_servicio->cliente_id;
+            $result->cargo = $solicitud_servicio->consulta_cargo_solicitado;
+            $result->salario = $solicitud_servicio->salario;
+            $result->municipio_id = $solicitud_servicio->ciudad_prestacion_servicio_id;
             $result->estado_ingreso_id = $request->estado_id;
             $result->responsable = $request->nombre_responsable;
-            $result->tipo_servicio_id = $ordenServicio->linea_servicio_id;
+            $result->tipo_servicio_id = $solicitud_servicio->linea_servicio_id;
             $result->informe_seleccion = $candidato->concepto;
-            $result->profesional = $ordenServicio->responsable;
-            $result->contacto_empresa = $ordenServicio->telefono_contacto;
+            $result->profesional = $solicitud_servicio->responsable;
+            $result->contacto_empresa = $solicitud_servicio->telefono_contacto;
             $result->responsable_id = $request->responsable_id;
             /*  $result->nombre_completo = $nombre_completo;
             $result->numero_identificacion = $candidato->num_doc; */
             $result->candidato_id = $candidato->usuario_id;
-            $result->n_servicio = $ordenServicio->numero_radicado;
+            $result->n_servicio = $solicitud_servicio->numero_radicado;
             $result->save();
 
 
@@ -3207,10 +3207,11 @@ class formularioGestionIngresoController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollback();
+            return $e;
             return response()->json(['status' => 'error', 'message' => 'Error al guardar formulario, por favor intente nuevamente']);
         }
 
-        $orden_servicio = OrdenServcio::where('id', '=', $ordenServicio->id)->first();
+        $orden_servicio = OrdenServcio::where('id', '=', $solicitud_servicio->id)->first();
         $numero_radicados_seiya = $orden_servicio->numero_radicados_seiya;
         $orden_servicio->numero_radicados_seiya = $numero_radicados_seiya + 1;
         $orden_servicio->save();
