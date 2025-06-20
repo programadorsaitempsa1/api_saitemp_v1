@@ -130,7 +130,7 @@ class SolicitudServicioController extends Controller
                 'usr_app_solicitud_servicio.fecha_hora_ingreso',
                 'usr_app_solicitud_servicio.salario',
                 'usr_app_solicitud_servicio.subsidio_transporte',
-    
+
             )->first();
         $candidatos = CandidatoSolicitudServicioModel:: //LeftJoin('usr_app_usuarios as us', 'us.id', 'usr_app_candadato_solicitud_servicio.usuario_id')
             // ->leftJoin('usr_app_candidatos_c as can', 'can.usuario_id', 'usr_app_candadato_solicitud_servicio.usuario_id')
@@ -303,13 +303,13 @@ class SolicitudServicioController extends Controller
         return response()->json(["status" => "success", "message" => "Asignación realizada de manera exitosa."]);
     }
 
-    public function candidatoRegistradoServicio(array $candidato, string $ordenServicio_id)
+    public function candidatoRegistradoServicio(array $candidato, string $ordenServicio_id, $fromCandidato = false)
     {
 
         try {
-            if (!empty($candidato['usuario_id'])) {
+            if (!empty($candidato['usuario_id']) && !$fromCandidato) {
                 $candidato_servicio = CandidatoSolicitudServicioModel::where('id', $candidato['candidato_id'])->first();
-            } else {
+            } else if (empty($candidato['usuario_id']) || $fromCandidato) {
                 $candidato_servicio = new CandidatoSolicitudServicioModel;
             }
             $candidato_servicio->servicio_id = $ordenServicio_id;
@@ -329,7 +329,15 @@ class SolicitudServicioController extends Controller
             $candidato_servicio->ciudad_prestacion_servicio_id = $candidato['ciudad_prestacion_servicio_id'];
             $candidato_servicio->whatsapp = $candidato['whatsapp'];
             $candidato_servicio->save();
+            if ($fromCandidato) {
+                $candidato_servicio->cargo_solicitado_id = $candidato['cargo_solicitado_id'];
+                $candidato_servicio->estado_candidato_id = $candidato['estado_candidato_id'];
+                $candidato_servicio->save();
+            }
             DB::commit();
+            if ($fromCandidato) {
+                return $candidato_servicio->id;
+            }
         } catch (\Exception $e) {
             DB::rollBack();
             return $e;
@@ -705,5 +713,53 @@ class SolicitudServicioController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function ordenServicioSeleccionbyPro()
+    {
+
+        $user = $this->getUserRelaciones();
+        $data = $user->getData(true);
+        $tipo_usuario = $data['tipo_usuario_id'];
+        $nit = null;
+        $usuario_id = null;
+        if (isset($data['id'])) {
+            $usuario_id = $data['id'];
+        }
+        if (isset($data['nit'])) {
+            $nit = $data['nit'];
+        }
+
+        $permisos = $this->permisos();
+
+        $result = SolicitudServicioModel::leftjoin('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_solicitud_servicio.linea_servicio_id')
+            ->leftjoin('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_solicitud_servicio.motivo_servicio_id')
+            ->leftjoin('usr_app_clientes as cli', 'cli.id', '=', 'usr_app_solicitud_servicio.cliente_id')
+            ->leftjoin('usr_app_lista_cargos as car', 'car.id', '=', 'usr_app_solicitud_servicio.cargo_solicitado_id')
+            ->when($tipo_usuario == '2', function ($query) use ($nit) {
+                return $query->where('usr_app_solicitud_servicio.nit', $nit);
+            })
+            ->when($tipo_usuario == '1' && !in_array('46', $permisos), function ($query) use ($usuario_id) {
+                return $query->where('usr_app_solicitud_servicio.responsable_id', $usuario_id);
+            })->where('ts.clave', 'seleccion');
+        if ($tipo_usuario == '1') {
+            $result->select(
+                'usr_app_solicitud_servicio.id',
+                DB::raw("CONCAT(usr_app_solicitud_servicio.numero_radicado, ' - ', car.nombre) as numero_radicado"),
+                'usr_app_solicitud_servicio.created_at',
+                'cli.razon_social',
+                'usr_app_solicitud_servicio.nit',
+                'usr_app_solicitud_servicio.responsable as responsable_servicio',
+                'usr_app_solicitud_servicio.radicador',
+                'usr_app_solicitud_servicio.fecha_fin',
+                'ts.nombre_servicio as linea_servicio',
+                'ms.nombre as motivo_servicio',
+                'usr_app_solicitud_servicio.cantidad_contrataciones',
+                'car.nombre as cargo_solicitado'
+            );
+        }
+        $result = $result->orderBy('usr_app_solicitud_servicio.id', 'DESC')->get();
+
+        return response()->json($result);
     }
 }

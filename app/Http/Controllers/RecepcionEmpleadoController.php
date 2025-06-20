@@ -21,9 +21,11 @@ use App\Models\CandidatoServicioModel;
 use App\Models\CandidatoSolicitudServicioModel;
 use Illuminate\Support\Str;
 use App\Models\CandidatosRequisitosModel;
+use App\Models\EstadoCandidatoServicioModel;
 use App\Models\HistoricoConceptosCandidatosModel;
 use App\Traits\AutenticacionGuard;
 use App\Models\HabilidadesCandidatosModel;
+use App\Models\SolicitudServicioModel;
 
 class RecepcionEmpleadoController extends Controller
 {
@@ -856,13 +858,34 @@ class RecepcionEmpleadoController extends Controller
         DB::beginTransaction();
         try {
             $candidato = UsuariosCandidatosModel::find($request->id_candidato);
+            $servicio = SolicitudServicioModel::find($request->id_servicio);
+            $estado_candidato = EstadoCandidatoServicioModel::where('usr_app_estado_candidato_servicio.clave', 'radicado')->first();
             if (isset($candidato)) {
                 $validarCandidato = $this->validacandidato($candidato->num_doc, 0, $candidato->tip_doc_id, false);
                 $validarCandidato = $validarCandidato->getData(true);
                 if ($validarCandidato['status'] == 'success') {
                     //guardar orden de servicio
-                    $ordenServiciolienteController = new OrdenServiciolienteController;
-                    $ordenServicioCandidato = $ordenServiciolienteController->candidatoRegistradoServicio($candidato->usuario_id, $request->id_servicio, 14, true);
+                    $candidatoArray = [
+                        'candidato_id' => $candidato->id,
+                        'usuario_id' => $candidato->usuario_id,
+                        'tipo_identificacion_id' => $candidato->tip_doc_id,
+                        'numero_documento_candidato' => $candidato->num_doc,
+                        'nombre_candidato' => $candidato->primer_nombre . " " . $candidato->segundo_nombre, // o como se llame en tu modelo
+                        'apellido_candidato' => $candidato->primer_apellido . " " . $candidato->segundo_apellido, // idem
+                        'celular_candidato' => $candidato->celular,
+                        'correo_candidato' => $candidato->correo ?? null,
+                        'salario' => $servicio->salario,
+                        'subsidio_transporte' => $servicio->subsidio_transporte ?? null,
+                        'direccion_presentacion' => $servicio->direccion_presentacion ?? null,
+                        'fecha_ingreso' => $servicio->fecha_hora_ingreso,
+                        'cargo_solicitado_id' => $request->cargo_solicitado_id,
+                        'ciudad_prestacion_servicio_id' => $servicio->ciudad_prestacion_servicio_id,
+                        'whatsapp' => $candidato->whatsapp ?? null,
+                        'cargo_solicitado_id' => $servicio->cargo_solicitado_id,
+                        'estado_candidato_id' => $estado_candidato->id
+                    ];
+                    $SolicitudServiciolienteController = new SolicitudServicioController;
+                    $ordenServicioCandidato = $SolicitudServiciolienteController->candidatoRegistradoServicio($candidatoArray, $request->id_servicio, true);
                     $formularioGestionIngresoController = new formularioGestionIngresoController;
                     $radicadoSeiya = $formularioGestionIngresoController->formularioingresoservicioCandidatoUnico($request, $ordenServicioCandidato)->getData();
                     if ($radicadoSeiya->status == '200') {
@@ -878,8 +901,9 @@ class RecepcionEmpleadoController extends Controller
                     DB::commit();
                 }
             }
-        } catch (\Throwable $th) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+            return $e;
             return response()->json(['status' => 'error', 'message' => 'Error al añadir candidato, por favor intenta nuevamente']);
         }
     }
