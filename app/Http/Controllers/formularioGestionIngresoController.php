@@ -357,6 +357,7 @@ class formularioGestionIngresoController extends Controller
             ->leftJoin('usr_app_formulario_ingreso_tipo_servicio as tiser', 'tiser.id', 'sc.linea_servicio_id')
             ->leftJoin('usr_app_formulario_ingreso_tipo_servicio as tiser2', 'tiser2.id', 'usr_app_formulario_ingreso.tipo_servicio_id')
             ->leftJoin('usr_app_lista_cargos as car', 'car.id', 'cs.cargo_solicitado_id')
+            ->leftJoin('usr_app_subestados_orden_servicio as sub', 'sub.id', 'usr_app_formulario_ingreso.subestado_id')
             ->where('usr_app_formulario_ingreso.id', '=', $id)
             ->select(
                 'historico_candidatos.id as historico_candidatos_id',
@@ -424,6 +425,11 @@ class formularioGestionIngresoController extends Controller
                 'usr_app_formulario_ingreso.responsable_corregir',
                 'usr_app_formulario_ingreso.nc_hora_cierre',
                 'usr_app_formulario_ingreso.candidato_servicio_id',
+                'cs.whatsapp',
+                'sub.nombre as subestado',
+                'sub.id as subestado_id',
+                'sc.id as servicio_id',
+                'cs.usuario_id as candidato_id',
             )
             ->first();
 
@@ -2228,7 +2234,9 @@ class formularioGestionIngresoController extends Controller
                     $result->nc_hora_cierre = 'Servicio no conforme';
                 }
 
-
+                if ($request->subestado_id != null) {
+                    $result->subestado_id = $request->subestado_id;
+                }
 
                 if ($candidatos[$i]['en_proceso'] != '1') {
                     $result->candidato_servicio_id = $candidatos[$i]['candidato_id'];
@@ -2559,6 +2567,10 @@ class formularioGestionIngresoController extends Controller
                     $historico_concepto->tipo = 1;
                     $historico_concepto->save();
                 }
+            }
+
+            if ($request->subestado_id != null) {
+                $result->subestado_id = $request->subestado_id;
             }
 
             if ($request->proceso_snc_id != 1) {

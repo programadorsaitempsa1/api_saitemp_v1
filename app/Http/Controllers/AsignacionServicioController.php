@@ -15,6 +15,7 @@ use App\Models\EstadoServicioModel;
 use App\Models\estadosIngreso;
 use App\Models\EstadoCandidatoServicioModel;
 use App\Models\SolicitudServicioModel;
+use App\Models\EstadoCandidatoServioOrdenServicioModel;
 use Illuminate\Support\Facades\DB;
 use App\Traits\AutenticacionGuard;
 use Illuminate\Support\Carbon;
@@ -105,7 +106,11 @@ class AsignacionServicioController extends Controller
 
     public function cancelacandidatoservicio(Request $request, $servicio_id, $candidato_id)
     {
+
+        // TODO:
+        // formularioGestionIngreso
         try {
+            DB::beginTransaction();
             $fecha_actual =  Carbon::now();
             $result = $this->getUserRelaciones();
             $usuario = $result->getdata(true);
@@ -116,12 +121,18 @@ class AsignacionServicioController extends Controller
             $candidato->motivo_cancelacion =  $request->motivo_cancelacion_id;
             $candidato->descripcion_cancelacion =  $request->descripcion_cancelacion;
             $candidato->estado_candidato_id = $estado_candidato->id; // se coloca el registro en estado cancelado
-            if ($candidato->save()) {
-                return response()->json(["status" => "success", "message" => "Candidato cancelado de manera exitosa"]);
+            $estado_candidato_relacional = EstadoCandidatoServioOrdenServicioModel::where('estado_candidato_servicio_id', $estado_candidato->id)->first();
+            if ($estado_candidato_relacional) {
+                $orden_servicio = formularioGestionIngreso::where('candidato_servicio_id', $candidato->id)->first();
+                $orden_servicio->estado_ingreso_id = $estado_candidato_relacional->estado_orden_servicio_id;
+                $orden_servicio->save();
             }
+            $candidato->save();
+            DB::commit();
+            return response()->json(["status" => "success", "message" => "Candidato cancelado de manera exitosa"]);
         } catch (\Exception $e) {
-            return $e;
             return response()->json(["status" => "error", "message" => "Hubo un error al caneclar el candidato, por favor intente nuevamente"]);
+             DB::rollBack();
         }
     }
 

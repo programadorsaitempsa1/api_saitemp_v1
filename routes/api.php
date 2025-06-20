@@ -197,6 +197,7 @@ use App\Http\Controllers\EstadoCandidatoServioOrdenServicioController;
 use App\Http\Controllers\HabilidadesCandidatosController;
 use App\Http\Controllers\NovedadesDDController;
 use App\Http\Controllers\AsignacionEstadosController;
+use App\Http\Controllers\SubestadoOrdenServivicioController;
 
 
 /*
@@ -1237,7 +1238,8 @@ Route::group([
 
   Route::get('/asignacionestados', [AsignacionEstadosController::class, 'index']);
   Route::put('/asignacionestados', [AsignacionEstadosController::class, 'update']);
-
+  
+  Route::get('/ordenserviciosubestado', [SubestadoOrdenServivicioController::class, 'index']);
 
 
 
