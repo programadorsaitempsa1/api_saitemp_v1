@@ -3184,6 +3184,7 @@ class formularioGestionIngresoController extends Controller
             $result->numero_identificacion = $candidato->num_doc; */
             $result->candidato_id = $candidato->usuario_id;
             $result->n_servicio = $solicitud_servicio->numero_radicado;
+            $result->candidato_servicio_id = $orden_servicio_candidato_id;
             $result->save();
 
 
