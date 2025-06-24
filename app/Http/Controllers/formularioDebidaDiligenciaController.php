@@ -2102,7 +2102,7 @@ class formularioDebidaDiligenciaController extends Controller
         }
     }
 
-    public function actualizaestadofirma($item_id, $estado_id, $responsable_id = null,  $responsable_actual = null, $estado_inicial = null)
+    public function actualizaestadofirma($item_id, $estado_id, $responsable_id = null,  $responsable_actual = null, $estado_inicial = null, $validarte = false)
     {
 
         $user = auth()->user();
@@ -2221,10 +2221,12 @@ class formularioDebidaDiligenciaController extends Controller
         // Obtener el registro de ingreso
         $permisos = $this->permisos();
 
-
-        if ($registro_ingreso->responsable_id != null && $registro_ingreso->responsable_id != $user->id && !in_array('34', $permisos)) {
-            return response()->json(['status' => 'error', 'message' => 'Solo el responsable puede realizar esta acción.']);
+        if ($validarte == false) {
+            if ($registro_ingreso->responsable_id != null && $registro_ingreso->responsable_id != $user->id && !in_array('34', $permisos)) {
+                return response()->json(['status' => 'error', 'message' => 'Solo el responsable puede realizar esta acción.']);
+            }
         }
+
 
         // Asignar a cada registro d e ingreso un responsable
         /*   $indiceResponsable = $registro_ingreso->id % $numeroResponsables; // Calcula el índice del responsable basado en el ID del registro
@@ -2237,7 +2239,12 @@ class formularioDebidaDiligenciaController extends Controller
         $seguimiento_estado->estados_firma_inicial = $estado_inicial != null ? $estado_inicial : $registro_ingreso->estado_firma_id;
         $seguimiento_estado->estados_firma_final =   $estado_id;
         $seguimiento_estado->cliente_id =  $item_id;
-        $seguimiento_estado->actualiza_registro =   $user->nombres . ' ' .  $user->apellidos;
+        if ($validarte == true) {
+            $seguimiento_estado->actualiza_registro =  "validarte";
+        } else {
+
+            $seguimiento_estado->actualiza_registro =   $user->nombres . ' ' .  $user->apellidos;
+        }
         $seguimiento_estado->oportuno = "2";
         $seguimiento_estado->save();
 
@@ -2254,6 +2261,7 @@ class formularioDebidaDiligenciaController extends Controller
 
         return response()->json(['status' => 'error', 'message' => 'Error al actualizar registro.']);
     }
+
 
     public function actualizaResponsableCliente($item_id, $responsable_id, $nombre_responsable)
     {

@@ -22,14 +22,14 @@ class ApiFirmaElectronicaController extends Controller
     public function takeTokenValidart()
     {
         $usuario = Config::get('app.USUARIO_VALIDART');
-        $password =  Config::get('app.PASSWORD_VALIDART');
+        $password = Config::get('app.PASSWORD_VALIDART');
         $url_validart = Config::get('app.VALIDART_URL');
         $datos = [
             "username" => $usuario,
             "password" => $password
         ];
-        try {
 
+        try {
             $response = Http::post($url_validart . '/api/users/authenticate', $datos);
             if ($response->successful()) {
                 return [
@@ -37,16 +37,17 @@ class ApiFirmaElectronicaController extends Controller
                     'token' => $response->json()
                 ];
             } else {
-                return response()->json([
+                return [
                     'status' => 'error',
-                    'message' => $response->body()
-                ], $response->status());
+                    'message' => $response->body(),
+                    'http_status' => $response->status()
+                ];
             }
         } catch (\Exception $e) {
-            return response()->json([
+            return [
                 'status' => 'error',
                 'message' => $e->getMessage()
-            ], 500);
+            ];
         }
     }
     public function uploadFileValidarT($id)
@@ -160,7 +161,7 @@ class ApiFirmaElectronicaController extends Controller
                 "Firmantes" => $firmantes,
                 "NombreCreador" => "Saitemp S.A",
                 "Notificacion" => "5",
-                "Callback" => "https://contratacion.saitempsa.com/aplicaciones/api/public/api/v1/callBackFirmado",
+                "Callback" => "https://contratacion.saitempsa.com/aplicaciones2/aplicaciones/api/public/api/v1/callBackFirmado",
                 "DiasVence" => "30",
                 "FirmaGrafica" => "0"
             ];
@@ -220,13 +221,14 @@ class ApiFirmaElectronicaController extends Controller
         if ($estado === "true") {
             $url = $request['url'];
             $controllerDD = new formularioDebidaDiligenciaController;
-            $formulario = $controllerDD->getbyid($id, false);
+            $formulario = $controllerDD->getbyid($contrato->cliente_id, false);
             $posicion_estado_firma_actual = $formulario->posicion_estado_firma;
             $posicion_estado_firma_nuevo = $posicion_estado_firma_actual + 1;
             $estadosController = new EstadosFirmaController;
             $estado_firma_nuevo = $estadosController->byOrder($posicion_estado_firma_nuevo);
+
             if ($estado_firma_nuevo) {
-                $controllerDD->actualizaestadofirma($id, $estado_firma_nuevo, null, $formulario->responsable_id, $formulario->estado_firma_id);
+                $controllerDD->actualizaestadofirma($contrato->cliente_id, $estado_firma_nuevo->id, null, $formulario->responsable_id, $formulario->estado_firma_id, true);
             }
             try {
                 // Descargar archivo desde la URL
