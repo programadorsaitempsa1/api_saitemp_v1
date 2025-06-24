@@ -277,7 +277,7 @@ class AuthCandidatosController extends Controller
         $nomb_membrete = 'Informe de servicio';
         $nombre = ucwords(strtolower($candidato->primer_nombre));
 
-        $body = "<h2>Bienvenido $nombre</h2>
+        $body = "<h2>Bienvenido(a) $nombre</h2>
         <brSu cuenta ha sido creada satisfactoriamente<br><br> 
         Para iniciar sesión haz <a href=\"$resetUrl\">clic aquí</a> en donde podrás completar tu hoja de vida.<br><br>
         Cualquier información adicional podrá ser atendida en la línea Servisai de Saitemp S.A. marcando al (604) 4485744. Con gusto uno de nuestros facilitadores atenderá su llamada.<br><br> 
