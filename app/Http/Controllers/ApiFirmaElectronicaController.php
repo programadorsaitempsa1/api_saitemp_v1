@@ -160,7 +160,7 @@ class ApiFirmaElectronicaController extends Controller
                 "Firmantes" => $firmantes,
                 "NombreCreador" => "Saitemp S.A",
                 "Notificacion" => "5",
-                "Callback" => "https://contratacion.saitempsa.com/aplicaciones/api2/public/api/v1/callBackFirmado",
+                "Callback" => "https://contratacion.saitempsa.com/aplicaciones/api/public/api/v1/callBackFirmado",
                 "DiasVence" => "30",
                 "FirmaGrafica" => "0"
             ];
