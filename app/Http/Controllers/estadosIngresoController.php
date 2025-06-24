@@ -129,6 +129,19 @@ class estadosIngresoController extends Controller
         }
     }
 
+     public function borradomasivo(Request $request)
+    {
+        try {
+            for ($i = 0; $i < count($request->id); $i++) {
+                $result = estadosIngreso::where('id', '=', $request->id[$i])->first();
+                $result->delete();
+            }
+            return response()->json(['status' => 'success', 'message' => 'Registros eliminados exitosamente']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Error al eliminar el registro, por favor intente nuevamente']);
+        }
+    }
+
     /**
      * Remove the specified resource from storage.
      *

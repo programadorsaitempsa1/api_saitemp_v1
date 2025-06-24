@@ -1006,6 +1006,9 @@ Route::group([
   Route::post('/estadosingresos', [estadosIngresoController::class, 'create']);
   Route::post('/estadosingresos/{id}', [estadosIngresoController::class, 'update']);
   Route::delete('/estadosingresos/{id}', [estadosIngresoController::class, 'destroy']);
+  Route::post('/estadosingresosborradomasivo', [estadosIngresoController::class, 'borradomasivo']);
+
+
   Route::get('/actualizaestadoingreso/{item}/{estado}', [formularioGestionIngresoController::class, 'actualizaestadoingreso']);
   Route::get('/actualizaResponsableingreso/{item}/{responsable_id}/{nombre}', [formularioGestionIngresoController::class, 'actualizaResponsableingreso']);
   Route::get('/responsableingresos/{estado}', [formularioGestionIngresoController::class, 'responsableingresos']);
