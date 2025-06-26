@@ -15,14 +15,16 @@ class AsignacionEstadosController extends Controller
      */
     public function index()
     {
-        $result = AsignacionEstadosModel::select(
-            'id',
-            'nombre_modulo_solicitd',
-            'nombre_modulo_estados',
-            'descripcion_solicitud',
-            'nombre_tabla',
-            'estado_id',
-            'nombre_endpoint',
+        $result = AsignacionEstadosModel::leftJoin('usr_app_estados_ingreso as est','est.id','usr_app_asignacion_estados.estado_id')
+        ->select(
+            'usr_app_asignacion_estados.id',
+            'usr_app_asignacion_estados.nombre_modulo_solicitd',
+            'usr_app_asignacion_estados.nombre_modulo_estados',
+            'usr_app_asignacion_estados.descripcion_solicitud',
+            'usr_app_asignacion_estados.nombre_tabla',
+            'usr_app_asignacion_estados.estado_id',
+            'est.nombre as estado_orden_servicio',
+            'usr_app_asignacion_estados.nombre_endpoint',
         )->get();
         return response()->json($result);
     }
