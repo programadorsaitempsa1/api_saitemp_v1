@@ -13,6 +13,7 @@ use App\Http\Controllers\formularioDebidaDiligenciaController;
 use App\Http\Controllers\EstadosFirmaController;
 use setasign\Fpdi\Fpdi;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ApiFirmaElectronicaController extends Controller
 
@@ -205,6 +206,10 @@ class ApiFirmaElectronicaController extends Controller
     }
     public function callBackFirmado(Request $request)
     {
+        Log::channel('daily')->info('Callback recibido', [
+            'payload' => $request->all(),
+            'headers' => $request->headers->all()
+        ]);
         $id = $request['id'];
         $contrato = HistoricoContratosDDModel::where('usr_app_historico_contratos_dd.transaccion_id', '=', $id)->where('activo', '=', 1)
             ->first();
