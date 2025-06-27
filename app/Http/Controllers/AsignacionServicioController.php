@@ -16,6 +16,7 @@ use App\Models\estadosIngreso;
 use App\Models\EstadoCandidatoServicioModel;
 use App\Models\SolicitudServicioModel;
 use App\Models\EstadoCandidatoServioOrdenServicioModel;
+use App\Models\AsignacionEstadosModel;
 use Illuminate\Support\Facades\DB;
 use App\Traits\AutenticacionGuard;
 use Illuminate\Support\Carbon;
@@ -79,17 +80,18 @@ class AsignacionServicioController extends Controller
             $orden_servicio->motivo_cancelacion =  $request->motivo_cancelacion_id;
             $orden_servicio->descripcion_cancelacion =  $request->descripcion_cancelacion;
             $orden_servicio->estado_servicio_id = $estado_solicitud_servicio->id; // se coloca el registro en estado cancelado
-
-            $candidatos_servicio = CandidatoServicioModel::where('servicio_id', '=', $id)->select()->get();
+           
+            $candidatos_servicio = CandidatoSolicitudServicioModel::where('servicio_id', '=', $id)->select()->get();
             $estado_candidato = EstadoCandidatoServicioModel::where('clave', '=', 'cancelado')->first();
 
-            $estado_orden_servicio = estadosIngreso::where('clave', '=', 'cancelado')->first();
+            $estado_orden_servicio = AsignacionEstadosModel::where('clave', '=', 'cancela_solicitud_servicio')->first();
+
             foreach ($candidatos_servicio as $candidato) {
-                $candidato->estado_id = $estado_candidato->id;
+                $candidato->estado_candidato_id = $estado_candidato->id;
                 $candidato->save();
-                $candidatos_seiya = formularioGestionIngreso::where('n_servicio', '=', $orden_servicio->numero_radicado)->where('candidato_id', '=', $candidato->usuario_id)->select()->get();
+                $candidatos_seiya = formularioGestionIngreso::where('n_servicio', '=', $orden_servicio->numero_radicado)->select()->get();
                 foreach ($candidatos_seiya as $candidato) {
-                    $candidato->estado_ingreso_id = $estado_orden_servicio->id;
+                    $candidato->estado_ingreso_id = $estado_orden_servicio->estado_id;
                     $candidato->save();
                 }
             }
