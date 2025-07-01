@@ -80,7 +80,7 @@ class AsignacionServicioController extends Controller
             $orden_servicio->motivo_cancelacion =  $request->motivo_cancelacion_id;
             $orden_servicio->descripcion_cancelacion =  $request->descripcion_cancelacion;
             $orden_servicio->estado_servicio_id = $estado_solicitud_servicio->id; // se coloca el registro en estado cancelado
-           
+
             $candidatos_servicio = CandidatoSolicitudServicioModel::where('servicio_id', '=', $id)->select()->get();
             $estado_candidato = EstadoCandidatoServicioModel::where('clave', '=', 'cancelado')->first();
 
@@ -134,7 +134,7 @@ class AsignacionServicioController extends Controller
             return response()->json(["status" => "success", "message" => "Candidato cancelado de manera exitosa"]);
         } catch (\Exception $e) {
             return response()->json(["status" => "error", "message" => "Hubo un error al caneclar el candidato, por favor intente nuevamente"]);
-             DB::rollBack();
+            DB::rollBack();
         }
     }
 
@@ -193,8 +193,8 @@ class AsignacionServicioController extends Controller
     public function responsableservicio($id)
     {
         $result = cliente::join('usr_app_actividades_ciiu as ac', 'ac.id', '=', 'usr_app_clientes.actividad_ciiu_id')
-            ->join('usr_app_codigos_ciiu as cc', 'cc.id', '=', 'ac.codigo_ciiu_id')
-            ->join('usr_app_sector_economico as se', 'se.id', '=', 'cc.sector_economico_id')
+            ->leftjoin('usr_app_codigos_ciiu as cc', 'cc.id', '=', 'ac.codigo_ciiu_id')
+            ->leftjoin('usr_app_sector_economico as se', 'se.id', '=', 'cc.sector_economico_id')
             ->where('usr_app_clientes.id', '=', $id)
             ->select(
                 'usr_app_clientes.id',

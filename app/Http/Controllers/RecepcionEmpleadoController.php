@@ -553,7 +553,7 @@ class RecepcionEmpleadoController extends Controller
 
 
         $historico_conceptos_servicios = CandidatoSolicitudServicioModel::leftjoin(
-            'usr_app_orden_servicio as orden_servicio',
+            'usr_app_solicitud_servicio as orden_servicio',
             'orden_servicio.id',
             '=',
             'usr_app_candadato_solicitud_servicio.servicio_id'
