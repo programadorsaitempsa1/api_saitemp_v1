@@ -2286,7 +2286,7 @@ class formularioGestionIngresoController extends Controller
         }
         DB::commit();
         $numero_radicados_seiya = formularioGestionIngreso::select('id')->where('n_servicio', '=', $request->n_servicio)->get();
-        $orden_servicio = OrdenServcio::where('numero_radicado', '=', $request->n_servicio)->first();
+        $orden_servicio = SolicitudServicioModel::where('numero_radicado', '=', $request->n_servicio)->first();
         $orden_servicio->numero_radicados_seiya = $numero_radicados_seiya->count();
         $orden_servicio->save();
         return response()->json(['status' => '200', 'message' => 'ok', 'registro_ingreso_id' => $ids]);
@@ -3224,7 +3224,7 @@ class formularioGestionIngresoController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Error al guardar formulario, por favor intente nuevamente']);
         }
 
-        $orden_servicio = OrdenServcio::where('id', '=', $solicitud_servicio->id)->first();
+        $orden_servicio = SolicitudServicioModel::where('id', '=', $solicitud_servicio->id)->first();
         $numero_radicados_seiya = $orden_servicio->numero_radicados_seiya;
         $orden_servicio->numero_radicados_seiya = $numero_radicados_seiya + 1;
         $orden_servicio->save();
