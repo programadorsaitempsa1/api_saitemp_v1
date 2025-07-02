@@ -126,6 +126,7 @@ use App\Http\Controllers\ProcesosController;
 use App\Http\Controllers\ClienteInteraccionController;
 use App\Http\Controllers\ArchivosFormularioIngresoController;
 use App\Http\Controllers\AfpFormularioIngresoController;
+use App\Http\Controllers\ApiPilaController;
 use App\Http\Controllers\CargosPlantaController;
 use App\Http\Controllers\formularioGestionIngresoController;
 use App\Http\Controllers\estadosIngresoController;
@@ -1242,7 +1243,7 @@ Route::group([
 
   Route::get('/asignacionestados', [AsignacionEstadosController::class, 'index']);
   Route::put('/asignacionestados', [AsignacionEstadosController::class, 'update']);
-  
+
   Route::get('/ordenserviciosubestado', [SubestadoOrdenServivicioController::class, 'index']);
 
 
@@ -1277,4 +1278,7 @@ Route::group([
   // Route::get('/examen/{cedula}', [ExamenPruebaController::class, 'examen']);
   // Route::get('/examenprueba', [ExamenPruebaController::class, 'create']);
   Route::post('/lovepdf', [PdfEditController::class, 'mergeToA4']);
+
+  //Rutas para la api de PILA
+  Route::post('/consultareferenciaspila', [ApiPilaController::class, 'consultaBdReferencias']);
 });
