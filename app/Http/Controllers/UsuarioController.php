@@ -311,7 +311,7 @@ class UsuarioController extends Controller
             DB::raw("CONCAT(nombres,' ',apellidos)  AS nombre"),
             'correo AS email',
 
-        )->where('rol_usuario_interno_id', 2)
+        )->where('rol_usuario_interno_id', 6)
             ->get();
         return response()->json($result);
     }
@@ -322,7 +322,7 @@ class UsuarioController extends Controller
             'id',
             DB::raw("CONCAT(nombres,' ',apellidos)  AS nombre"),
             'correo AS email',
-        )->where('rol_usuario_interno_id', 1)
+        )->where('rol_usuario_interno_id', 7)
             ->get();
         return response()->json($result);
     }
