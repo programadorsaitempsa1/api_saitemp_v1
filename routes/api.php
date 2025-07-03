@@ -1280,5 +1280,7 @@ Route::group([
   Route::post('/lovepdf', [PdfEditController::class, 'mergeToA4']);
 
   //Rutas para la api de PILA
+
+  Route::get('/consultatokenpila', [ApiPilaController::class, 'getToken']);
   Route::post('/consultareferenciaspila', [ApiPilaController::class, 'consultaBdReferencias']);
 });

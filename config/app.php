@@ -63,6 +63,10 @@ return [
     'CONTRASENA_NO_REPLY' => env('CONTRASENA_NO_REPLY'),
     'CORREO_NO_REPLY' => env('CORREO_NO_REPLY'),
     'CAPTCHA_URL' => env('CAPTCHA_URL'),
+    'PILA_APLICACION' => env('PILA_APLICACION'),
+    'PILA_URL' => env('PILA_URL'),
+    'USUARIO_PILA' => env('USUARIO_PILA'),
+    'PASSWORD_PILA' => env('PASSWORD_PILA'),
 
     /*
     |--------------------------------------------------------------------------
