@@ -52,12 +52,31 @@ class ApiPilaController extends Controller
         $password = Config::get('app.PASSWORD_PILA');
         $url_validart = Config::get('app.PILA_URL');
         $pila_aplicacion = Config::get('app.PILA_APLICACION');
+        $endpoint = "/api/Persona/ConsultarPersonaEnBaseDatosReferencia";
         $takenToken = $this->getToken();
 
         if ($takenToken['status'] == 'success') {
             $token = $takenToken['token']['data'];
+            try {
+                $datos = [
+                    "data" => [
+                        [
+                            "TipoDocumento" => $request->tipo_doc,
+                            "NumeroDocumento" => $request->num_doc,
+                        ]
+                    ]
+                ];
 
-            return $token;
+                $response = Http::withHeaders([
+                    'token' => $token
+                ])->post($url_validart . $endpoint, $datos);
+                return $response;
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
         }
     }
 }
