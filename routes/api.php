@@ -1248,10 +1248,11 @@ Route::group([
   Route::get('/ordenserviciosubestado', [SubestadoOrdenServivicioController::class, 'index']);
 
   // rutas para la relacion facilitador_analista
-  Route::get('/facilitadoranalista', [FacilitadorAnalistaController::class, 'index']);
+  Route::get('/facilitadoranalista/{cantidad}', [FacilitadorAnalistaController::class, 'index']);
   Route::post('/facilitadoranalista', [FacilitadorAnalistaController::class, 'create']);
   Route::delete('/facilitadoranalista/{id}', [FacilitadorAnalistaController::class, 'delete']);
-  Route::get('/facilitadoranalista/{usuario_id}', [FacilitadorAnalistaController::class, 'byUserId']);
+  Route::get('/facilitadoranalistaById/{usuario_id}', [FacilitadorAnalistaController::class, 'byUserId']);
+  Route::get('/facilitadoranalistafiltro/{cadena}/{cantidad}', [FacilitadorAnalistaController::class, 'byUserId']);
   //   EstadoServicioController
   // EstadoCandidatoServicioController
 

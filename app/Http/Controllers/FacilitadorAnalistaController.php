@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class FacilitadorAnalistaController extends Controller
 {
-    public function index()
+    public function index($cantidad)
     {
 
         $result = FacilitadorAnalistaModel::join('usr_app_usuarios as us_facilitador', 'us_facilitador.id', 'usr_app_facilitador_analistas.facilitador_id')
@@ -17,12 +17,13 @@ class FacilitadorAnalistaController extends Controller
             ->join('usr_app_usuarios_internos as ui_analista', 'ui_analista.usuario_id', 'us_analista.id')
             ->select(
                 'usr_app_facilitador_analistas.id',
-                'usr_app_facilitador_analistas.facilitador_id',
-                'usr_app_facilitador_analistas.analista_id',
+                /*         'usr_app_facilitador_analistas.facilitador_id',
+                'usr_app_facilitador_analistas.analista_id', */
                 DB::raw("CONCAT(ui_facilitador.nombres,' ',ui_facilitador.apellidos) AS nombre_facilitador"),
                 DB::raw("CONCAT(ui_analista.nombres,' ',ui_analista.apellidos) AS nombre_analista")
             )
-            ->get();
+            ->orderby('ui_facilitador.nombres')
+            ->paginate($cantidad);
 
         return response()->json($result);
     }

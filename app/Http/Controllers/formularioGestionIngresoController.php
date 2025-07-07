@@ -1222,7 +1222,7 @@ class formularioGestionIngresoController extends Controller
 
                 $pdf->SetFont('helveticaI', 'B', 11);
                 $pdf->SetX(20);
-                $pdf->Cell(95, 10, 'Profesional:', 0, 0, 'L');
+                $pdf->Cell(95, 10, 'Evaluador:', 0, 0, 'L');
                 $pdf->SetFont('helveticaI', '', 11);
 
                 $pdf->Ln(10);
@@ -1279,7 +1279,7 @@ class formularioGestionIngresoController extends Controller
 
                 $pdf->SetFont('helveticaI', 'B', 11);
                 $pdf->SetX($margen_izquierdo);
-                $pdf->Cell(95, 10, 'Profesional:', 0, 0, 'L');
+                $pdf->Cell(95, 10, 'Evaluador:', 0, 0, 'L');
                 $pdf->SetFont('helveticaI', '', 11);
 
                 $pdf->Ln(10);
