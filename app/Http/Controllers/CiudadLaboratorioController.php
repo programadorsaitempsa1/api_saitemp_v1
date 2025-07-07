@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\CiudadLaboratorio;
+use App\Models\Municipios;
 
 class CiudadLaboratorioController extends Controller
 {
@@ -99,5 +100,24 @@ class CiudadLaboratorioController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function rellenarNoAplica()
+    {
+        $municipios = Municipios::select(
+            'id'
+        )
+            ->get();
+        try {
+            foreach ($municipios as $municipio) {
+                $ciudadLaboratorio = new CiudadLaboratorio();
+                $ciudadLaboratorio->ciudad_id = $municipio['id'];
+                $ciudadLaboratorio->laboratorio = "No aplica";
+                $ciudadLaboratorio->save();
+            }
+            return "Proceso creado correctamente";
+        } catch (\Exception $e) {
+            return $e;
+        }
     }
 }

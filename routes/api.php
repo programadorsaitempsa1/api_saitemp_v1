@@ -199,6 +199,7 @@ use App\Http\Controllers\HabilidadesCandidatosController;
 use App\Http\Controllers\NovedadesDDController;
 use App\Http\Controllers\AsignacionEstadosController;
 use App\Http\Controllers\SubestadoOrdenServivicioController;
+use App\Http\Controllers\FacilitadorAnalistaController;
 
 
 /*
@@ -1246,8 +1247,11 @@ Route::group([
 
   Route::get('/ordenserviciosubestado', [SubestadoOrdenServivicioController::class, 'index']);
 
-
-
+  // rutas para la relacion facilitador_analista
+  Route::get('/facilitadoranalista', [FacilitadorAnalistaController::class, 'index']);
+  Route::post('/facilitadoranalista', [FacilitadorAnalistaController::class, 'create']);
+  Route::delete('/facilitadoranalista/{id}', [FacilitadorAnalistaController::class, 'delete']);
+  Route::get('/facilitadoranalista/{usuario_id}', [FacilitadorAnalistaController::class, 'byUserId']);
   //   EstadoServicioController
   // EstadoCandidatoServicioController
 
@@ -1283,4 +1287,5 @@ Route::group([
 
   Route::get('/consultatokenpila', [ApiPilaController::class, 'getToken']);
   Route::post('/consultareferenciaspila', [ApiPilaController::class, 'consultaBdReferencias']);
+  Route::get('/rellenarlaboratorios', [CiudadLaboratorioController::class, 'rellenarNoAplica']);
 });
