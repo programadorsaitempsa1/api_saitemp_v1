@@ -31,13 +31,22 @@ class FacilitadorAnalistaController extends Controller
     public function create(Request $request)
     {
         try {
-            $facilitadorAnalista = new FacilitadorAnalistaModel;
-            $facilitadorAnalista->facilitador_id = $request['facilitador_id'];
-            $facilitadorAnalista->analista_id = $request['analista_id'];
-            $facilitadorAnalista->save();
-            return response()->json(['status' => 'success', 'message' => 'Registro guardado de manera exitosa']);
+            DB::beginTransaction();
+            $usuarios = $request->all();
+            foreach ($usuarios[0] as  $usuarios_facilitadores) {
+                foreach ($usuarios[1] as  $usuarios_analistas) {
+                    $result = new FacilitadorAnalistaModel();
+                    $result->facilitador_id = $usuarios_facilitadores['id'];
+                    $result->analista_id = $usuarios_analistas['id'];
+                    $result->save();
+                }
+            }
+            DB::commit();
+            return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => 'Error al guardar el formulario, por favor intenta nuevamente']);
+            DB::rollback();
+            return $e;
+            return response()->json(['status' => 'error', 'message' => 'ya existe uno de los estados ingresados.']);
         }
     }
 
