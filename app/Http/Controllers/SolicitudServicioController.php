@@ -43,6 +43,11 @@ class SolicitudServicioController extends Controller
 
         $permisos = $this->permisos();
 
+        // Paso 1: Buscar si el usuario es analista
+        $facilitadores = DB::table('usr_app_facilitador_analistas')
+            ->where('analista_id', $usuario_id)
+            ->pluck('facilitador_id');
+
         $result = SolicitudServicioModel::join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_solicitud_servicio.linea_servicio_id')
             ->join('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_solicitud_servicio.motivo_servicio_id')
             ->join('usr_app_clientes as cli', 'cli.id', '=', 'usr_app_solicitud_servicio.cliente_id')
@@ -52,6 +57,15 @@ class SolicitudServicioController extends Controller
             ->when($tipo_usuario == '1' && !in_array('46', $permisos), function ($query) use ($usuario_id) {
                 return $query->where('usr_app_solicitud_servicio.responsable_id', $usuario_id);
             });
+
+        // Paso 2: Si el usuario es analista y tiene facilitadores asociados, agregar filtro adicional
+        if (!$facilitadores->isEmpty()) {
+            $result->orWhere(function ($query) use ($facilitadores) {
+                $query->whereIn('usr_app_solicitud_servicio.responsable_id', $facilitadores);
+            });
+        }
+
+        // SELECTS por tipo de usuario
         if ($tipo_usuario == '1') {
             $result->select(
                 'usr_app_solicitud_servicio.id',
@@ -67,6 +81,7 @@ class SolicitudServicioController extends Controller
                 'usr_app_solicitud_servicio.cantidad_contrataciones',
             );
         }
+
         if ($tipo_usuario == '2') {
             $result->select(
                 'usr_app_solicitud_servicio.id',
@@ -78,6 +93,7 @@ class SolicitudServicioController extends Controller
                 'usr_app_solicitud_servicio.cantidad_contrataciones',
             );
         }
+
         $result = $result->orderBy('usr_app_solicitud_servicio.id', 'DESC')
             ->paginate($cantidad);
 
