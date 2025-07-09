@@ -340,7 +340,8 @@ class SolicitudServicioController extends Controller
             $candidato_servicio->salario = $candidato['salario'];
             $candidato_servicio->subsidio_transporte = $candidato['subsidio_transporte'];
             $candidato_servicio->direccion_prestacion_servicio = $candidato['direccion_presentacion'];
-            $candidato_servicio->fecha_ingreso = Carbon::parse($candidato['fecha_ingreso'])->format('Y-d-m H:i:s');
+            $candidato_servicio->hora_ingreso = $candidato['hora_ingreso'];
+            $candidato_servicio->fecha_ingreso = Carbon::parse($candidato['fecha_ingreso'])->format('Y-d-m');
             $candidato_servicio->cargo_solicitado_id = $candidato['cargo_solicitado_id'];
             $candidato_servicio->ciudad_prestacion_servicio_id = $candidato['ciudad_prestacion_servicio_id'];
             $candidato_servicio->whatsapp = $candidato['whatsapp'];
@@ -418,9 +419,10 @@ class SolicitudServicioController extends Controller
             $candidato->celular_candidato = $usuario['celular_candidato'];
             $candidato->correo_candidato = $usuario['correo_candidato'];
             $candidato->salario = $usuario['salario'];
+            $candidato->hora_ingreso = $usuario['hora_ingreso'];
             $candidato->subsidio_transporte = $usuario['subsidio_transporte'];
             $candidato->direccion_prestacion_servicio = $usuario['direccion_presentacion'];
-            $candidato->fecha_ingreso = Carbon::parse($usuario['fecha_ingreso'])->format('Y-d-m H:i:s');
+            $candidato->fecha_ingreso = Carbon::parse($usuario['fecha_ingreso'])->format('Y-d-m');
             $candidato->cargo_solicitado_id = $usuario['cargo_solicitado_id'];
             $candidato->ciudad_prestacion_servicio_id = $usuario['ciudad_prestacion_servicio_id'];
             $candidato->whatsapp = $usuario['whatsapp'];
