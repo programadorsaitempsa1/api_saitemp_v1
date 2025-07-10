@@ -28,7 +28,8 @@ use Illuminate\Support\Facades\DB;
 use App\Traits\Permisos;
 use App\Traits\AutenticacionGuard;
 use App\Exports\SalidasNoConformeExport;
-
+use App\Models\Cargo2Examen;
+use App\Models\Cargo2;
 
 class formularioGestionIngresoController extends Controller
 {
@@ -433,6 +434,38 @@ class formularioGestionIngresoController extends Controller
             )
             ->first();
 
+        $examenes = Cargo2::leftJoin('usr_app_riesgos_laborales as rl2', 'rl2.id', '=', 'usr_app_cargos2.riesgo_laboral_id')
+            ->leftJoin('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_cargos2.cargo_id')
+            ->leftJoin('usr_app_subcategoria_cargos as sc', 'sc.id', '=', 'lc.subcategoria_cargo_id')
+            ->leftJoin('usr_app_categoria_cargos as cc', 'cc.id', '=', 'sc.categoria_cargo_id')
+            ->leftJoin('usr_app_cargos2_recomendaciones as cr', 'cr.cargo_id', '=', 'usr_app_cargos2.id')
+            ->leftJoin('usr_app_lista_recomendaciones as recom', 'recom.id', '=', 'cr.recomendacion_id')
+            ->leftJoin('usr_app_cargos2_examenes as cx', 'cx.cargo_id', '=', 'usr_app_cargos2.id')
+            ->leftJoin('usr_app_lista_examenes as exam', 'exam.id', '=', 'cx.examen_id')
+            ->where('usr_app_cargos2.cargo_id', $result->cargo_id)
+            ->where('usr_app_cargos2.cliente_id', $result->cliente_id)
+            ->select(
+                'usr_app_cargos2.cargo_id as cargo_id',
+                'lc.nombre as cargo',
+                'lc.subcategoria_cargo_id as categoria_cargo_id',
+                'sc.categoria_cargo_id as tipo_cargo_id',
+                'sc.nombre as categoria',
+                'cc.nombre as tipo_cargo',
+                'usr_app_cargos2.funcion_cargo as funcion_cargo',
+                'usr_app_cargos2.riesgo_laboral_id',
+                'rl2.nombre as riesgo_laboral',
+                'cr.recomendacion_id',
+                'recom.recomendacion1 as recomendacion1',
+                'recom.recomendacion2 as recomendacion2',
+                'cx.examen_id',
+                'exam.nombre as examen',
+
+            )
+
+            ->distinct('exam.nombre as examen')
+            ->get();
+
+        $result['lista_examenes'] = $examenes;
         $laboratorios = RegistroIngresoLaboratorio::join('usr_app_ciudad_laboraorio as ciulab', 'ciulab.id', '=', 'usr_app_registro_ingreso_laboraorio.laboratorio_medico_id')
             ->join('usr_app_municipios as mun', 'mun.id', '=', 'ciulab.ciudad_id')
             ->join('usr_app_departamentos as dep', 'dep.id', '=', 'mun.departamento_id')

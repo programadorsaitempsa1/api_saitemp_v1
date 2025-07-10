@@ -14,11 +14,11 @@ class SolicitudServicioModel extends Model
 
     protected $dateFormat = 'd-m-Y H:i:s';
 
-    public function fromDateTime($value)
+    /*    public function fromDateTime($value)
     {
         // return Carbon::parse(parent::fromDateTime($value))->format('Y-d-m H:i:s');
         return Carbon::parse(parent::fromDateTime($value))->format('Y-d-m');
-    }
+    } */
 
     protected static function boot()
     {

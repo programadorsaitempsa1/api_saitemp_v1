@@ -172,6 +172,7 @@ class SolicitudServicioController extends Controller
                 'usr_app_candadato_solicitud_servicio.numero_documento_identidad as confirma_numero_documento_candidato',
                 'usr_app_candadato_solicitud_servicio.tipo_identificacion_id',
                 'usr_app_candadato_solicitud_servicio.subsidio_transporte',
+                'usr_app_candadato_solicitud_servicio.hora_ingreso',
                 'usr_app_candadato_solicitud_servicio.cargo_solicitado_id',
                 'car.nombre as cargo_solicitado',
                 'usr_app_candadato_solicitud_servicio.whatsapp',
