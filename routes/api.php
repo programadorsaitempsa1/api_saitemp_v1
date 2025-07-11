@@ -1288,5 +1288,6 @@ Route::group([
 
   Route::get('/consultatokenpila', [ApiPilaController::class, 'getToken']);
   Route::post('/consultareferenciaspila', [ApiPilaController::class, 'consultaBdReferencias']);
+  Route::post('/consultareferenciaspilaMasiva', [ApiPilaController::class, 'consultaBdReferenciasMasivo']);
   Route::get('/rellenarlaboratorios', [CiudadLaboratorioController::class, 'rellenarNoAplica']);
 });

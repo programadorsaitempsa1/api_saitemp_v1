@@ -74,6 +74,7 @@ class DashBoardSeleccionController extends Controller
 
             // Combinar el array de nombres de estados con el array principal
             $resultadoFinal = array_merge([$nombresEstadosArray], $registrosPorEstadoArray);
+            $resultadoFinal = array_values($resultadoFinal);   // reindexa de 0‑n
 
             return response()->json($resultadoFinal);
         } catch (\Exception $e) {
