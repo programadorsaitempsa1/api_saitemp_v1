@@ -13,8 +13,6 @@ use App\Models\FormularioIngresoSeguimiento;
 use App\Models\UsuarioPermiso;
 use App\Models\FormularioIngresoSeguimientoEstado;
 use App\Models\User;
-use App\Models\CandidatoServicioModel;
-use App\Models\OrdenServcio;
 use Carbon\Carbon;
 use App\Events\NotificacionSeiya;
 use App\Models\HistoricoConceptosCandidatosModel;
