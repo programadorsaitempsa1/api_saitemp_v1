@@ -975,6 +975,7 @@ Route::group([
   Route::get('/archivosingreso', [ArchivosFormularioIngresoController::class, 'index']);
   Route::put('/archivosingreso', [ArchivosFormularioIngresoController::class, 'update']);
   Route::get('/afp', [AfpFormularioIngresoController::class, 'index']);
+  Route::get('/afp/{cod_afp}', [AfpFormularioIngresoController::class, 'getByCodAfp']);
 
   Route::get('/formularioingreso/{cantidad}', [formularioGestionIngresoController::class, 'index']);
   Route::post('/formularioIngreso/filtrofechaingreso/{cantidad}', [formularioGestionIngresoController::class, 'filtroFechaIngreso']);
