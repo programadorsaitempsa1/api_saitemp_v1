@@ -200,7 +200,7 @@ use App\Http\Controllers\NovedadesDDController;
 use App\Http\Controllers\AsignacionEstadosController;
 use App\Http\Controllers\SubestadoOrdenServivicioController;
 use App\Http\Controllers\FacilitadorAnalistaController;
-
+use App\Http\Controllers\HistoricoConsultasPilaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -1290,5 +1290,9 @@ Route::group([
   Route::get('/consultatokenpila', [ApiPilaController::class, 'getToken']);
   Route::post('/consultareferenciaspila', [ApiPilaController::class, 'consultaBdReferencias']);
   Route::post('/consultareferenciaspilaMasiva', [ApiPilaController::class, 'consultaBdReferenciasMasivo']);
+  Route::get('consultabyidmasivo/{consulta_id}', [ApiPilaController::class, 'consultaByIdMasivo']);
   Route::get('/rellenarlaboratorios', [CiudadLaboratorioController::class, 'rellenarNoAplica']);
+
+  //historico de consultas PILA
+  Route::get('/consultahistoricopila', [HistoricoConsultasPilaController::class, 'index']);
 });

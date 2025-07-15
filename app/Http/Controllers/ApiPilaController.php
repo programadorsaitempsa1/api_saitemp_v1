@@ -52,7 +52,7 @@ class ApiPilaController extends Controller
     {
         $usuario = Config::get('app.USUARIO_PILA');
         $password = Config::get('app.PASSWORD_PILA');
-        $url_validart = Config::get('app.PILA_URL');
+        $url_pila = Config::get('app.PILA_URL');
         $pila_aplicacion = Config::get('app.PILA_APLICACION');
         $endpoint = "/api/Persona/ConsultarPersonaEnBaseDatosReferencia";
         $takenToken = $this->getToken();
@@ -71,7 +71,7 @@ class ApiPilaController extends Controller
 
                 $response = Http::withHeaders([
                     'token' => $token
-                ])->post($url_validart . $endpoint, $datos);
+                ])->post($url_pila . $endpoint, $datos);
 
                 if ($response != null && $response['data'] != null && count($response['data']) > 0) {
                     return response()->json([
@@ -148,11 +148,45 @@ class ApiPilaController extends Controller
             }
         }
     }
-    public function consultarRespuestaMasiva(Request $request)
+    public function consultaByIdMasivo($consulta_id)
     {
 
-        $url_validart = Config::get('app.PILA_URL');
+        $url_pila = Config::get('app.PILA_URL');
         $endpoint = "/api/Persona/ConsultarRespuestaSolicitudPersonaMasivo";
+
         $takenToken = $this->getToken();
+
+        if ($takenToken['status'] == 'success') {
+            try {
+                $token = $takenToken['token']['data'];
+                $datos = [
+                    "data" => [
+                        [
+                            "IdSolicitud" => $consulta_id,
+                        ]
+                    ]
+                ];
+
+                $response = Http::withHeaders([
+                    'token' => $token
+                ])->post($url_pila . $endpoint, $datos);
+                if ($response != null && $response['data'] != null && count($response['data']) > 0) {
+                    return response()->json([
+                        'status' => 'success',
+                        'data' => $response['data']
+                    ], 200);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => "No existen datos para el número y tipo de documento especificado"
+                    ], 404);
+                }
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        }
     }
 }
