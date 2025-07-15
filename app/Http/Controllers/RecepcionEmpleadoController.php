@@ -887,6 +887,9 @@ class RecepcionEmpleadoController extends Controller
                     ];
                     $SolicitudServiciolienteController = new SolicitudServicioController;
                     $ordenServicioCandidato = $SolicitudServiciolienteController->candidatoRegistradoServicio($candidatoArray, $request->id_servicio, true);
+                    if (empty($ordenServicioCandidato)) {
+                        return response()->json(['status' => 'error', 'message' => 'El candidato ya existe en ese servicio']);
+                    }
                     $formularioGestionIngresoController = new formularioGestionIngresoController;
                     $radicadoSeiya = $formularioGestionIngresoController->formularioingresoservicioCandidatoUnico($request, $ordenServicioCandidato)->getData();
                     if ($radicadoSeiya->status == '200') {
