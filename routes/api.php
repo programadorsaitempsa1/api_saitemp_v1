@@ -481,8 +481,7 @@ Route::group([
   Route::post('/rolesborradomasivo', [RolController::class, 'borradomasivo']);
   Route::post('/rolesactualizacionmasiva', [RolController::class, 'actualizacionmasiva']);
   Route::get('/roleslista', [RolController::class, 'lista']);
-  Route::post('/unidadmedidaborradomasivo', [UnidadMedidaController::class, 'borradomasivo']);
-  Route::post('/unidadmedidaactualizacionmasiva', [UnidadMedidaController::class, 'actualizacionmasiva']);
+
 
 
   // Rol permiso
