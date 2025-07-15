@@ -22,6 +22,17 @@ class AfpFormularioIngresoController extends Controller
         return response()->json($result);
     }
 
+    public function getByCodAfp($cod_afp)
+    {
+        try {
+            $rol = AfpFormularioIngreso::select('*')->where('adres_codigo', $cod_afp)->first();
+
+            return $rol;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
     /**
      * Show the form for creating a new resource.
      *

@@ -415,6 +415,7 @@ class formularioGestionIngresoController extends Controller
                 DB::RAW("COALESCE(us1.email, usr_app_formulario_ingreso.correo_notificacion_usuario) as correo_notificacion_usuario"),
                 'usr_app_formulario_ingreso.novedades_examenes',
                 DB::RAW("CONCAT(ti.des_tip,'',ti2.des_tip) as tipo_identificacion"),
+                DB::RAW("CONCAT(ti.tip_tip,'',ti2.tip_tip) as tip_tip"),
                 DB::RAW("CONCAT(ti.cod_tip,'',ti2.cod_tip) as tipo_identificacion_id"),
                 'usr_app_formulario_ingreso.subsidio_transporte',
                 'usr_app_formulario_ingreso.estado_vacante',

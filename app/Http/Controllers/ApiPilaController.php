@@ -73,7 +73,7 @@ class ApiPilaController extends Controller
                     'token' => $token
                 ])->post($url_validart . $endpoint, $datos);
 
-                if ($response != null && count($response['data']) > 0) {
+                if ($response != null && $response['data'] != null && count($response['data']) > 0) {
                     return response()->json([
                         'status' => 'success',
                         'data' => $response['data'][0]

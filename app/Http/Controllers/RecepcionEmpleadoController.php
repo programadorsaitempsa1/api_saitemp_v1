@@ -882,7 +882,8 @@ class RecepcionEmpleadoController extends Controller
                         'ciudad_prestacion_servicio_id' => $servicio->ciudad_prestacion_servicio_id,
                         'whatsapp' => $candidato->whatsapp ?? null,
                         'cargo_solicitado_id' => $servicio->cargo_solicitado_id,
-                        'estado_candidato_id' => $estado_candidato->id
+                        'estado_candidato_id' => $estado_candidato->id,
+                        'hora_ingreso' => null
                     ];
                     $SolicitudServiciolienteController = new SolicitudServicioController;
                     $ordenServicioCandidato = $SolicitudServiciolienteController->candidatoRegistradoServicio($candidatoArray, $request->id_servicio, true);
