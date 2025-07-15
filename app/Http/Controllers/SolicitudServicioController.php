@@ -146,6 +146,7 @@ class SolicitudServicioController extends Controller
                 'usr_app_solicitud_servicio.fecha_hora_ingreso',
                 'usr_app_solicitud_servicio.salario',
                 'usr_app_solicitud_servicio.subsidio_transporte',
+                'usr_app_solicitud_servicio.hora_ingreso',
 
             )->first();
         $candidatos = CandidatoSolicitudServicioModel:: //LeftJoin('usr_app_usuarios as us', 'us.id', 'usr_app_candadato_solicitud_servicio.usuario_id')
@@ -226,6 +227,7 @@ class SolicitudServicioController extends Controller
             $ordenServicio->usuario_id = $data['usuario_id'];
             $ordenServicio->radicador = $data['nombres'];
             $ordenServicio->cliente_id = $request->cliente_id;
+            $ordenServicio->hora_ingreso = $request->hora_ingreso;
             $ordenServicio->nit = $request->nit;
             $ordenServicio->fecha_fin = $request->fecha_fin;
             $ordenServicio->linea_servicio_id = $request->linea_servicio_id;
