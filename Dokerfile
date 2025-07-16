@@ -2,30 +2,39 @@ FROM php:8.2-fpm
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
-    git curl unzip gnupg2 \
-    libxml2-dev libzip-dev libpng-dev libonig-dev \
-    libssl-dev libcurl4-openssl-dev pkg-config \
-    libssl-dev libgssapi-krb5-2 libgssapi-krb5-dev \
-    unixodbc-dev gnupg gnupg2 software-properties-common
-
-# Instalar extensiones PHP requeridas
-RUN docker-php-ext-install pdo zip bcmath
-
-# Instalar la extensión SQLSRV y PDO_SQLSRV
-RUN pecl install pdo_sqlsrv sqlsrv \
-    && docker-php-ext-enable pdo_sqlsrv sqlsrv
+    build-essential \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    locales \
+    zip \
+    jpegoptim optipng pngquant gifsicle \
+    vim \
+    unzip \
+    git \
+    curl \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    && docker-php-ext-install pdo pdo_mysql zip mbstring exif pcntl bcmath gd
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Establecer el directorio de trabajo
+# Crear directorio de la app
 WORKDIR /var/www
 
-# Copiar archivos del proyecto
-COPY . /var/www
+# Copiar archivos al contenedor
+COPY . .
 
-# Instalar dependencias PHP (Laravel)
+# Instalar dependencias de Laravel
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Establecer permisos correctos
-RUN chown -R www-data:www-data /var/www && chmod -R 755 /var/www
+# Dar permisos a la carpeta de almacenamiento
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 775 /var/www/storage
+
+# Exponer puerto (opcional si usas solo nginx)
+EXPOSE 9000
+
+CMD ["php-fpm"]
