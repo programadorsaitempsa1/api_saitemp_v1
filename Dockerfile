@@ -28,7 +28,9 @@ WORKDIR /var/www
 COPY . .
 
 # Instalar dependencias de Laravel
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+#RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+RUN composer update --ignore-platform-reqs --no-interaction --prefer-dist --optimize-autoloader
+
 
 # Dar permisos a la carpeta de almacenamiento
 RUN chown -R www-data:www-data /var/www \
