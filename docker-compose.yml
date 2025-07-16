@@ -8,8 +8,6 @@ services:
     restart: unless-stopped
     volumes:
       - .:/var/www
-    depends_on:
-      - nginx
 
   nginx:
     image: nginx:alpine
