@@ -924,4 +924,17 @@ class RecepcionEmpleadoController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Error al eliminar referencia, por favor intenta nuevamente']);
         }
     }
+
+    public function empleadosactivos()
+    {
+        $result = DashboardActivos::leftJoin('gen_tipide as tipoId', 'tipoId.cod_tip', '=', 'rhh_emplea.tip_ide')
+            ->select(
+                'tipoId.tip_tip as tip_id',
+                'rhh_emplea.cod_emp'
+            )
+            ->where('est_lab', '=', '01')
+            ->get()
+            ->count();
+        return response()->json($result);
+    }
 }

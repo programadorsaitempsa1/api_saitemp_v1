@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HistoricoConsultasApiModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
@@ -93,10 +94,16 @@ class ApiPilaController extends Controller
             }
         }
     }
+
+    public function consultaBdReferenciasMasivo(Request $request) {}
+
+
+
+
     public function consultaBdReferenciasMasivoExcel(Request $request)
     {
 
-        $url_validart = Config::get('app.PILA_URL');
+        $url_pila = Config::get('app.PILA_URL');
         $pila_aplicacion = Config::get('app.PILA_APLICACION');
         $endpoint = "/api/Persona/ConsultarPersonaEnBaseDatosReferenciaMasivo";
         $takenToken = $this->getToken();
@@ -124,8 +131,17 @@ class ApiPilaController extends Controller
             try {
                 $response = Http::withHeaders([
                     'token' => $token
-                ])->post($url_validart . $endpoint, $payload);
+                ])->post($url_pila . $endpoint, $payload);
                 Storage::delete($ruta);
+                if ($response['data']) {
+                    $user = $this->getUserRelaciones();
+                    $user = $user->getdata(true);
+                    $historicoConsultas = new HistoricoConsultasApiModel();
+                    $historicoConsultas->consulta_id = $response['data'];
+                    $historicoConsultas->usuario_id = $user['id'];
+                    $historicoConsultas->nombre_usuario = $user['nombres'] . ' ' .  $user['apellidos'];
+                    $historicoConsultas->save();
+                }
                 return response()->json([
                     'payload_enviado' => $payload,
                     'respuesta_api' => $response->json()
