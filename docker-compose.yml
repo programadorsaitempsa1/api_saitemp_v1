@@ -1,14 +1,15 @@
 version: '3.8'
 
 services:
-  app:
+  laravel:
     build:
       context: .
     container_name: laravel_api
     restart: unless-stopped
     volumes:
       - .:/var/www
-    ports:
-      - "9000:9000" # por ejemplo si usas php-fpm
+    expose:
+      - "9000" # expone solo internamente (no a todo el host)
+
 
 
