@@ -8,15 +8,7 @@ services:
     restart: unless-stopped
     volumes:
       - .:/var/www
-
-  nginx:
-    image: nginx:alpine
-    container_name: laravel_nginx
     ports:
-      - "8081:80"
-    volumes:
-      - .:/var/www
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - app
+      - "9000:9000" # por ejemplo si usas php-fpm
+
 
