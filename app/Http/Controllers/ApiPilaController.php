@@ -9,9 +9,16 @@ use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\RecepcionEmpleadoController;
+use App\Traits\Permisos;
+use App\Traits\AutenticacionGuard;
 
 class ApiPilaController extends Controller
+
+
 {
+    use Permisos;
+    use AutenticacionGuard;
     public function getToken()
     {
         $usuario = Config::get('app.USUARIO_PILA');
@@ -95,16 +102,64 @@ class ApiPilaController extends Controller
         }
     }
 
-    public function consultaBdReferenciasMasivo(Request $request) {}
+    public function consultaBdReferenciasMasivo()
+    {
+        $url_pila = Config::get('app.PILA_URL');
+        $endpoint = "/api/Persona/ConsultarPersonaEnBaseDatosReferenciaMasivo";
+        $takenToken = $this->getToken();
+        try {
+            $recepcionEmpleadoController = new RecepcionEmpleadoController();
+            $clientes_activos = $recepcionEmpleadoController->idesEmpleadosactivos();
+            if ($takenToken['status'] == 'success') {
+                $token = $takenToken['token']['data'];
+                $payload = ['data' => $clientes_activos];
+                $response = Http::withHeaders([
+                    'token' => $token
+                ])->post($url_pila . $endpoint, $payload);
+                if ($response['data']) {
+                    $user = $this->getUserRelaciones();
+                    $user = $user->getdata(true);
+                    $historicoConsultas = new HistoricoConsultasApiModel();
+                    $historicoConsultas->consulta_id = $response['data'];
+                    $historicoConsultas->usuario_id = $user['id'];
+                    $historicoConsultas->nombre_usuario = $user['nombres'] . ' ' .  $user['apellidos'];
+                    $historicoConsultas->save();
+                }
+                return response()->json(['status' => 'success', 'message' => 'consulta generada correctamente'], 200);
+            }
+        } catch (\Exception $e) {
+
+            return response()->json(['status' => 'error', 'message' => 'No es posible generar la consulta en este momento, intente más tarde'], 500);
+        }
+    }
 
 
+    public function getConsultaHistoricoConsultaMasiva($cantidad)
+    {
+        $permisos = $this->permisos();
+        $user = $this->getUserRelaciones();
+        $user = $user->getdata(true);
+        $result = HistoricoConsultasApiModel::select(
+            'usr_app_historico_masivo_pila.id',
+            'usr_app_historico_masivo_pila.consulta_id',
+            'usr_app_historico_masivo_pila.created_at',
+            'usr_app_historico_masivo_pila.usuario_id',
+            'usr_app_historico_masivo_pila.nombre_usuario',
 
+
+        )->when(!in_array('47', $permisos), function ($query) use ($user) {
+            return $query->where(function ($subQuery) use ($user) {
+                $subQuery->Where('usr_app_historico_masivo_pila.usuario_id', $user['id']);
+            });
+        })->orderby('usr_app_historico_masivo_pila.created_at', 'DESC')
+            ->paginate($cantidad);
+        return response()->json($result);
+    }
 
     public function consultaBdReferenciasMasivoExcel(Request $request)
     {
 
         $url_pila = Config::get('app.PILA_URL');
-        $pila_aplicacion = Config::get('app.PILA_APLICACION');
         $endpoint = "/api/Persona/ConsultarPersonaEnBaseDatosReferenciaMasivo";
         $takenToken = $this->getToken();
         $request->validate([

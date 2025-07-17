@@ -201,6 +201,7 @@ use App\Http\Controllers\AsignacionEstadosController;
 use App\Http\Controllers\SubestadoOrdenServivicioController;
 use App\Http\Controllers\FacilitadorAnalistaController;
 use App\Http\Controllers\HistoricoConsultasPilaController;
+use App\Models\RecepcionEmpleado;
 
 /*
 |--------------------------------------------------------------------------
@@ -1076,6 +1077,7 @@ Route::group([
   Route::delete('/eliminarrefenciapersonal/{cod_emp}/{num_ref}', [RecepcionEmpleadoController::class, 'deleteReferencia']);
   Route::get('/buscardocumentolistacandidatos/{documento}', [RecepcionEmpleadoController::class, 'buscardocumentolistacandidato']);
   Route::delete('/habilidadescandidato/{id}', [HabilidadesCandidatosController::class, 'deleteHabilidad']);
+  Route::get('/idesempleadosactivos', [RecepcionEmpleadoController::class, 'idesEmpleadosactivos']);
 
   //ruta para generar el archivo zip de seiya
   Route::get('/descargarZip/{idRadicado}/{idCliente}', [GenerarZipController::class, 'descargarArchivosById']);
@@ -1292,6 +1294,8 @@ Route::group([
   Route::post('/consultareferenciaspilaMasivaexcel', [ApiPilaController::class, 'consultaBdReferenciasMasivoExcel']);
   Route::get('consultabyidmasivo/{consulta_id}', [ApiPilaController::class, 'consultaByIdMasivo']);
   Route::get('/rellenarlaboratorios', [CiudadLaboratorioController::class, 'rellenarNoAplica']);
+  Route::get('/consultareferenciaspilamasiva', [ApiPilaController::class, 'consultaBdReferenciasMasivo']);
+  Route::get('/consultareferenciaspilamasiva/{cantidad}', [ApiPilaController::class, 'getConsultaHistoricoConsultaMasiva']);
 
   //historico de consultas PILA
   Route::get('/consultahistoricopila', [HistoricoConsultasPilaController::class, 'index']);

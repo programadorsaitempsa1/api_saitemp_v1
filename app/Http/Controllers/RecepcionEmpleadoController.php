@@ -925,16 +925,15 @@ class RecepcionEmpleadoController extends Controller
         }
     }
 
-    public function empleadosactivos()
+    public function idesEmpleadosactivos()
     {
         $result = DashboardActivos::leftJoin('gen_tipide as tipoId', 'tipoId.cod_tip', '=', 'rhh_emplea.tip_ide')
             ->select(
-                'tipoId.tip_tip as tip_id',
-                'rhh_emplea.cod_emp'
+                'tipoId.tip_tip as TipoDocumento',
+                'rhh_emplea.cod_emp as NumeroDocumento'
             )
             ->where('est_lab', '=', '01')
-            ->get()
-            ->count();
-        return response()->json($result);
+            ->get();
+        return $result;
     }
 }
