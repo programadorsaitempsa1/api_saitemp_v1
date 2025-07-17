@@ -10,7 +10,7 @@
     "require": {
         "php": "^7.3|^8.0",
         "barryvdh/laravel-dompdf": "^2.2",
-        "beyondcode/laravel-websockets": "^2.0@beta",
+        "beyondcode/laravel-websockets": "1.12",
         "doctrine/dbal": "^3.6",
         "fideloper/proxy": "^4.4",
         "fruitcake/laravel-cors": "^2.0",
@@ -19,7 +19,7 @@
         "laravel/framework": "^8.12",
         "laravel/tinker": "^2.5",
         "maatwebsite/excel": "^3.1",
-        "pusher/pusher-php-server": "~3.0",
+        "pusher/pusher-php-server": "5.0",
         "setasign/fpdi": "^2.6",
         "setasign/fpdi-fpdf": "^2.3",
         "symfony/mailer": "^6.1",
