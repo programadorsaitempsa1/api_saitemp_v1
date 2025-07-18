@@ -8,8 +8,9 @@ services:
     restart: unless-stopped
     volumes:
       - .:/var/www
-   ports:
-  - "8082:9000"
+    ports:
+      - "8082:9000"
+
 
 
 
