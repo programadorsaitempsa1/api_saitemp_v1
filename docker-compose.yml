@@ -8,8 +8,9 @@ services:
     restart: unless-stopped
     volumes:
       - .:/var/www
-    expose:
-      - "9000" # expone solo internamente (no a todo el host)
+   ports:
+  - "8082:9000"
+
 
 
 
