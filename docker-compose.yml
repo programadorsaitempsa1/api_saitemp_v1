@@ -13,7 +13,7 @@ services:
     image: nginx:alpine
     container_name: laravel_nginx
     ports:
-      - "8082:9000"
+      - "8082:80"
     volumes:
       - .:/var/www
       - ./default.conf:/etc/nginx/conf.d/default.conf
