@@ -1296,6 +1296,7 @@ Route::group([
   Route::get('/rellenarlaboratorios', [CiudadLaboratorioController::class, 'rellenarNoAplica']);
   Route::get('/consultareferenciaspilamasiva', [ApiPilaController::class, 'consultaBdReferenciasMasivo']);
   Route::get('/consultareferenciaspilamasiva/{cantidad}', [ApiPilaController::class, 'getConsultaHistoricoConsultaMasiva']);
+  Route::post('/actualizarnovasoft', [ApiPilaController::class, 'actualizaNovasoftwithAdres']);
 
   //historico de consultas PILA
   Route::get('/consultahistoricopila', [HistoricoConsultasPilaController::class, 'index']);

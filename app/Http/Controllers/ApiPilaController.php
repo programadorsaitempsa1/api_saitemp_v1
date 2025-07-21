@@ -10,8 +10,11 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\RecepcionEmpleadoController;
+use App\Models\HistoricoFondosModel;
 use App\Traits\Permisos;
 use App\Traits\AutenticacionGuard;
+use Carbon\Carbon;
+use App\Models\fondoSP;
 
 class ApiPilaController extends Controller
 
@@ -289,11 +292,11 @@ class ApiPilaController extends Controller
                     $item['CodigoAfp'] != $item['afp_novasoft'] &&
                     $item['CodigoEps'] != $item['eps_novasoft']
                 ) {
-                    $advertencias[] = 'La AFP y la EPS actuales son diferentes a las de la consulta en ADRES; verifique la información.';
+                    $advertencias[] = 'La AFP y la EPS actuales son diferentes a las de la consulta en ADRES/RUAF; verifique la información.';
                 } elseif ($item['CodigoEps'] != $item['eps_novasoft']) {
                     $advertencias[] = 'La EPS actual es diferente a la obtenida en ADRES; verifique la información.';
                 } elseif ($item['CodigoAfp'] != $item['afp_novasoft']) {
-                    $advertencias[] = 'La AFP actual es diferente a la obtenida en ADRES; verifique la información.';
+                    $advertencias[] = 'La AFP actual es diferente a la obtenida en RUAF; verifique la información.';
                 }
 
                 if (is_null($item['eps_novasoft']) && is_null($item['afp_novasoft'])) {
@@ -322,6 +325,119 @@ class ApiPilaController extends Controller
                 'status'  => 'error',
                 'message' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    public function actualizaNovasoftwithAdres(Request $request)
+    {
+
+
+
+        $fecha_actual = Carbon::now()->subMonthNoOverflow()->endOfMonth()->format('d-m-Y');
+        $fecha_actual_format = Carbon::now()->startOfMonth()->format('d-m-Y');
+        $empleados = $request['actualiza_empleados'];
+        if (count($empleados) > 0) {
+            $array_resultado = [];
+            foreach ($empleados as $empleado) {
+                try {
+
+                    $ultimo_registro_eps = HistoricoFondosModel::leftJoin('rhh_tbfondos as f', 'f.cod_fdo', '=', 'rhh_hisfon.cod_fdo')
+                        ->select(
+                            'rhh_hisfon.cod_fdo',
+                            'rhh_hisfon.cod_emp',
+                            'rhh_hisfon.fec_afi',
+                            'rhh_hisfon.tip_nov',
+                            'rhh_hisfon.fec_ter',
+                            'rhh_hisfon.tip_fdo',
+                            'f.nom_fdo as nombre_fondo',
+                            'f.cod_sgs as codigo_adres'
+                        )
+                        ->where('cod_emp', $empleado['NumeroDocumento'])
+                        ->where('rhh_hisfon.tip_fdo', 2)
+                        ->orderByDesc('fec_afi')
+                        ->first();
+                    $ultimo_registro_afp = HistoricoFondosModel::leftJoin('rhh_tbfondos as f', 'f.cod_fdo', '=', 'rhh_hisfon.cod_fdo')
+                        ->select(
+                            'rhh_hisfon.cod_fdo',
+                            'rhh_hisfon.cod_emp',
+                            'rhh_hisfon.fec_afi',
+                            'rhh_hisfon.tip_nov',
+                            'rhh_hisfon.fec_ter',
+                            'rhh_hisfon.tip_fdo',
+                            'f.nom_fdo as nombre_fondo',
+                            'f.cod_sgs as codigo_adres'
+                        )
+                        ->where('cod_emp', $empleado['NumeroDocumento'])
+                        ->where('rhh_hisfon.tip_fdo', 1)
+                        ->orderByDesc('fec_afi')
+                        ->first();
+
+                    if ($ultimo_registro_eps->codigo_adres != $empleado['CodigoEps'] && $empleado['CodigoEps'] != null) {
+                        $solo_fecha = \Carbon\Carbon::parse($ultimo_registro_eps->fec_afi)->format('d-m-Y');
+
+                        $registro = DB::table('rhh_hisfon')
+                            ->where('cod_emp', $ultimo_registro_eps->cod_emp)
+                            ->whereDate('fec_afi', $solo_fecha)
+                            ->where('cod_fdo', $ultimo_registro_eps->cod_fdo)
+
+                            ->update([
+                                'tip_nov' => 2,
+                                'fec_ter' => $fecha_actual
+                            ]);
+
+                        $eps_nueva = fondoSP::select('*')->where('cod_sgs', $empleado['CodigoEps'])->first();
+                        $historicoModel = new HistoricoFondosModel();
+                        $historicoModel->cod_emp = $empleado['NumeroDocumento'];
+                        $historicoModel->cod_fdo = $eps_nueva->cod_fdo;
+                        $historicoModel->fec_afi = $fecha_actual_format;
+                        $historicoModel->tip_nov = 1;
+                        $historicoModel->tip_fdo = 2;
+                        $historicoModel->save();
+                    }
+                    if ($ultimo_registro_afp->codigo_adres != $empleado['CodigoAfp'] && $empleado['CodigoAfp'] != null) {
+                        $solo_fecha = \Carbon\Carbon::parse($ultimo_registro_eps->fec_afi)->format('d-m-Y');
+                        $afp_nueva = fondoSP::select('*')->where('cod_sgs', $empleado['CodigoAfp'])->first();
+                        $registro2 = DB::table('rhh_hisfon')
+                            ->where('cod_emp', $ultimo_registro_eps->cod_emp)
+                            ->whereDate('fec_afi', $solo_fecha)
+                            ->where('cod_fdo', $ultimo_registro_eps->cod_fdo)
+
+                            ->update([
+                                'tip_nov' => 2,
+                                'fec_ter' => $fecha_actual
+                            ]);
+
+                        $historicoModel = new HistoricoFondosModel();
+                        $historicoModel->cod_emp = $empleado['NumeroDocumento'];
+                        $historicoModel->cod_fdo = $afp_nueva->cod_fdo;
+                        $historicoModel->fec_afi = $fecha_actual;
+                        $historicoModel->tip_nov = 1;
+                        $historicoModel->tip_fdo = 1;
+                        $historicoModel->save();
+                    }
+                } catch (\Exception $e) {
+
+                    $error_message = $e->getMessage();
+                    $datos = [
+                        'num_doc' => $empleado['NumeroDocumento'],
+                        'message' => $error_message
+                    ];
+                    array_push($array_resultado, $datos);
+                }
+            }
+            if (count($array_resultado) > 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'data'   => $datos,
+                    'message' => 'No se actualizaron algunos documentos'
+                ], 500);
+            } else {
+                return response()->json([
+                    'status' => 'success',
+                    'data'   => null,
+                    'message' => 'Documentos actualizados correctamente'
+                ], 200);
+            }
         }
     }
 }
