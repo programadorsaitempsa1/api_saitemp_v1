@@ -1,42 +1,39 @@
 FROM php:8.2-fpm
 
-# Instalar dependencias del sistema
+# Instalar dependencias y herramientas necesarias
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    locales \
-    zip \
-    jpegoptim optipng pngquant gifsicle \
-    vim \
-    unzip \
-    git \
-    curl \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    && docker-php-ext-install pdo pdo_mysql zip mbstring exif pcntl bcmath gd
+    gnupg2 curl apt-transport-https \
+    libzip-dev zip unzip git libicu-dev libonig-dev libxml2-dev unixodbc-dev libgssapi-krb5-2 nginx
+
+# Instalar extensiones PHP necesarias
+RUN docker-php-ext-install pdo pdo_mysql zip intl mbstring xml
+
+# Instalar Microsoft ODBC Driver para SQL Server
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+ && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+ && apt-get update \
+ && ACCEPT_EULA=Y apt-get install -y msodbcsql18
+
+# Instalar extensiones PHP para SQL Server
+RUN pecl install sqlsrv pdo_sqlsrv \
+ && docker-php-ext-enable sqlsrv pdo_sqlsrv
+
+# Copiar configuración nginx
+COPY nginx.conf /etc/nginx/sites-enabled/default
+
+WORKDIR /var/www/html
+
+# Copiar código Laravel al contenedor
+COPY . .
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Crear directorio de la app
-WORKDIR /var/www
+RUN composer install --no-dev --optimize-autoloader
 
-# Copiar archivos al contenedor
-COPY . .
+# Ajustar permisos para storage y bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Instalar dependencias de Laravel
-#RUN composer install --no-interaction --prefer-dist --optimize-autoloader
-RUN composer update --ignore-platform-reqs --no-interaction --prefer-dist --optimize-autoloader
+EXPOSE 80
 
-
-# Dar permisos a la carpeta de almacenamiento
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 775 /var/www/storage
-
-# Exponer puerto (opcional si usas solo nginx)
-EXPOSE 9000
-
-CMD ["php-fpm"]
+CMD service nginx start && php-fpm
