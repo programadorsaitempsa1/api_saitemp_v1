@@ -147,8 +147,8 @@ class ApiPilaController extends Controller
             'usr_app_historico_masivo_pila.id',
             'usr_app_historico_masivo_pila.consulta_id',
             'usr_app_historico_masivo_pila.created_at',
-            'usr_app_historico_masivo_pila.usuario_id',
             'usr_app_historico_masivo_pila.nombre_usuario',
+            'usr_app_historico_masivo_pila.usuario_id',
 
 
         )->when(!in_array('47', $permisos), function ($query) use ($user) {
@@ -447,5 +447,71 @@ class ApiPilaController extends Controller
 
         $data = json_decode($request->input('data'), true); // convertir JSON string a array
         return Excel::download(new ConsultaPilaExport($data), 'EmpleadosAdres.xlsx');
+    }
+
+    public function filtroConsultaMasiva($cadena, $cantidad = null)
+    {
+        try {
+            $permisos = $this->permisos();
+            $user = $this->getUserRelaciones();
+            $user = $user->getdata(true);
+            if ($cantidad == null) {
+                $cantidad = 10;
+            }
+            $consulta = base64_decode($cadena);
+            $valores = explode("/", $consulta);
+            $campo = $valores[0];
+            $operador = $valores[1];
+            $valor = $valores[2];
+            $valor2 = isset($valores[3]) ? $valores[3] : null;
+
+            $query = HistoricoConsultasApiModel::select(
+                'usr_app_historico_masivo_pila.id',
+                'usr_app_historico_masivo_pila.consulta_id',
+                'usr_app_historico_masivo_pila.created_at',
+                'usr_app_historico_masivo_pila.nombre_usuario',
+                'usr_app_historico_masivo_pila.usuario_id',
+
+
+            )->when(!in_array('47', $permisos), function ($query) use ($user) {
+                return $query->where(function ($subQuery) use ($user) {
+                    $subQuery->Where('usr_app_historico_masivo_pila.usuario_id', $user['id']);
+                });
+            })
+                ->orderby('usr_app_historico_masivo_pila.created_at', 'DESC');
+            switch ($operador) {
+                case 'Contiene':
+                    if ($campo == "consulta_id") {
+                        $query->where('usr_app_historico_masivo_pila.consulta_id', 'like', '%' . $valor . '%');
+                    } else if ($campo == "nombre_usuario") {
+                        $query->where('usr_app_historico_masivo_pila.nombre_usuario', 'like', '%' . $valor . '%');
+                    } else {
+                        $query->where($campo, 'like', '%' . $valor . '%');
+                    }
+                    break;
+                case 'Igual a':
+                    if ($campo == "consulta_id") {
+                        $query->where('usr_app_historico_masivo_pila.consulta_id', '=', $valor);
+                    } else if ($campo == "nombre_usuario") {
+                        $query->where('usr_app_historico_masivo_pila.nombre_usuario', '=', $valor);
+                    } else {
+                        $query->where($campo, '=', $valor);
+                    }
+                    break;
+                case 'Igual a fecha':
+                    $query->whereDate("usr_app_historico_masivo_pila." . $campo, '=', $valor);
+                    break;
+                case 'Entre':
+                    $query->whereDate("usr_app_historico_masivo_pila." . $campo, '>=', $valor)
+                        ->whereDate("usr_app_historico_masivo_pila." . $campo, '<=', $valor2);
+                    break;
+            }
+
+            $result = $query->paginate();
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return $e;
+        }
     }
 }
