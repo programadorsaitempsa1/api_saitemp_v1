@@ -15,6 +15,7 @@ use App\Traits\Permisos;
 use App\Traits\AutenticacionGuard;
 use Carbon\Carbon;
 use App\Models\fondoSP;
+use App\Exports\ConsultaPilaExport;
 
 class ApiPilaController extends Controller
 
@@ -440,5 +441,11 @@ class ApiPilaController extends Controller
                 ], 200);
             }
         }
+    }
+    public function descargarExcelAdres(Request $request)
+    {
+
+        $data = json_decode($request->input('data'), true); // convertir JSON string a array
+        return Excel::download(new ConsultaPilaExport($data), 'EmpleadosAdres.xlsx');
     }
 }

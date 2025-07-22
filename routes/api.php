@@ -1297,6 +1297,7 @@ Route::group([
   Route::get('/consultareferenciaspilamasiva', [ApiPilaController::class, 'consultaBdReferenciasMasivo']);
   Route::get('/consultareferenciaspilamasiva/{cantidad}', [ApiPilaController::class, 'getConsultaHistoricoConsultaMasiva']);
   Route::post('/actualizarnovasoft', [ApiPilaController::class, 'actualizaNovasoftwithAdres']);
+  Route::post('/exportexcelconsultapila', [ApiPilaController::class, 'descargarExcelAdres']);
 
   //historico de consultas PILA
   Route::get('/consultahistoricopila', [HistoricoConsultasPilaController::class, 'index']);
