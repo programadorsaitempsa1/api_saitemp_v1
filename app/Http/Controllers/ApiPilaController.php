@@ -340,7 +340,7 @@ class ApiPilaController extends Controller
             $array_resultado = [];
             foreach ($empleados as $empleado) {
                 try {
-
+                    DB::beginTransaction();
                     $ultimo_registro_eps = HistoricoFondosModel::leftJoin('rhh_tbfondos as f', 'f.cod_fdo', '=', 'rhh_hisfon.cod_fdo')
                         ->select(
                             'rhh_hisfon.cod_fdo',
@@ -372,7 +372,7 @@ class ApiPilaController extends Controller
                         ->orderByDesc('fec_afi')
                         ->first();
 
-                    if ($ultimo_registro_eps->codigo_adres != $empleado['CodigoEps'] && $empleado['CodigoEps'] != null) {
+                    if ($ultimo_registro_eps && $ultimo_registro_eps->codigo_adres != $empleado['CodigoEps'] && $empleado['CodigoEps'] != null) {
                         $solo_fecha = \Carbon\Carbon::parse($ultimo_registro_eps->fec_afi)->format('d-m-Y');
 
                         $registro = DB::table('rhh_hisfon')
@@ -394,13 +394,13 @@ class ApiPilaController extends Controller
                         $historicoModel->tip_fdo = 2;
                         $historicoModel->save();
                     }
-                    if ($ultimo_registro_afp->codigo_adres != $empleado['CodigoAfp'] && $empleado['CodigoAfp'] != null) {
-                        $solo_fecha = \Carbon\Carbon::parse($ultimo_registro_eps->fec_afi)->format('d-m-Y');
+                    if ($ultimo_registro_afp && $ultimo_registro_afp->codigo_adres != $empleado['CodigoAfp'] && $empleado['CodigoAfp'] != null) {
+                        $solo_fecha = \Carbon\Carbon::parse($ultimo_registro_afp->fec_afi)->format('d-m-Y');
                         $afp_nueva = fondoSP::select('*')->where('cod_sgs', $empleado['CodigoAfp'])->first();
                         $registro2 = DB::table('rhh_hisfon')
-                            ->where('cod_emp', $ultimo_registro_eps->cod_emp)
+                            ->where('cod_emp', $ultimo_registro_afp->cod_emp)
                             ->whereDate('fec_afi', $solo_fecha)
-                            ->where('cod_fdo', $ultimo_registro_eps->cod_fdo)
+                            ->where('cod_fdo', $ultimo_registro_afp->cod_fdo)
 
                             ->update([
                                 'tip_nov' => 2,
@@ -415,8 +415,9 @@ class ApiPilaController extends Controller
                         $historicoModel->tip_fdo = 1;
                         $historicoModel->save();
                     }
+                    DB::commit();
                 } catch (\Exception $e) {
-
+                    DB::rollBack();
                     $error_message = $e->getMessage();
                     $datos = [
                         'num_doc' => $empleado['NumeroDocumento'],
