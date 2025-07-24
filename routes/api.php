@@ -127,6 +127,7 @@ use App\Http\Controllers\ClienteInteraccionController;
 use App\Http\Controllers\ArchivosFormularioIngresoController;
 use App\Http\Controllers\AfpFormularioIngresoController;
 use App\Http\Controllers\ApiPilaController;
+use App\Http\Controllers\ArlApiSuraController;
 use App\Http\Controllers\CargosPlantaController;
 use App\Http\Controllers\formularioGestionIngresoController;
 use App\Http\Controllers\estadosIngresoController;
@@ -1302,4 +1303,8 @@ Route::group([
 
   //historico de consultas PILA
   Route::get('/consultahistoricopila', [HistoricoConsultasPilaController::class, 'index']);
+
+  //Api ARL SURA 
+  Route::post('/afiliarempleadoarlsura', [ArlApiSuraController::class, 'ingresarEmpleado']);
+  Route::get('/consultaempleadoarl/{num_doc}', [ArlApiSuraController::class, 'buscarEmpleadoContratado']);
 });
