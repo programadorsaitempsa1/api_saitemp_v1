@@ -63,10 +63,7 @@ class ApiPilaController extends Controller
 
     public function consultaBdReferencias(Request $request)
     {
-        $usuario = Config::get('app.USUARIO_PILA');
-        $password = Config::get('app.PASSWORD_PILA');
         $url_pila = Config::get('app.PILA_URL');
-        $pila_aplicacion = Config::get('app.PILA_APLICACION');
         $endpoint = "/api/Persona/ConsultarPersonaEnBaseDatosReferencia";
         $takenToken = $this->getToken();
 
@@ -313,7 +310,7 @@ class ApiPilaController extends Controller
                 return $item;
             })
                 ->filter(function ($item) {
-                    return !empty($item['advertencias']); // ← filtrar los que sí tienen advertencias
+                    return !empty($item['advertencias']);
                 })
 
                 ->values();

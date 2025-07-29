@@ -109,7 +109,7 @@ class ArlApiSuraController extends Controller
             $user = $this->getUserRelaciones();
             $user = $user->getdata(true);
             $datos = [
-                "codTipCotizante" => 01,
+                "codTipoCotizante" => "01",
                 "tipoDocumento" => $empleado['tipo_identificacion'],
                 "numeroDocumento" => $num_doc,
                 "apellido1" => $empleado['ap1_emp'],
@@ -128,11 +128,11 @@ class ArlApiSuraController extends Controller
                 "telefonoResidencia1" => $empleado['tel_cel'],
                 "correoElectronico" => $empleado['e_mail'],
                 "modalidad" => "PRESENCIAL",
-                "codigoCentroTrabajo" => $empleado['historial_laboral']['cod_CT'],
+                "codigoCentroTrabajo" => str_pad($empleado['historial_laboral']['cod_CT'], 10, '0', STR_PAD_LEFT),
                 "direccionTrabajo" => $empleado['empresa']['direccion'],
                 "municipioTrabajo" => $empleado['empresa']['cod_ciu'],
                 "zonaTrabajo" => "URBANA",
-                "telefono1Trabajo" => $empleado['empresa']['te1_cli'],
+                "telefono1Trabajo" => (int)$empleado['empresa']['te1_cli'],
                 "telefono2Trabajo" => null,
                 "correoElectronicoTrabajo" => $empleado['empresa']['e_mail'],
                 "cargoEmpleado" => $empleado['historial_laboral']['nombre_cargo'],
@@ -142,14 +142,21 @@ class ArlApiSuraController extends Controller
                     "documento" => [
                         "tipo" => "NI",
                         "numero" => "811025401"
-                    ]
+                    ],
+                    'correo' => "programador2@saitempsa.com"
                 ]
             ];
             try {
 
-                $response = Http::post($url_arl . '/employee/add', $datos);
-
-                if ($response->successful()) {
+                $response = Http::withHeaders([
+                    'x-apikey' => 'Sinm8gf9MB0tpVJg28r3nIslRC1DQhsA'
+                ])->post($url_arl . '/ingreso', $datos);
+                if ($response['result'] == false) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => $response["message"],
+                    ], $response->status());
+                } else {
                     $historicoArl = new HistoricoIngresoArlModel();
                     $historicoArl->numero_documento = $datos['numeroDocumento'];
                     $historicoArl->tipo_documento = $datos['tipoDocumento'];
@@ -159,10 +166,10 @@ class ArlApiSuraController extends Controller
                     $historicoArl->nombre2 = $datos['nombre2'];
                     $historicoArl->sexo = $datos['sexo'];
                     $historicoArl->salario = $datos['ibc'];
-                    $historicoArl->fecha_nacimiento = $datos['fechaNacimiento'];
+                    $historicoArl->fecha_nacimiento = Carbon::parse($datos['fechaNacimiento'])->format('d-m-Y');
                     $historicoArl->eps = $datos['eps'];
                     $historicoArl->afp = $datos['afp'];
-                    $historicoArl->ini_cobertura = $datos['fechaInicioCobertura'];
+                    $historicoArl->ini_cobertura = Carbon::parse($datos['fechaInicioCobertura'])->format('d-m-Y');
                     $historicoArl->dir_res = $datos['direccionResidencia'];
                     $historicoArl->ciu_res = $datos['municipioResidencia'];
                     $historicoArl->zona_res = $datos['zonaResidencia'];
@@ -181,11 +188,9 @@ class ArlApiSuraController extends Controller
                     $historicoArl->usuario_id = $user['id'];
                     $historicoArl->nombre_usuario = $user['nombres'] . ' ' .  $user['apellidos'];
                     $historicoArl->save();
-                    return $response;
-                } else {
                     return response()->json([
-                        'status' => 'error',
-                        'message' => 'Error en respuesta del servidor ARL.',
+                        'status' => 'success',
+                        'message' => $response["message"],
                         'body' => $response->body()
                     ], $response->status());
                 }
@@ -195,7 +200,7 @@ class ArlApiSuraController extends Controller
         } else {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Empleado no encontrado.'
+                'message' => 'Empleado no encontrado en novasoft.'
             ], 404);
         }
     }
