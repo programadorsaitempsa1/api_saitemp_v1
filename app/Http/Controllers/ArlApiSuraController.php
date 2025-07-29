@@ -104,6 +104,7 @@ class ArlApiSuraController extends Controller
         $url_arl = Config::get('app.ARL_API_URL');
         $num_doc = $request['num_doc'];
         $empleado = $this->buscarEmpleadoContratado($num_doc);
+        $api_key = Config::get('app.ARL_API_KEY');
 
         if ($empleado) {
             $user = $this->getUserRelaciones();
@@ -149,7 +150,7 @@ class ArlApiSuraController extends Controller
             try {
 
                 $response = Http::withHeaders([
-                    'x-apikey' => 'Sinm8gf9MB0tpVJg28r3nIslRC1DQhsA'
+                    'x-apikey' => $api_key
                 ])->post($url_arl . '/ingreso', $datos);
                 if ($response['result'] == false) {
                     return response()->json([

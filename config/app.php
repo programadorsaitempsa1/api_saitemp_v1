@@ -68,6 +68,7 @@ return [
     'USUARIO_PILA' => env('USUARIO_PILA'),
     'PASSWORD_PILA' => env('PASSWORD_PILA'),
     'ARL_API_URL' => env('ARL_API_URL'),
+    'ARL_API_KEY' => env('ARL_API_KEY'),
 
     /*
     |--------------------------------------------------------------------------
