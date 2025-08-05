@@ -199,6 +199,7 @@ use App\Http\Controllers\EstadoCandidatoServioOrdenServicioController;
 use App\Http\Controllers\HabilidadesCandidatosController;
 use App\Http\Controllers\NovedadesDDController;
 use App\Http\Controllers\AsignacionEstadosController;
+use App\Http\Controllers\EnvioSmsYeastarController;
 use App\Http\Controllers\SubestadoOrdenServivicioController;
 use App\Http\Controllers\FacilitadorAnalistaController;
 use App\Http\Controllers\HistoricoConsultasPilaController;
@@ -1307,4 +1308,9 @@ Route::group([
   //Api ARL SURA 
   Route::post('/afiliarempleadoarlsura', [ArlApiSuraController::class, 'ingresarEmpleado']);
   Route::get('/consultaempleadoarl/{num_doc}', [ArlApiSuraController::class, 'buscarEmpleadoContratado']);
+
+
+  //envio de sms de texto yeastar
+  Route::post('/eviarmensajesmsindividual', [EnvioSmsYeastarController::class, 'envioIndividual']);
+  Route::post('/enviosmsmasivo', [EnvioSmsYeastarController::class, 'envioMasivo']);
 });
