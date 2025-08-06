@@ -17,7 +17,7 @@ class EnvioSmsYeastarController extends Controller
         $api_user = Config::get('app.YEASTAR_USER');
         $api_password = Config::get('app.YEASTAR_PASSWORD');
 
-        $gsm_port = 2;
+        $gsm_port = 1;
         $encoded_message = urlencode($mensaje);
         $api_url = "http://{$yeastar_ip}/cgi/WebCGI?1500101=" .
             "account={$api_user}&" .
@@ -33,7 +33,7 @@ class EnvioSmsYeastarController extends Controller
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curl_error = curl_error($ch);
         curl_close($ch);
-
+        /*     return ["status"=>"error","api" => $api_url]; */
         if ($curl_error) {
             return ['status' => 'error', 'message' => 'Error de cURL: ' . $curl_error];
         }
