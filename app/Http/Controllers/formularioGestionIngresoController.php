@@ -832,6 +832,7 @@ class formularioGestionIngresoController extends Controller
             $pdf->Cell(65, 1, $municipio, 0, 1, 'L');
             $pdf->Ln(2);
 
+
             if (isset($formulario->laboratorios[0])) {
 
                 if (!empty($formulario->laboratorios && $otro_laboratorio == '')) {
@@ -935,7 +936,10 @@ class formularioGestionIngresoController extends Controller
 
                     $pdf->SetX(120);
                     $pdf->Cell(65, 1, $recomendaciones_examen != null ? $recomendaciones_examen : 'N/A', 0, 1, 'L');
+
                     $pdf->Ln(2);
+                    $pdf->SetX(20); // margen izquierdo
+                    $pdf->MultiCell(170, 10, "\n\n\n\"No se exige la práctica de pruebas específicas consideradas discriminatorias como obligatorias para el acceso o permanencia en cualquier actividad laboral acorde a la resolución 1843 de 2025\"", 0, 'L');
                 } else {
                     $pdf->SetFont('helveticaI', 'B', 10);
                     $pdf->SetX(20);
