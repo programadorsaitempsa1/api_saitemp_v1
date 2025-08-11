@@ -1313,4 +1313,7 @@ Route::group([
   //envio de sms de texto yeastar
   Route::post('/eviarmensajesmsindividual', [EnvioSmsYeastarController::class, 'envioIndividual']);
   Route::post('/enviosmsmasivo', [EnvioSmsYeastarController::class, 'envioMasivo']);
+
+  //Rutas para verificar empleado activo
+  Route::get('/empleadoactivo/{id}', [DashboardController::class, 'empleadosActivosById']);
 });
