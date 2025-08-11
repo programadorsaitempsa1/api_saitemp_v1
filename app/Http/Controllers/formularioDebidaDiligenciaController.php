@@ -503,6 +503,9 @@ class formularioDebidaDiligenciaController extends Controller
                 ->join('usr_app_lista_recomendaciones as recom', 'recom.id', '=', 'cr.recomendacion_id')
                 ->join('usr_app_cargos2_examenes as cx', 'cx.cargo_id', '=', 'usr_app_cargos2.id')
                 ->join('usr_app_lista_examenes as exam', 'exam.id', '=', 'cx.examen_id')
+                ->leftJoin('usr_app_perfil_cargo_examenes as pcexa', 'pcexa.id', '=', 'exam.examen_id')
+                ->leftJoin('usr_app_examenes_recomendaciones as er', 'er.examen_id', '=', 'pcexa.id')
+                ->leftJoin('usr_app_perfil_cargo_examenes_recomendaciones as pcer', 'pcer.id', '=', 'er.recomendacion_id')
                 ->select(
                     'usr_app_cargos2.cargo_id as id_cargo',
                     'lc.nombre as cargo',
@@ -518,6 +521,9 @@ class formularioDebidaDiligenciaController extends Controller
                     'recom.recomendacion2 as recomendacion2',
                     'cx.examen_id',
                     'exam.nombre as examen',
+                    'pcer.id as recomendacion_examen_id',
+                    'pcer.nombre as recomendacion_examen',
+
 
                 )
                 ->where('cliente_id', '=', $id)
@@ -545,6 +551,9 @@ class formularioDebidaDiligenciaController extends Controller
                 $recomendacion2 = $objeto['recomendacion2'];
                 $idExamen = $objeto['examen_id'];
                 $examen = $objeto['examen'];
+                $recomendacion_examen_id = $objeto['recomendacion_examen_id'];
+                $recomendacion_examen = $objeto['recomendacion_examen'];
+
 
                 // Verificar si el cargo ya existe en los resultados
                 if (!isset($resultados[$idCargo])) {
@@ -560,7 +569,8 @@ class formularioDebidaDiligenciaController extends Controller
                         'categoria' => $subcategoria,
                         'tipo_cargo_id' => $idCategoria,
                         'tipo_cargo' => $categoria,
-                        'funcion_cargo' => $funcion_cargo
+                        'funcion_cargo' => $funcion_cargo,
+                        'recomendacion_examen' => []
                     ];
                 }
 
@@ -578,6 +588,17 @@ class formularioDebidaDiligenciaController extends Controller
                         'id' => $idRequisito,
                         'recomendacion1' => $recomendacion1,
                         'recomendacion2' => $recomendacion2,
+                    ];
+                }
+
+                if (
+                    $recomendacion_examen_id !== null &&
+                    $recomendacion_examen !== null &&
+                    !in_array($recomendacion_examen_id, array_column($resultados[$idCargo]['recomendacion_examen'], 'id'))
+                ) {
+                    $resultados[$idCargo]['recomendacion_examen'][] = [
+                        'id' => $recomendacion_examen_id,
+                        'recomendacion_examen' => $recomendacion_examen,
                     ];
                 }
             }

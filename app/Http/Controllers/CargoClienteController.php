@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\Cargo2;
 use App\Models\Cargo2Examen;
 use App\Models\Cargo2Recomendacion;
+use App\Models\Cargos2TareaAltoRiesgo;
+use App\Models\PerfilCargoExamenesCargos2Model;
+use App\Models\PerfilCargoRecomendacionesCargos2Model;
 use App\Models\Cargos;
 use Illuminate\Support\Facades\DB;
 
@@ -22,14 +25,19 @@ class CargoClienteController extends Controller
         // $result = CargoCliente::select()
         //     ->get();
         // return response()->json($result);
-        $cargos = Cargo2::join('usr_app_riesgos_laborales as rl2', 'rl2.id', '=', 'usr_app_cargos2.riesgo_laboral_id')
-            ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_cargos2.cargo_id')
-            ->join('usr_app_subcategoria_cargos as sc', 'sc.id', '=', 'lc.subcategoria_cargo_id')
-            ->join('usr_app_categoria_cargos as cc', 'cc.id', '=', 'sc.categoria_cargo_id')
-            ->join('usr_app_cargos2_recomendaciones as cr', 'cr.cargo_id', '=', 'usr_app_cargos2.id')
-            ->join('usr_app_lista_recomendaciones as recom', 'recom.id', '=', 'cr.recomendacion_id')
-            ->join('usr_app_cargos2_examenes as cx', 'cx.cargo_id', '=', 'usr_app_cargos2.id')
-            ->join('usr_app_lista_examenes as exam', 'exam.id', '=', 'cx.examen_id')
+        $cargos = Cargo2::leftJoin('usr_app_riesgos_laborales as rl2', 'rl2.id', '=', 'usr_app_cargos2.riesgo_laboral_id')
+            ->leftJoin('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_cargos2.cargo_id')
+            ->leftJoin('usr_app_subcategoria_cargos as sc', 'sc.id', '=', 'lc.subcategoria_cargo_id')
+            ->leftJoin('usr_app_categoria_cargos as cc', 'cc.id', '=', 'sc.categoria_cargo_id')
+            ->leftJoin('usr_app_cargos2_recomendaciones as cr', 'cr.cargo_id', '=', 'usr_app_cargos2.id')
+            ->leftJoin('usr_app_lista_recomendaciones as recom', 'recom.id', '=', 'cr.recomendacion_id')
+            ->leftJoin('usr_app_cargos2_examenes as cx', 'cx.cargo_id', '=', 'usr_app_cargos2.id')
+            ->leftJoin('usr_app_lista_examenes as exam', 'exam.id', '=', 'cx.examen_id')
+            ->leftJoin('usr_app_perfil_cargo_examenes as pcexa', 'pcexa.id', '=', 'exam.examen_id')
+            ->leftJoin('usr_app_cargos2_tareas_alto_riesgo as c2tar', 'c2tar.cargo_id', '=', 'usr_app_cargos2.id')
+            ->leftJoin('usr_app_tareas_alto_riesgo_cargos as tar', 'tar.id', '=', 'c2tar.tarea_alto_riesgo_id')
+            ->leftJoin('usr_app_examenes_recomendaciones as er', 'er.examen_id', '=', 'pcexa.id')
+            ->leftJoin('usr_app_perfil_cargo_examenes_recomendaciones as pcer', 'pcer.id', '=', 'er.recomendacion_id')
             ->select(
                 'usr_app_cargos2.cargo_id as cargo_id',
                 'lc.nombre as cargo',
@@ -43,8 +51,12 @@ class CargoClienteController extends Controller
                 'cr.recomendacion_id',
                 'recom.recomendacion1 as recomendacion1',
                 'recom.recomendacion2 as recomendacion2',
-                'cx.examen_id',
-                'exam.nombre as examen',
+                'tar.nombre as tarea_alto_riesgo',
+                'tar.id as tarea_alto_riesgo_id',
+                'pcexa.id as examen_id',
+                'pcexa.nombre as examen',
+                'pcer.id as recomendacion_examen_id',
+                'pcer.nombre as recomendacion_examen',
 
             )
             ->where('cliente_id', '=', $id)
@@ -72,6 +84,10 @@ class CargoClienteController extends Controller
             $recomendacion2 = $objeto['recomendacion2'];
             $idExamen = $objeto['examen_id'];
             $examen = $objeto['examen'];
+            $tarea_alto_riesgo_id = $objeto['tarea_alto_riesgo_id'];
+            $tareas_alto_riesgo_seleccionadas = $objeto['tarea_alto_riesgo'];
+            $recomendacion_examen_id = $objeto['recomendacion_examen_id'];
+            $recomendacion_examen = $objeto['recomendacion_examen'];
 
             // Verificar si el cargo ya existe en los resultados
             if (!isset($resultados[$idCargo])) {
@@ -87,7 +103,9 @@ class CargoClienteController extends Controller
                     'categoria' => $subcategoria,
                     'tipo_cargo_id' => $idCategoria,
                     'tipo_cargo' => $categoria,
-                    'funcion_cargo' => $funcion_cargo
+                    'funcion_cargo' => $funcion_cargo,
+                    'tareas_alto_riesgo_seleccionadas' => [],
+                    'recomendacion_examen' => []
                 ];
             }
 
@@ -107,6 +125,32 @@ class CargoClienteController extends Controller
                     'recomendacion2' => $recomendacion2,
                 ];
             }
+
+
+            // TODO:
+            // Verificar si el requisito ya existe en los resultados del cargo
+            // if (!in_array($recomendacion_examen_id, array_column($resultados[$idCargo]['recomendacion_examen'], 'id'))) {
+            //     $resultados[$idCargo]['recomendacion_examen'][] = [
+            //         'id' => $recomendacion_examen_id,
+            //         'recomendacion_examen' => $recomendacion_examen,
+            //     ];
+            // }
+
+            if (
+                $recomendacion_examen_id !== null &&
+                $recomendacion_examen !== null &&
+                !in_array($recomendacion_examen_id, array_column($resultados[$idCargo]['recomendacion_examen'], 'id'))
+            ) {
+                $resultados[$idCargo]['recomendacion_examen'][] = [
+                    'id' => $recomendacion_examen_id,
+                    'recomendacion_examen' => $recomendacion_examen,
+                ];
+            }
+
+
+            if (!in_array($tarea_alto_riesgo_id, $resultados[$idCargo]['tareas_alto_riesgo_seleccionadas'])) {
+                $resultados[$idCargo]['tareas_alto_riesgo_seleccionadas'][] = $tarea_alto_riesgo_id;
+            }
         }
 
         // Resultado: Array final con cargos, exámenes y requisitos sin duplicados
@@ -123,6 +167,7 @@ class CargoClienteController extends Controller
     {
         $cargoExamen = Cargo2Examen::where('cargo_id', '=', $id)->delete();
         $cargoRecomendacion = Cargo2Recomendacion::where('cargo_id', '=', $id)->delete();
+        $tarea_alto_riesgo = Cargos2TareaAltoRiesgo::where('cargo_id', '=', $id)->delete();
         $cargo = Cargo2::where('cliente_id', '=', $id)->delete();
 
         $request = $request->all();
@@ -156,6 +201,34 @@ class CargoClienteController extends Controller
                             $cargoRecomendacion->recomendacion_id = $item['id'];
                             $cargoRecomendacion->cargo_id = $cargo->id;
                             $cargoRecomendacion->save();
+                        }
+                    }
+
+                    // foreach ($request[$contador]['examenes'] as $item) {
+                    //     if ($item['id'] != '') {
+                    //         $cargoExamen = new PerfilCargoExamenesCargos2Model;
+                    //         $cargoExamen->examen_id = $item['id'];
+                    //         $cargoExamen->cargo_id = $cargo->id;
+                    //         $cargoExamen->save();
+                    //     }
+                    // }
+
+                    // // Se eliminan los requisitos del formulario
+                    // foreach ($request[$contador]['recomendaciones'] as $item) {
+                    //     if ($item['id'] != '') {
+                    //         $cargoRecomendacion = new PerfilCargoRecomendacionesCargos2Model;
+                    //         $cargoRecomendacion->recomendacion_id = $item['id'];
+                    //         $cargoRecomendacion->cargo_id = $cargo->id;
+                    //         $cargoRecomendacion->save();
+                    //     }
+                    // }
+
+                    if (!empty($request[$contador]['tareas_alto_riesgo_seleccionadas'])) {
+                        foreach ($request[$contador]['tareas_alto_riesgo_seleccionadas'] as $item) {
+                            $tarea_alto_riesgo = new Cargos2TareaAltoRiesgo;
+                            $tarea_alto_riesgo->tarea_alto_riesgo_id = $item;
+                            $tarea_alto_riesgo->cargo_id = $cargo->id;
+                            $tarea_alto_riesgo->save();
                         }
                     }
                     $contador++;

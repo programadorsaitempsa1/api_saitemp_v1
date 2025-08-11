@@ -1528,8 +1528,8 @@ class SeguimientoCrmController extends Controller
             ->leftjoin('usr_app_estado_cierre_crm as cierre', 'cierre.id', 'usr_app_seguimiento_crm.estado_id')
             ->leftjoin('usr_app_pqrsf_crm as pqrsf', 'pqrsf.id', 'usr_app_seguimiento_crm.pqrsf_id')
             ->leftjoin('usr_app_solicitante_crm as soli', 'soli.id', 'usr_app_seguimiento_crm.solicitante_id')
-            /*  ->where('usr_app_seguimiento_crm.tipo_atencion_id', 5) */ // Condición para excluir registros con pqrsf_id = 6
-            /*  ->where('usr_app_seguimiento_crm.tipo_atencion_id', 5) */
+            ->where('usr_app_seguimiento_crm.tipo_atencion_id', 5)  // Condición para excluir registros con pqrsf_id = 6
+            ->where('usr_app_seguimiento_crm.tipo_atencion_id', 5)
             ->select(
                 'usr_app_seguimiento_crm.id',
                 'usr_app_seguimiento_crm.numero_radicado',

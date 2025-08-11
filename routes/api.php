@@ -200,6 +200,11 @@ use App\Http\Controllers\NovedadesDDController;
 use App\Http\Controllers\AsignacionEstadosController;
 use App\Http\Controllers\SubestadoOrdenServivicioController;
 use App\Http\Controllers\FacilitadorAnalistaController;
+use App\Http\Controllers\ListaRiesgosPerfilcargoController;
+use App\Http\Controllers\TareasAltoRiesgoCargoController;
+use App\Http\Controllers\ExamenPerfilCargoController;
+use App\Http\Controllers\RecomendacionesExamenPerfilCargoController;
+use App\Http\Controllers\ExamenesRecomendacionesController;
 
 
 /*
@@ -1253,6 +1258,26 @@ Route::group([
   Route::delete('/facilitadoranalista/{id}', [FacilitadorAnalistaController::class, 'delete']);
   Route::get('/facilitadoranalistaById/{usuario_id}', [FacilitadorAnalistaController::class, 'byUserId']);
   Route::get('/facilitadoranalistafiltro/{cadena}/{cantidad}', [FacilitadorAnalistaController::class, 'byUserId']);
+  
+  
+  Route::get('/listariesgosperfilcargo/{id}', [ListaRiesgosPerfilcargoController::class, 'byid']);
+
+  Route::get('/tareasaltoriesgocargo', [TareasAltoRiesgoCargoController::class, 'index']);
+
+
+  Route::get('/examenesperfilcargo', [ExamenPerfilCargoController::class, 'index']);
+  Route::get('/examenesperfilcargo/{cantidad}', [ExamenPerfilCargoController::class, 'tabla']);
+  Route::get('/examenesperfilcargofiltro/{cadena}', [ExamenPerfilCargoController::class, 'filtro']);
+
+  Route::get('/recomendacionesexamenesperfilcargo', [RecomendacionesExamenPerfilCargoController::class, 'index']);
+  Route::get('/recomendacionesexamenesperfilcargo/{cantidad}', [RecomendacionesExamenPerfilCargoController::class, 'tabla']);
+  Route::get('/recomendacionesexamenesperfilcargofiltro/{cadena}', [RecomendacionesExamenPerfilCargoController::class, 'filtro']);
+  
+  Route::get('/recomendacionesexamenes/{cantidad}', [ExamenesRecomendacionesController::class, 'index']);
+  Route::post('/recomendacionesexamenes', [ExamenesRecomendacionesController::class, 'create']);
+  Route::delete('/recomendacionesexamenes/{id}', [ExamenesRecomendacionesController::class, 'destroy']);
+  Route::post('/recomendacionesexamenesborradomasivo', [ExamenesRecomendacionesController::class, 'borradomasivo']);
+  Route::get('/recomendacionesexamenesfiltro/{cadena}', [ExamenesRecomendacionesController::class, 'filtro']);
   //   EstadoServicioController
   // EstadoCandidatoServicioController
 
