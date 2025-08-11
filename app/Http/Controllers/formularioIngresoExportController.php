@@ -12,6 +12,8 @@ use App\Models\FormularioIngresoSeguimiento;
 use App\Models\FormularioIngresoSeguimientoEstado;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\OrdenServicioExport;
+use App\Exports\ExportMultipleSheets;
+
 
 
 
@@ -19,40 +21,38 @@ class formularioIngresoExportController extends Controller
 {
     public function export3($cadena)
     {
+        ini_set('memory_limit', '3000M');
+        set_time_limit(600);
 
-        ini_set('memory_limit', '2048M');
-
-        // Aumenta el tiempo de ejecución a 5 minutos
-        set_time_limit(300);
-
+        // Decodificar filtros
         $cadenaJSON = base64_decode($cadena);
         $cadenaUTF8 = mb_convert_encoding($cadenaJSON, 'UTF-8', 'ISO-8859-1');
         $arrays = explode('/', $cadenaUTF8);
         $arraysDecodificados = array_map('json_decode', $arrays);
-
 
         $campo = $arraysDecodificados[0];
         $operador = $arraysDecodificados[1];
         $valor_comparar = $arraysDecodificados[2];
         $valor_comparar2 = $arraysDecodificados[3];
 
+        // Base query
         $query = FormularioGestionIngreso::leftJoin('usr_app_clientes as cli', 'cli.id', 'usr_app_formulario_ingreso.cliente_id')
             ->leftJoin('usr_app_municipios as mun', 'mun.id', 'usr_app_formulario_ingreso.municipio_id')
             ->leftJoin('usr_app_departamentos as dep', 'dep.id', 'mun.departamento_id')
-            ->LeftJoin('usr_app_estados_ingreso as est', 'est.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
-            ->LeftJoin('usr_app_afp as afp', 'afp.id', 'usr_app_formulario_ingreso.afp_id')
+            ->leftJoin('usr_app_estados_ingreso as est', 'est.id', 'usr_app_formulario_ingreso.estado_ingreso_id')
+            ->leftJoin('usr_app_afp as afp', 'afp.id', 'usr_app_formulario_ingreso.afp_id')
             ->leftJoin('usr_app_formulario_ingreso_tipo_servicio as tiser', 'tiser.id', 'usr_app_formulario_ingreso.tipo_servicio_id')
             ->leftJoin('gen_tipide as doc', 'doc.cod_tip', 'usr_app_formulario_ingreso.tipo_documento_id')
             ->select(
                 'usr_app_formulario_ingreso.id',
                 'usr_app_formulario_ingreso.numero_radicado',
-                DB::raw("FORMAT(CAST(usr_app_formulario_ingreso.created_at AS DATE), 'dd/MM/yyyy') as fecha_radicado"),
+                'usr_app_formulario_ingreso.created_at',
                 'est.nombre as estado_ingreso',
                 'usr_app_formulario_ingreso.responsable',
                 'cli.razon_social',
                 'usr_app_formulario_ingreso.direccion_empresa',
                 'tiser.nombre_servicio',
-                'doc.des_tip as Tipo de identificación',
+                'doc.des_tip as tipo_identificacion',
                 'usr_app_formulario_ingreso.numero_identificacion',
                 'usr_app_formulario_ingreso.nombre_completo',
                 'usr_app_formulario_ingreso.numero_contacto',
@@ -78,87 +78,68 @@ class formularioIngresoExportController extends Controller
                 'usr_app_formulario_ingreso.afectacion_servicio',
                 'usr_app_formulario_ingreso.responsable_corregir',
                 'usr_app_formulario_ingreso.correo_notificacion_empresa',
-                DB::raw("FORMAT(CAST(usr_app_formulario_ingreso.fecha_ingreso AS DATE), 'dd/MM/yyyy') as fecha_ingreso"),
+                'usr_app_formulario_ingreso.fecha_ingreso',
                 'usr_app_formulario_ingreso.estado_vacante',
                 'usr_app_formulario_ingreso.laboratorio',
-                'usr_app_formulario_ingreso.observacion_estado',
-
-
-
+                'usr_app_formulario_ingreso.observacion_estado'
             )
-            ->orderBy('usr_app_formulario_ingreso.created_at', 'DESC');
-        $numElementos = count($campo);
+            ->orderBy('usr_app_formulario_ingreso.created_at', 'desc');
 
+        // Aplicar filtros
+        $numElementos = count($campo);
         for ($i = 0; $i < $numElementos; $i++) {
             $campoActual = $campo[$i];
             $operadorActual = $operador[$i];
-            $valorCompararActual = $valor_comparar[$i];
+            $valorActual = $valor_comparar[$i];
 
-            $prefijoCampo = '';
-            if ($campoActual === 'ciudad') {
-                $prefijoCampo = 'mun.';
-                $campoActual = 'nombre';
-            } elseif ($campoActual === 'estado_ingreso') {
-                $prefijoCampo = 'est.';
-                $campoActual = 'nombre';
-            } elseif ($campoActual === 'razon_social') {
-                $prefijoCampo = 'cli.';
-            } elseif ($campoActual === 'nombre_servicio') {
-                $prefijoCampo = 'tiser.';
-            } else {
-                $prefijoCampo = 'usr_app_formulario_ingreso.';
-            }
+            $prefijo = match ($campoActual) {
+                'ciudad' => 'mun.',
+                'estado_ingreso' => 'est.',
+                'razon_social' => 'cli.',
+                'nombre_servicio' => 'tiser.',
+                default => 'usr_app_formulario_ingreso.',
+            };
+
+            $campoSQL = $prefijo . ($campoActual === 'ciudad' || $campoActual === 'estado_ingreso' ? 'nombre' : $campoActual);
 
             switch ($operadorActual) {
                 case 'Menor que':
-                    $query->where($prefijoCampo . $campoActual, '<', $valorCompararActual);
+                    $query->where($campoSQL, '<', $valorActual);
                     break;
                 case 'Mayor que':
-                    $query->where($prefijoCampo . $campoActual, '>', $valorCompararActual);
+                    $query->where($campoSQL, '>', $valorActual);
                     break;
                 case 'Menor o igual que':
-                    $query->where($prefijoCampo . $campoActual, '<=', $valorCompararActual);
+                    $query->where($campoSQL, '<=', $valorActual);
                     break;
                 case 'Mayor o igual que':
-                    $query->where($prefijoCampo . $campoActual, '>=', $valorCompararActual);
+                    $query->where($campoSQL, '>=', $valorActual);
                     break;
                 case 'Igual a número':
-                    $query->where($prefijoCampo . $campoActual, '=', $valorCompararActual);
-                    break;
-                case 'Entre':
-                    $valorComparar2Actual = $valor_comparar2[$i];
-                    $query->whereDate($prefijoCampo . $campoActual, '>=', $valorCompararActual);
-                    $query->whereDate($prefijoCampo . $campoActual, '<=', $valorComparar2Actual);
-                    break;
                 case 'Igual a':
-                    $query->where($prefijoCampo . $campoActual, '=', $valorCompararActual);
+                    $query->where($campoSQL, '=', $valorActual);
                     break;
                 case 'Igual a fecha':
-                    // $fechaHora = date('Y-m-d H:i:s', strtotime($valorCompararActual));
-                    // $query->whereRaw("TRY_CONVERT(datetime, $prefijoCampo$campoActual) = ?", [$fechaHora]);
-                    // break;
-                    //    return $prefijoCampo .''. $campoActual. '='. $valorCompararActual;
-                    $query->whereDate($prefijoCampo . $campoActual, '=', $valorCompararActual);
+                    $query->whereDate($campoSQL, '=', $valorActual);
+                    break;
+                case 'Entre':
+                    $valor2 = $valor_comparar2[$i];
+                    $query->whereDate($campoSQL, '>=', $valorActual)->whereDate($campoSQL, '<=', $valor2);
                     break;
                 case 'Contiene':
-                    // return $prefijoCampo . $campoActual . 'LIKE' . '%' . $valorCompararActual . '%';
-                    $query->where($prefijoCampo . $campoActual, 'like', '%' . $valorCompararActual . '%');
+                    $query->where($campoSQL, 'like', '%' . $valorActual . '%');
                     break;
             }
         }
 
-        $resultados = $query->get();
 
-        // $ids = $resultados->pluck('id')->all();
-        $ids = $resultados->pluck('id');
-        $loteSize = 2000;
-        $chunks = $ids->chunk($loteSize);
-        $allSeguimiento_estados = collect();
-        $allSeguimiento_guardado = collect();
-        $allLaboratorios = collect();
+        $data1 = $query->get();
+        $ids = $data1->pluck('id');
+        $chunks = collect($ids)->chunk(2000);
 
+        $data2 = collect();
         foreach ($chunks as $chunk) {
-            $seguimiento_estados = DB::table('usr_app_formulario_ingreso_seguimiento_estado AS see')
+            $result = DB::table('usr_app_formulario_ingreso_seguimiento_estado AS see')
                 ->join('usr_app_estados_ingreso AS ei', 'ei.id', '=', 'see.estado_ingreso_inicial')
                 ->join('usr_app_estados_ingreso AS ef', 'ef.id', '=', 'see.estado_ingreso_final')
                 ->whereIn('see.formulario_ingreso_id', $chunk->all())
@@ -174,25 +155,13 @@ class formularioIngresoExportController extends Controller
                 ->orderBy('see.id', 'desc')
                 ->get();
 
-            $allSeguimiento_estados = $allSeguimiento_estados->merge($seguimiento_estados);
+            $data2 = $data2->merge($result);
+        }
 
-            $seguimiento_guardado = DB::table('usr_app_formulario_ingreso_seguimiento as se')
-                ->join('usr_app_estados_ingreso as ei', 'ei.id', '=', 'se.estado_ingreso_id')
-                ->whereIn('se.formulario_ingreso_id', $chunk->all())
-                ->select(
-                    'se.formulario_ingreso_id',
-                    'se.usuario',
-                    'ei.nombre as estado',
-                    'se.created_at',
+        $data3 = collect();
 
-                )
-                ->orderby('se.id', 'desc')
-                ->get();
-            $allSeguimiento_guardado = $allSeguimiento_guardado->merge($seguimiento_guardado);
-
-
-
-            $laboratorios = DB::table('usr_app_registro_ingreso_laboraorio as lab') //RegistroIngresoLaboratorio::
+        foreach ($chunks as $chunk) {
+            $result = DB::table('usr_app_registro_ingreso_laboraorio as lab')
                 ->join('usr_app_ciudad_laboraorio as ciulab', 'ciulab.id', '=', 'lab.laboratorio_medico_id')
                 ->join('usr_app_municipios as mun', 'mun.id', '=', 'ciulab.ciudad_id')
                 ->join('usr_app_departamentos as dep', 'dep.id', '=', 'mun.departamento_id')
@@ -201,19 +170,33 @@ class formularioIngresoExportController extends Controller
                     'lab.registro_ingreso_id',
                     'ciulab.laboratorio as nombre',
                     'mun.nombre as municipio',
-                    'dep.nombre as departamento',
+                    'dep.nombre as departamento'
                 )
                 ->get();
-                 $allLaboratorios = $allLaboratorios->merge($laboratorios);
+
+            $data3 = $data3->merge($result);
         }
 
-        $data1 = $resultados;
-        $data2 = $allSeguimiento_estados;
-        $data3 = $allSeguimiento_guardado;
-        $data4 = $allLaboratorios;
+        $data4 = collect();
 
-        // // return  $resultados;
-        return Excel::download(new OrdenServicioExport($data1, $data2, $data3, $data4), 'exporte_multiple.xlsx');
+        foreach ($chunks as $chunk) {
+            $result = DB::table('usr_app_formulario_ingreso_seguimiento as se')
+                ->join('usr_app_estados_ingreso as ei', 'ei.id', '=', 'se.estado_ingreso_id')
+                ->whereIn('se.formulario_ingreso_id', $chunk->all())
+                ->select(
+                    'se.formulario_ingreso_id',
+                    'se.usuario',
+                    'ei.nombre as estado',
+                    'se.created_at'
+                )
+                ->orderBy('se.id', 'desc')
+                ->get();
+
+            $data4 = $data4->merge($result);
+        }
+
+        // Exportar a múltiples hojas
+        return Excel::download(new ExportMultipleSheets($data1, $data4, $data3, $data2), 'exporte_multiple.xlsx');
 
         // 5) Agrupa por formulario para tener un arreglo de seguimientos por ID
         // $allSeguimientos = $allSeguimientos->groupBy('formulario_ingreso_id');

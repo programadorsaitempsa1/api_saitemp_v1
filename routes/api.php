@@ -127,6 +127,7 @@ use App\Http\Controllers\ClienteInteraccionController;
 use App\Http\Controllers\ArchivosFormularioIngresoController;
 use App\Http\Controllers\AfpFormularioIngresoController;
 use App\Http\Controllers\ApiPilaController;
+use App\Http\Controllers\ArlApiSuraController;
 use App\Http\Controllers\CargosPlantaController;
 use App\Http\Controllers\formularioGestionIngresoController;
 use App\Http\Controllers\estadosIngresoController;
@@ -198,6 +199,7 @@ use App\Http\Controllers\EstadoCandidatoServioOrdenServicioController;
 use App\Http\Controllers\HabilidadesCandidatosController;
 use App\Http\Controllers\NovedadesDDController;
 use App\Http\Controllers\AsignacionEstadosController;
+use App\Http\Controllers\EnvioSmsYeastarController;
 use App\Http\Controllers\SubestadoOrdenServivicioController;
 use App\Http\Controllers\FacilitadorAnalistaController;
 use App\Http\Controllers\ListaRiesgosPerfilcargoController;
@@ -205,6 +207,8 @@ use App\Http\Controllers\TareasAltoRiesgoCargoController;
 use App\Http\Controllers\ExamenPerfilCargoController;
 use App\Http\Controllers\RecomendacionesExamenPerfilCargoController;
 use App\Http\Controllers\ExamenesRecomendacionesController;
+use App\Http\Controllers\HistoricoConsultasPilaController;
+use App\Models\RecepcionEmpleado;
 
 
 /*
@@ -1080,6 +1084,7 @@ Route::group([
   Route::delete('/eliminarrefenciapersonal/{cod_emp}/{num_ref}', [RecepcionEmpleadoController::class, 'deleteReferencia']);
   Route::get('/buscardocumentolistacandidatos/{documento}', [RecepcionEmpleadoController::class, 'buscardocumentolistacandidato']);
   Route::delete('/habilidadescandidato/{id}', [HabilidadesCandidatosController::class, 'deleteHabilidad']);
+  Route::get('/idesempleadosactivos', [RecepcionEmpleadoController::class, 'idesEmpleadosactivos']);
 
   //ruta para generar el archivo zip de seiya
   Route::get('/descargarZip/{idRadicado}/{idCliente}', [GenerarZipController::class, 'descargarArchivosById']);
@@ -1313,6 +1318,29 @@ Route::group([
 
   Route::get('/consultatokenpila', [ApiPilaController::class, 'getToken']);
   Route::post('/consultareferenciaspila', [ApiPilaController::class, 'consultaBdReferencias']);
-  Route::post('/consultareferenciaspilaMasiva', [ApiPilaController::class, 'consultaBdReferenciasMasivo']);
+  Route::post('/consultareferenciaspilaMasivaexcel', [ApiPilaController::class, 'consultaBdReferenciasMasivoExcel']);
+  Route::get('consultabyidmasivo/{consulta_id}', [ApiPilaController::class, 'consultaByIdMasivo']);
   Route::get('/rellenarlaboratorios', [CiudadLaboratorioController::class, 'rellenarNoAplica']);
+
+  Route::get('/consultareferenciaspilamasiva', [ApiPilaController::class, 'consultaBdReferenciasMasivo']);
+  Route::get('/consultareferenciaspilamasiva/{cantidad}', [ApiPilaController::class, 'getConsultaHistoricoConsultaMasiva']);
+  Route::post('/actualizarnovasoft', [ApiPilaController::class, 'actualizaNovasoftwithAdres']);
+  Route::post('/exportexcelconsultapila', [ApiPilaController::class, 'descargarExcelAdres']);
+  Route::get('/consultareferenciaspilamasivafiltro/{cadena}', [ApiPilaController::class, 'filtroConsultaMasiva']);
+
+  //historico de consultas PILA
+  Route::get('/consultahistoricopila', [HistoricoConsultasPilaController::class, 'index']);
+
+  //Api ARL SURA 
+  Route::post('/afiliarempleadoarlsura', [ArlApiSuraController::class, 'ingresarEmpleado']);
+  Route::get('/consultaempleadoarl/{num_doc}', [ArlApiSuraController::class, 'buscarEmpleadoContratado']);
+
+
+  //envio de sms de texto yeastar
+  Route::post('/eviarmensajesmsindividual', [EnvioSmsYeastarController::class, 'envioIndividual']);
+  Route::post('/enviosmsmasivo', [EnvioSmsYeastarController::class, 'envioMasivo']);
+
+  //Rutas para verificar empleado activo
+  Route::get('/empleadoactivo/{id}', [DashboardController::class, 'empleadosActivosById']);
 });
+

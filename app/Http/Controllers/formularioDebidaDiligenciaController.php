@@ -1056,28 +1056,33 @@ class formularioDebidaDiligenciaController extends Controller
             $cliente->contratacion_observacion = $request['contratacion_observacion'];
             $cliente->save();
 
-            $seguimiento_estado = new ClientesSeguimientoEstado;
-            $seguimiento_estado->responsable_inicial =  $user->nombres . ' ' . $user->apellidos;
-            $seguimiento_estado->responsable_final = $cliente->responsable = $request->responsable;
-            $seguimiento_estado->estados_firma_inicial =  $cliente->estado_firma_id;
-            $seguimiento_estado->estados_firma_final =    $cliente->estado_firma_id;
-            $seguimiento_estado->cliente_id =   $cliente->id;
-            $seguimiento_estado->actualiza_registro =   $user->nombres . ' ' .  $user->apellidos;
-            $seguimiento_estado->oportuno = "2";
-            $seguimiento_estado->save();
-            $this->eventoSocket($request->responsable_id);
+            if ($request['index_ruta'] == 0) {
 
-            $operacion = new HistoricoOperacionesDDModel();
-            $operacion->cliente_id =  $cliente->id;
-            $operacion->tipo_operacion_id = $cliente->operacion_id;
-            $operacion->nombre_usuario_actualiza = $user->nombres . ' ' . $user->apellidos;
-            $operacion->save();
+                $seguimiento_estado = new ClientesSeguimientoEstado;
+                $seguimiento_estado->responsable_inicial =  $user->nombres . ' ' . $user->apellidos;
+                $seguimiento_estado->responsable_final = $cliente->responsable = $request->responsable;
+                $seguimiento_estado->estados_firma_inicial =  $cliente->estado_firma_id;
+                $seguimiento_estado->estados_firma_final =    $cliente->estado_firma_id;
+                $seguimiento_estado->cliente_id =   $cliente->id;
+                $seguimiento_estado->actualiza_registro =   $user->nombres . ' ' .  $user->apellidos;
+                $seguimiento_estado->oportuno = "2";
+                $seguimiento_estado->save();
+                $this->eventoSocket($request->responsable_id);
 
-            $seguimiento = new ClientesSeguimientoGuardado();
-            $seguimiento->estado_firma_id = $cliente->estado_firma_id;
-            $seguimiento->usuario = $user->nombres . ' ' . $user->apellidos;
-            $seguimiento->cliente_id = $cliente->id;
-            $seguimiento->save();
+                $operacion = new HistoricoOperacionesDDModel();
+                $operacion->cliente_id =  $cliente->id;
+                $operacion->tipo_operacion_id = $cliente->operacion_id;
+                $operacion->nombre_usuario_actualiza = $user->nombres . ' ' . $user->apellidos;
+                $operacion->save();
+
+                $seguimiento = new ClientesSeguimientoGuardado();
+                $seguimiento->estado_firma_id = $cliente->estado_firma_id;
+                $seguimiento->usuario = $user->nombres . ' ' . $user->apellidos;
+                $seguimiento->cliente_id = $cliente->id;
+                $seguimiento->save();
+            }
+
+
 
             $contador = 0;
             foreach ($request['cargos2'] as $item) {
@@ -1411,6 +1416,7 @@ class formularioDebidaDiligenciaController extends Controller
         $estado__nuevo_id = $request->estado_firma_id;
         $user = auth()->user();
         $permisos = $this->permisos();
+        DB::beginTransaction();
         $cliente = Cliente::where('usr_app_clientes.id', '=', $id)
             ->select()
             ->first();
@@ -2118,7 +2124,7 @@ class formularioDebidaDiligenciaController extends Controller
         } catch (\Exception $e) {
             // Revertir la transacción si se produce alguna excepción
             DB::rollback();
-            return $e;
+
             return response()->json(['status' => 'error', 'message' => 'Error al guardar formulario, por favor intente nuevamente']);
         }
     }

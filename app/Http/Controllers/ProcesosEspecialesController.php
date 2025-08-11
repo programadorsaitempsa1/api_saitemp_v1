@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Exports\ProcesosEspecialesExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class ProcesosEspecialesController extends Controller
@@ -137,59 +138,35 @@ class ProcesosEspecialesController extends Controller
         return $resultadosPaginados->toJson();
     }
 
-
     public function procesosespecialesexport($request)
     {
-
         set_time_limit(0);
-        ini_set('memory_limit', '2048M');
+        ini_set('memory_limit', '30000M');
+
+        // Decodificar la cadena y separar los parámetros
         $decoded = base64_decode($request);
-        $separator = "*";
-        $array = explode($separator, $decoded);
-        // return $array[0];
-        // $result = base64_decode($request);
-        $valoresParametros = $array;
-        $numParametros = count($valoresParametros) - 1; // Excluye el último elemento
-        $parametros = [];
+        $array = explode('*', $decoded);
+        $nombreProcedimiento = array_pop($array); // Último valor es el nombre del SP
+        $parametros = $array;
 
-        for ($i = 0; $i < $numParametros; $i++) {
-            $parametros[] = $valoresParametros[$i];
-        }
-
-        $nombreProcedimiento = $valoresParametros[$numParametros];
-
-        // Creamos una cadena que contiene los marcadores de posición para los parámetros
-        $marcadores = implode(',', array_fill(0, $numParametros, '?'));
-
-        // Concatenamos el nombre del procedimiento almacenado con los marcadores de posición
-        $sql = "EXEC $nombreProcedimiento $marcadores";
-
-        // Ejecutamos la consulta SQL y obtenemos los resultados
+        // Ejecutar procedimiento
+        $sql = "EXEC $nombreProcedimiento " . implode(',', array_fill(0, count($parametros), '?'));
         $items = DB::select($sql, $parametros);
 
-        // return (new ProcesosEspecialesExport($items))->download('items.xlsx', \Maatwebsite\Excel\Excel::XLSX);
-        // Obtén la colección de resultados
-        $collection = collect($items);
-
-        // Obtén los nombres de las columnas dinámicamente
-        $columns = array_keys(get_object_vars($collection->first()));
-
-        // Crea un arreglo con los nombres de las columnas
-        $exportData = [$columns];
-
-        // Agrega los datos de cada fila al arreglo
-        foreach ($collection as $row) {
-            $rowData = [];
-            foreach ($columns as $column) {
-                $rowData[] = $row->$column;
-            }
-            $exportData[] = $rowData;
+        if (empty($items)) {
+            return response()->json(['message' => 'Sin resultados'], 204);
         }
-        $data = collect($exportData);
-        
-        return (new ProcesosEspecialesExport($data))->download('exportData.xlsx', \Maatwebsite\Excel\Excel::XLSX,[
-            'chunk' => 1000 // Define el tamaño del bloque en registros
-        ]);
+
+        // Obtener columnas dinámicamente
+        $columns = array_keys(get_object_vars($items[0]));
+
+        // Convertir cada objeto en array
+        $data = array_map(function ($item) use ($columns) {
+            return array_map(fn($col) => $item->$col, $columns);
+        }, $items);
+
+        // Exportar
+        return Excel::download(new ProcesosEspecialesExport($data, $columns), 'exportData.xlsx');
     }
 
     /**

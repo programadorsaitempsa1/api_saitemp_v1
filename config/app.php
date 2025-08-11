@@ -67,6 +67,11 @@ return [
     'PILA_URL' => env('PILA_URL'),
     'USUARIO_PILA' => env('USUARIO_PILA'),
     'PASSWORD_PILA' => env('PASSWORD_PILA'),
+    'ARL_API_URL' => env('ARL_API_URL'),
+    'ARL_API_KEY' => env('ARL_API_KEY'),
+    'YEASTAR_IP' => env('YEASTAR_IP'),
+    'YEASTAR_USER' => env('YEASTAR_USER'),
+    'YEASTAR_PASSWORD' => env('YEASTAR_PASSWORD'),
 
     /*
     |--------------------------------------------------------------------------
