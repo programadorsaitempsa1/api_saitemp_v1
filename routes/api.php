@@ -484,8 +484,7 @@ Route::group([
   Route::post('/rolesborradomasivo', [RolController::class, 'borradomasivo']);
   Route::post('/rolesactualizacionmasiva', [RolController::class, 'actualizacionmasiva']);
   Route::get('/roleslista', [RolController::class, 'lista']);
-  Route::post('/unidadmedidaborradomasivo', [UnidadMedidaController::class, 'borradomasivo']);
-  Route::post('/unidadmedidaactualizacionmasiva', [UnidadMedidaController::class, 'actualizacionmasiva']);
+
 
 
   // Rol permiso
@@ -1296,6 +1295,7 @@ Route::group([
   Route::post('/consultareferenciaspilaMasivaexcel', [ApiPilaController::class, 'consultaBdReferenciasMasivoExcel']);
   Route::get('consultabyidmasivo/{consulta_id}', [ApiPilaController::class, 'consultaByIdMasivo']);
   Route::get('/rellenarlaboratorios', [CiudadLaboratorioController::class, 'rellenarNoAplica']);
+
   Route::get('/consultareferenciaspilamasiva', [ApiPilaController::class, 'consultaBdReferenciasMasivo']);
   Route::get('/consultareferenciaspilamasiva/{cantidad}', [ApiPilaController::class, 'getConsultaHistoricoConsultaMasiva']);
   Route::post('/actualizarnovasoft', [ApiPilaController::class, 'actualizaNovasoftwithAdres']);
@@ -1317,3 +1317,4 @@ Route::group([
   //Rutas para verificar empleado activo
   Route::get('/empleadoactivo/{id}', [DashboardController::class, 'empleadosActivosById']);
 });
+
