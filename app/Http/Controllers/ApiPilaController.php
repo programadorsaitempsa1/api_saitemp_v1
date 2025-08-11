@@ -213,87 +213,148 @@ class ApiPilaController extends Controller
 
     public function consultaByIdMasivo($consulta_id)
     {
+        set_time_limit(600);
+
         $url_pila   = Config::get('app.PILA_URL');
         $endpoint   = '/api/Persona/ConsultarRespuestaSolicitudPersonaMasivo';
 
         $takenToken = $this->getToken();
-
         if ($takenToken['status'] !== 'success') {
             return response()->json(['status' => 'error', 'message' => 'Token inválido'], 403);
         }
 
+        // Normaliza documento: trim (si tienes puntos/guiones, cambia a preg_replace('/\D+/', '', $s))
+        $normalize = function ($v) {
+            if ($v === null) return null;
+            $s = trim((string)$v);
+            return $s;
+        };
+
         try {
             $token  = $takenToken['token']['data'];
 
-            $payload = [
-                'data' => [
-                    ['IdSolicitud' => $consulta_id],
-                ],
-            ];
+            $payload = ['data' => [['IdSolicitud' => $consulta_id]]];
 
+            // HTTP robusto
             $response = Http::withHeaders(['token' => $token])
+                ->timeout(30)                           // tiempo total
+                ->withOptions(['connect_timeout' => 10]) // conexión
+                ->retry(2, 200)                         // reintentos
                 ->post($url_pila . $endpoint, $payload);
 
+            if (!$response->ok()) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Error desde servicio externo',
+                    'detalle' => $response->json(),
+                ], 502);
+            }
 
-            if (empty($response['data']) || !is_array($response['data'])) {
+            $data = $response->json('data');
+            if (empty($data) || !is_array($data)) {
                 return response()->json([
                     'status'  => 'error',
                     'message' => 'No existen datos para la solicitud',
                 ], 404);
             }
-            $datosEnriquecidos = collect($response['data'])->map(function ($item) {
-                $documento = $item['NumeroDocumento'] ?? null;
 
-                $item['eps_novasoft'] = null;
-                $item['eps_nombre_novasoft'] = null;
-                $item['eps_fecha_afiliacion_novasoft'] = null;
-                $item['afp_novasoft'] = null;
-                $item['afp_nombre_novasoft'] = null;
-                $item['afp_fecha_afiliacion'] = null;
+            // --- Documentos únicos normalizados ---
+            $documentos = collect($data)
+                ->pluck('NumeroDocumento')
+                ->filter()
+                ->map($normalize)
+                ->filter()
+                ->unique()
+                ->values();
 
-                if (!$documento) return $item;
+            if ($documentos->isEmpty()) {
+                return response()->json(['status' => 'success', 'data' => []], 200);
+            }
 
-                // EPS
-                $registro = DB::table('rhh_hisfon as h')
+            DB::disableQueryLog();
+
+            // --- Consulta Novasoft por CHUNKS y solo el ÚLTIMO registro por empleado/tipo ---
+            $fondos = collect();
+            foreach ($documentos->chunk(900) as $chunk) {
+                // Subquery: MAX(fec_afi) por (cod_emp, tip_fdo) en el lote
+                $sub = DB::table('rhh_hisfon')
+                    ->select('cod_emp', 'tip_fdo', DB::raw('MAX(fec_afi) AS max_fec'))
+                    ->whereIn('cod_emp', $chunk->values())
+                    ->whereIn('tip_fdo', [1, 2]) // 1=AFP, 2=EPS
+                    ->groupBy('cod_emp', 'tip_fdo');
+
+                // Join contra la tabla real para obtener cod_fdo de ese último registro, y luego el nombre/código del fondo
+                $rows = DB::table('rhh_hisfon as h')
+                    ->joinSub($sub, 'm', function ($join) {
+                        $join->on('h.cod_emp', '=', 'm.cod_emp')
+                            ->on('h.tip_fdo', '=', 'm.tip_fdo')
+                            ->on('h.fec_afi', '=', 'm.max_fec');
+                    })
                     ->leftJoin('rhh_tbfondos as f', 'f.cod_fdo', '=', 'h.cod_fdo')
-                    ->where('h.cod_emp', $documento)
-                    ->where('h.tip_fdo', 2)
-                    ->orderByDesc('h.fec_afi')
-                    ->select('f.cod_sgs', 'f.nom_fdo', 'h.fec_afi')
-                    ->first();
+                    ->select(
+                        'h.cod_emp',
+                        'h.tip_fdo',
+                        'h.fec_afi',
+                        'f.cod_sgs',
+                        'f.nom_fdo'
+                    )
+                    ->get();
 
-                if ($registro) {
-                    $item['eps_novasoft'] = $registro->cod_sgs ?? null;
-                    $item['eps_nombre_novasoft'] = $registro->nom_fdo ?? null;
-                    $item['eps_fecha_afiliacion_novasoft'] = $registro->fec_afi ?? null;
-                }
+                // Normaliza llave
+                $rows = $rows->map(function ($r) use ($normalize) {
+                    $r->cod_emp = $normalize($r->cod_emp);
+                    return $r;
+                });
 
-                // AFP
-                $afp = DB::table('rhh_hisfon as h')
-                    ->leftJoin('rhh_tbfondos as f', 'f.cod_fdo', '=', 'h.cod_fdo')
-                    ->where('h.cod_emp', $documento)
-                    ->where('h.tip_fdo', 1)
-                    ->orderByDesc('h.fec_afi')
-                    ->select('f.cod_sgs', 'f.nom_fdo', 'h.fec_afi')
-                    ->first();
+                $fondos = $fondos->concat($rows);
+            }
 
-                if ($afp) {
-                    $item['afp_novasoft'] = $afp->cod_sgs ?? null;
-                    $item['afp_nombre_novasoft'] = $afp->nom_fdo ?? null;
-                    $item['afp_fecha_afiliacion_novasoft'] = $afp->fec_afi ?? null;
-                }
+            // Mapas por documento
+            $epsByDoc = $fondos->where('tip_fdo', 2)
+                ->keyBy('cod_emp')
+                ->map(fn($r) => [
+                    'cod'  => $r->cod_sgs,
+                    'nom'  => $r->nom_fdo,
+                    'fec'  => $r->fec_afi,
+                ]);
+
+            $afpByDoc = $fondos->where('tip_fdo', 1)
+                ->keyBy('cod_emp')
+                ->map(fn($r) => [
+                    'cod'  => $r->cod_sgs,
+                    'nom'  => $r->nom_fdo,
+                    'fec'  => $r->fec_afi,
+                ]);
+
+            // --- Enriquecer sin más queries ---
+            $datosEnriquecidos = collect($data)->map(function ($item) use ($normalize, $epsByDoc, $afpByDoc) {
+                $docKey = $normalize($item['NumeroDocumento'] ?? null);
+
+                $eps = $docKey ? ($epsByDoc[$docKey] ?? null) : null;
+                $afp = $docKey ? ($afpByDoc[$docKey] ?? null) : null;
+
+                // Inicializa claves esperadas por tu export
+                $item['eps_novasoft']                  = $eps['cod'] ?? null;
+                $item['eps_nombre_novasoft']           = $eps['nom'] ?? null;
+                $item['eps_fecha_afiliacion_novasoft'] = $eps['fec'] ?? null;
+
+                $item['afp_novasoft']                  = $afp['cod'] ?? null;
+                $item['afp_nombre_novasoft']           = $afp['nom'] ?? null;
+                $item['afp_fecha_afiliacion_novasoft'] = $afp['fec'] ?? null;
 
                 // Advertencias
                 $advertencias = [];
+                $codigoEpsApi = $item['CodigoEps'] ?? null;
+                $codigoAfpApi = $item['CodigoAfp'] ?? null;
 
                 if (
-                    $item['CodigoAfp'] != $item['afp_novasoft'] &&
-                    $item['CodigoEps'] != $item['eps_novasoft']
+                    $codigoAfpApi != trim((string)($item['afp_novasoft'] ?? '')) &&
+                    $codigoEpsApi != trim((string)($item['eps_novasoft'] ?? ''))
                 ) {
                     $advertencias[] = 'La AFP y la EPS actuales son diferentes a las de la consulta en ADRES/RUAF; verifique la información.';
-                } elseif ($item['CodigoEps'] != $item['eps_novasoft']) {
+                } elseif ($codigoEpsApi != trim((string)($item['eps_novasoft'] ?? ''))) {
                     $advertencias[] = 'La EPS actual es diferente a la obtenida en ADRES; verifique la información.';
-                } elseif ($item['CodigoAfp'] != $item['afp_novasoft']) {
+                } elseif ($codigoAfpApi != trim((string)($item['afp_novasoft'] ?? ''))) {
                     $advertencias[] = 'La AFP actual es diferente a la obtenida en RUAF; verifique la información.';
                 }
 
@@ -309,11 +370,9 @@ class ApiPilaController extends Controller
 
                 return $item;
             })
-                ->filter(function ($item) {
-                    return !empty($item['advertencias']);
-                })
-
+                ->filter(fn($item) => !empty($item['advertencias'])) // si quieres solo con advertencias
                 ->values();
+
             return response()->json([
                 'status' => 'success',
                 'data'   => $datosEnriquecidos,
@@ -441,9 +500,72 @@ class ApiPilaController extends Controller
     }
     public function descargarExcelAdres(Request $request)
     {
+        try {
+            // 1) Lee la carga útil (puede venir como string JSON o array)
+            $raw  = $request->input('data');
+            $rows = is_array($raw) ? $raw : (json_decode($raw, true) ?? []);
 
-        $data = json_decode($request->input('data'), true); // convertir JSON string a array
-        return Excel::download(new ConsultaPilaExport($data), 'EmpleadosAdres.xlsx');
+            // 2) Defaults EXACTOS según tu export
+            $defaults = [
+                'TipoDocumento'                   => null,
+                'NumeroDocumento'                 => null,
+                'PrimerNombre'                    => null,
+                'SegundoNombre'                   => null,
+                'PrimerApellido'                  => null,
+                'SegundoApellido'                 => null,
+                'CodigoEps'                       => null,
+                'NombreEps'                       => null,
+                'eps_novasoft'                    => null,
+                'eps_nombre_novasoft'             => null,
+                'FechaAfiliacionEps'              => null,
+                'eps_fecha_afiliacion_novasoft'   => null,
+                'CertificadoEps'                  => false,
+                'CodigoAfp'                       => null,
+                'NombreAfp'                       => null,
+                'afp_novasoft'                    => null,
+                'afp_nombre_novasoft'             => null,
+                'FechaAfiliacionAfp'              => null,
+                'afp_fecha_afiliacion_novasoft'   => null,
+                'CertificadoAfp'                  => false,
+                'EsPensionado'                    => false,
+                'EnTramitePension'                => null,
+                'TipoPension'                     => null,
+                'advertencias'                    => [],
+            ];
+
+            // 3) Normaliza cada fila
+            $data = array_map(function ($row) use ($defaults) {
+                // merge defaults para garantizar todas las claves
+                $row = $row + $defaults;
+
+                // Booleanos consistentes (acepta "true"/"false", 1/0, etc.)
+                $row['CertificadoEps'] = filter_var($row['CertificadoEps'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+                $row['CertificadoAfp'] = filter_var($row['CertificadoAfp'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+                $row['EsPensionado']   = filter_var($row['EsPensionado'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+
+                // Asegura que advertencias sea array
+                if (!is_array($row['advertencias'])) {
+                    $row['advertencias'] = array_filter([(string) $row['advertencias']]);
+                }
+
+                // (Opcional) Normaliza fechas a YYYY-MM-DD si vienen en otro formato
+                foreach (['FechaAfiliacionEps', 'eps_fecha_afiliacion_novasoft', 'FechaAfiliacionAfp', 'afp_fecha_afiliacion_novasoft'] as $k) {
+                    if (!empty($row[$k])) {
+                        try {
+                            $row[$k] = Carbon::parse($row[$k])->toDateString();
+                        } catch (\Throwable $e) {
+                            // si no parsea, déjalo tal cual
+                        }
+                    }
+                }
+
+                return $row;
+            }, $rows);
+
+            return Excel::download(new ConsultaPilaExport($data), 'EmpleadosAdres.xlsx');
+        } catch (\Exception $e) {
+            return $e;
+        }
     }
 
     public function filtroConsultaMasiva($cadena, $cantidad = null)
