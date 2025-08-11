@@ -192,7 +192,7 @@ class AsignacionServicioController extends Controller
 
     public function responsableservicio($id)
     {
-        $result = cliente::join('usr_app_actividades_ciiu as ac', 'ac.id', '=', 'usr_app_clientes.actividad_ciiu_id')
+        $result = cliente::leftJoin('usr_app_actividades_ciiu as ac', 'ac.id', '=', 'usr_app_clientes.actividad_ciiu_id')
             ->leftjoin('usr_app_codigos_ciiu as cc', 'cc.id', '=', 'ac.codigo_ciiu_id')
             ->leftjoin('usr_app_sector_economico as se', 'se.id', '=', 'cc.sector_economico_id')
             ->where('usr_app_clientes.id', '=', $id)
