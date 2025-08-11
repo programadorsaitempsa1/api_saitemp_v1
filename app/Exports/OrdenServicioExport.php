@@ -1,49 +1,30 @@
 <?php
 
-namespace App\Exports;
-
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use App\Exports\FormularioIngresoExport;
-use App\Exports\SeguimientoEstadosOrdenServicioSheet;
 use App\Exports\SeguimientoGuardadoOrdenServicioSheet;
 use App\Exports\LaborariosMedicosSheet;
+use App\Exports\SeguimientoEstadosOrdenServicioSheet;
 
 class OrdenServicioExport implements WithMultipleSheets
 {
-    /** @var \Illuminate\Support\Collection */
-    private $data1;
-    /** @var \Illuminate\Support\Collection */
-    private $data2;
-    /** @var \Illuminate\Support\Collection */
-    private $data3;
-    /** @var \Illuminate\Support\Collection */
-    private $data4;
+    protected $data1, $data2, $data3, $data4;
 
-    /**
-     * @param \Illuminate\Support\Collection $data1
-     * @param \Illuminate\Support\Collection $data2
-     */
     public function __construct($data1, $data2, $data3, $data4)
     {
-        $this->data1 = $data1;
-        $this->data2 = $data2;
-        $this->data3 = $data3;
-        $this->data4 = $data4;
+        $this->data1 = $data1; // Ingresos
+        $this->data2 = $data2; // Seguimiento Guardado
+        $this->data3 = $data3; // Laboratorios
+        $this->data4 = $data4; // Seguimiento Estado
     }
 
-    /**
-     * Retorna un arreglo de instancias de las hojas que quieres exportar.
-     *
-     * @return array
-     */
     public function sheets(): array
     {
         return [
-            // Aquí pasas la colección a cada sheet
             new FormularioIngresoExport($this->data1),
-            new SeguimientoEstadosOrdenServicioSheet($this->data2),
-            new SeguimientoGuardadoOrdenServicioSheet($this->data3),
-            new LaborariosMedicosSheet($this->data4),
+            new SeguimientoGuardadoOrdenServicioSheet($this->data2),
+            new LaborariosMedicosSheet($this->data3),
+            new SeguimientoEstadosOrdenServicioSheet($this->data4),
         ];
     }
 }

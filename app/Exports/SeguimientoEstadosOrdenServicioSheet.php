@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Illuminate\Support\Carbon;
 
 
 class SeguimientoEstadosOrdenServicioSheet implements FromCollection, WithStyles, ShouldAutoSize, WithHeadings, WithTitle
@@ -41,17 +42,16 @@ class SeguimientoEstadosOrdenServicioSheet implements FromCollection, WithStyles
     public function headings(): array
     {
         return [
-            'registro_id',
-            'responsable_inicial',
-            'responsable_final',
-            'estado_ingreso_inicial',
-            'estado_ingreso_final',
-            'actualiza_registro',
-            'fecha guardado',
-
-
+            'ID Formulario',
+            'Responsable Inicial',
+            'Responsable Final',
+            'Estado Inicial',
+            'Estado Final',
+            'Actualiza Registro',
+            'Fecha Seguimiento',
         ];
     }
+
 
 
     public function styles(Worksheet $sheet)

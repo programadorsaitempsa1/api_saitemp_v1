@@ -9,9 +9,10 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Illuminate\Support\Carbon;
 
 
-class FormularioIngresoExport implements FromCollection, WithStyles, ShouldAutoSize,WithHeadings, WithTitle
+class FormularioIngresoExport implements FromCollection, WithStyles, ShouldAutoSize, WithHeadings, WithTitle
 {
 
     use Exportable;
@@ -31,8 +32,8 @@ class FormularioIngresoExport implements FromCollection, WithStyles, ShouldAutoS
 
 
     /**
-    * @return \Illuminate\Support\Collection
-    */
+     * @return \Illuminate\Support\Collection
+     */
     public function collection()
     {
         return $this->exportData;
@@ -41,53 +42,46 @@ class FormularioIngresoExport implements FromCollection, WithStyles, ShouldAutoS
     public function headings(): array
     {
         return [
-            'Número de radicado',
-            'Fecha de radicado',
-            'Estado ingreso',
+            'ID',
+            'Número Radicado',
+            'Fecha Radicado',
+            'Estado Ingreso',
             'Responsable',
-            'Empresa usuaria',
-            'Dirección de empresa',
-            'Tipo de servicio',
-            'Tipo de indentificación',
-            'Número de identificación',
-            'Nombre candidato',
-            'Número de contacto',
-            'Correo candidato',
-            'cargo',
+            'Razón Social',
+            'Dirección Empresa',
+            'Tipo Servicio',
+            'Tipo Identificación',
+            'Número Identificación',
+            'Nombre Completo',
+            'Número Contacto',
+            'Correo Notificación',
+            'Cargo',
             'Salario',
             'Profesional',
-            'Informe de selección',
-            'Subsidio de transporte',
+            'Informe Selección',
+            'Subsidio Transporte',
             'Departamento',
             'Ciudad',
             'EPS',
             'AFP',
-            'Stradata verificado',
-            'Novedades stradata',
-            'Dirección laboratorio',
+            'Estradata',
+            'Novedad Stradata',
+            'Dirección Laboratorio',
             'Exámenes',
-            'Fecha de exámen',
-            'Recomendaciones exámen',
-            'Novedades exámenes',
-            'Observacion al servicio',
-            'Novedad en servicio',
-            'Afectaciones al servicio',
-            'Corregir por',
-            'Correo notificación empresa',
-            'Fecha de ingreso',
-            'Estado de la vacante',
-            'Otro laboratorio',
-            'Departamento ubicación laboratorio médico',
-            'Ciudad ubicación laboratorio médico',
-            'Laboratorio médico',
-            'Seguimiento estados',
-            ' ',
-            'Seguimiento guardado',
-            ' ',
-            
+            'Fecha Examen',
+            'Recomendaciones Examen',
+            'Novedades Exámenes',
+            'Novedades',
+            'Observación Estado',
+            'Afectación Servicio',
+            'Responsable Corregir',
+            'Correo Notificación Empresa',
+            'Fecha Ingreso',
+            'Estado Vacante',
+            'Laboratorio',
+            'Observación Estado',
         ];
     }
-    
 
     public function styles(Worksheet $sheet)
     {
@@ -95,5 +89,4 @@ class FormularioIngresoExport implements FromCollection, WithStyles, ShouldAutoS
             1 => ['font' => ['bold' => true, 'size' => 12]],
         ];
     }
-
 }
