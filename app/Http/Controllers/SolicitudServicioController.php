@@ -87,9 +87,8 @@ class SolicitudServicioController extends Controller
                 'usr_app_solicitud_servicio.id',
                 'usr_app_solicitud_servicio.numero_radicado',
                 'usr_app_solicitud_servicio.created_at',
-                'usr_app_solicitud_servicio.fecha_fin',
+                // 'usr_app_solicitud_servicio.fecha_fin',
                 'ts.nombre_servicio as linea_servicio',
-                'ms.nombre as motivo_servicio',
                 'usr_app_solicitud_servicio.cantidad_contrataciones',
             );
         }
