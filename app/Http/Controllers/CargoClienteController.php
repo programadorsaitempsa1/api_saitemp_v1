@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CargoCliente;
 use Illuminate\Http\Request;
 use App\Models\Cargo2;
 use App\Models\Cargo2Examen;
 use App\Models\Cargo2Recomendacion;
 use App\Models\Cargos2TareaAltoRiesgo;
-use App\Models\PerfilCargoExamenesCargos2Model;
-use App\Models\PerfilCargoRecomendacionesCargos2Model;
-use App\Models\Cargos;
+use App\Models\CandidatoSolicitudServicioModel;
 use Illuminate\Support\Facades\DB;
 
 class CargoClienteController extends Controller
@@ -22,9 +19,6 @@ class CargoClienteController extends Controller
      */
     public function index($id)
     {
-        // $result = CargoCliente::select()
-        //     ->get();
-        // return response()->json($result);
         $cargos = Cargo2::leftJoin('usr_app_riesgos_laborales as rl2', 'rl2.id', '=', 'usr_app_cargos2.riesgo_laboral_id')
             ->leftJoin('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_cargos2.cargo_id')
             ->leftJoin('usr_app_subcategoria_cargos as sc', 'sc.id', '=', 'lc.subcategoria_cargo_id')
@@ -39,6 +33,7 @@ class CargoClienteController extends Controller
             ->leftJoin('usr_app_examenes_recomendaciones as er', 'er.examen_id', '=', 'pcexa.id')
             ->leftJoin('usr_app_perfil_cargo_examenes_recomendaciones as pcer', 'pcer.id', '=', 'er.recomendacion_id')
             ->select(
+                'usr_app_cargos2.id as cargo_cliente_id',  // id del cargo del cliente
                 'usr_app_cargos2.cargo_id as cargo_id',
                 'lc.nombre as cargo',
                 'lc.subcategoria_cargo_id as categoria_cargo_id',
@@ -72,6 +67,7 @@ class CargoClienteController extends Controller
 
             $funcion_cargo = $objeto['funcion_cargo'];
             $idCargo = $objeto['cargo_id'];
+            $cargo_cliente_id = $objeto['cargo_cliente_id'];
             $cargo = $objeto['cargo'];
             $idSubcategoria = $objeto['categoria_cargo_id'];
             $subcategoria = $objeto['categoria'];
@@ -94,6 +90,7 @@ class CargoClienteController extends Controller
                 // Si no existe, crear un nuevo objeto para el cargo
                 $resultados[$idCargo] = [
                     'cargo_id' => $idCargo,
+                    'cargo_cliente_id' => $cargo_cliente_id,
                     'cargo' => $cargo,
                     'riesgo_laboral_id' => $idRiesgoLaboral,
                     'riesgo_laboral' => $riesgoLaboral,
@@ -126,16 +123,6 @@ class CargoClienteController extends Controller
                 ];
             }
 
-
-            // TODO:
-            // Verificar si el requisito ya existe en los resultados del cargo
-            // if (!in_array($recomendacion_examen_id, array_column($resultados[$idCargo]['recomendacion_examen'], 'id'))) {
-            //     $resultados[$idCargo]['recomendacion_examen'][] = [
-            //         'id' => $recomendacion_examen_id,
-            //         'recomendacion_examen' => $recomendacion_examen,
-            //     ];
-            // }
-
             if (
                 $recomendacion_examen_id !== null &&
                 $recomendacion_examen !== null &&
@@ -165,17 +152,17 @@ class CargoClienteController extends Controller
      */
     public function create(Request $request, $id)
     {
-        $cargoExamen = Cargo2Examen::where('cargo_id', '=', $id)->delete();
-        $cargoRecomendacion = Cargo2Recomendacion::where('cargo_id', '=', $id)->delete();
-        $tarea_alto_riesgo = Cargos2TareaAltoRiesgo::where('cargo_id', '=', $id)->delete();
-        $cargo = Cargo2::where('cliente_id', '=', $id)->delete();
-
-        $request = $request->all();
         try {
+            $cargo = Cargo2::where('cliente_id', '=', $id)->first();
+            $cargo_candidato_id = CandidatoSolicitudServicioModel::where('cargo_solicitado_id', $cargo->id)->first();
+            $request = $request->all();
 
             DB::Begintransaction();
             $contador = 0;
             foreach ($request as $item) {
+                if (!empty($cargo_candidato_id) && isset($item['cargo_cliente_id']) && $cargo_candidato_id->cargo_solicitado_id == $item['cargo_cliente_id']) {
+                    continue;
+                }
                 if ($item['cargo_id'] != '' || $item['riesgo_laboral_id'] != '') {
                     $cargo = new cargo2;
                     $cargo->cargo_id = $item['cargo_id'];
@@ -203,25 +190,6 @@ class CargoClienteController extends Controller
                             $cargoRecomendacion->save();
                         }
                     }
-
-                    // foreach ($request[$contador]['examenes'] as $item) {
-                    //     if ($item['id'] != '') {
-                    //         $cargoExamen = new PerfilCargoExamenesCargos2Model;
-                    //         $cargoExamen->examen_id = $item['id'];
-                    //         $cargoExamen->cargo_id = $cargo->id;
-                    //         $cargoExamen->save();
-                    //     }
-                    // }
-
-                    // // Se eliminan los requisitos del formulario
-                    // foreach ($request[$contador]['recomendaciones'] as $item) {
-                    //     if ($item['id'] != '') {
-                    //         $cargoRecomendacion = new PerfilCargoRecomendacionesCargos2Model;
-                    //         $cargoRecomendacion->recomendacion_id = $item['id'];
-                    //         $cargoRecomendacion->cargo_id = $cargo->id;
-                    //         $cargoRecomendacion->save();
-                    //     }
-                    // }
 
                     if (!empty($request[$contador]['tareas_alto_riesgo_seleccionadas'])) {
                         foreach ($request[$contador]['tareas_alto_riesgo_seleccionadas'] as $item) {
@@ -296,7 +264,14 @@ class CargoClienteController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $cargo = Cargo2::where('id', '=', $id)->first();
+        $cargo_candidato_id = CandidatoSolicitudServicioModel::where('cargo_solicitado_id', $cargo->id)->first();
+        if (empty($cargo_candidato_id)) {
+            $cargo->delete();
+             return response()->json(['status'=>'success','message'=>'Cargo eliminado de manera exitosa.','delete'=>1]);
+        } else {
+            return response()->json(['status'=>'success','message'=>'El cargo no puede ser eliminado.','delete'=>0]);
+        }
     }
 
     public function cargoById($id, $cliente_id)

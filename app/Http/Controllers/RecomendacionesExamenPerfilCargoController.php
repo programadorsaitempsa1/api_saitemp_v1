@@ -21,6 +21,15 @@ class RecomendacionesExamenPerfilCargoController extends Controller
         return response()->json($result);
     }
 
+    public function tabla($cantidad)
+    {
+        $result = RecomendacionesExamenPerfilCargoModel::select(
+            'id',
+            'nombre'
+        )->paginate($cantidad);
+        return response()->json($result);
+    }
+
     /**
      * Show the form for creating a new resource.
      *

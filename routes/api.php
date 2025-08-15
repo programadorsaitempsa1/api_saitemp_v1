@@ -202,7 +202,6 @@ use App\Http\Controllers\AsignacionEstadosController;
 use App\Http\Controllers\EnvioSmsYeastarController;
 use App\Http\Controllers\SubestadoOrdenServivicioController;
 use App\Http\Controllers\FacilitadorAnalistaController;
-use App\Http\Controllers\ListaRiesgosPerfilcargoController;
 use App\Http\Controllers\TareasAltoRiesgoCargoController;
 use App\Http\Controllers\ExamenPerfilCargoController;
 use App\Http\Controllers\RecomendacionesExamenPerfilCargoController;
@@ -1264,8 +1263,6 @@ Route::group([
   Route::get('/facilitadoranalistaById/{usuario_id}', [FacilitadorAnalistaController::class, 'byUserId']);
   Route::get('/facilitadoranalistafiltro/{cadena}/{cantidad}', [FacilitadorAnalistaController::class, 'byUserId']);
   
-  
-  Route::get('/listariesgosperfilcargo/{id}', [ListaRiesgosPerfilcargoController::class, 'byid']);
 
   Route::get('/tareasaltoriesgocargo', [TareasAltoRiesgoCargoController::class, 'index']);
 
