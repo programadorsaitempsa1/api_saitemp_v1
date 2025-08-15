@@ -860,14 +860,14 @@ class formularioDebidaDiligenciaController extends Controller
         $user = auth()->user();
         $year_actual = date('Y');
         try {
-            $consulta = base64_decode($cadena);
-            $valores = explode("/", $consulta);
+
+            $cadenaJSON = base64_decode($cadena);
+            $cadenaUTF8 = mb_convert_encoding($cadenaJSON, 'UTF-8', 'ISO-8859-1');
+            $valores = explode("/", $cadenaUTF8);
             $campo = $valores[0];
             $operador = $valores[1];
             $valor = $valores[2];
             $valor2 = isset($valores[3]) ? $valores[3] : null;
-
-            // return $campo."".$valor;
 
             $query = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
                 ->leftJoin('usr_app_estados_firma as estf', 'estf.id', '=', 'usr_app_clientes.estado_firma_id')
@@ -879,7 +879,6 @@ class formularioDebidaDiligenciaController extends Controller
                     '=',
                     'usr_app_clientes.id'
                 )
-                /*    ->whereYear('usr_app_clientes.created_at', $year_actual) */
                 ->when(!in_array('39', $permisos), function ($query) use ($user) {
                     return $query->where(function ($subQuery) use ($user) {
                         $subQuery->where('usr_app_clientes.vendedor_id', $user->vendedor_id)
