@@ -393,6 +393,7 @@ class ApiPilaController extends Controller
 
         $fecha_actual = Carbon::now()->subMonthNoOverflow()->endOfMonth()->format('d-m-Y');
         $fecha_actual_format = Carbon::now()->startOfMonth()->format('d-m-Y');
+
         $empleados = $request['actualiza_empleados'];
         if (count($empleados) > 0) {
             $array_resultado = [];
@@ -444,13 +445,15 @@ class ApiPilaController extends Controller
                             ]);
 
                         $eps_nueva = fondoSP::select('*')->where('cod_sgs', $empleado['CodigoEps'])->first();
-                        $historicoModel = new HistoricoFondosModel();
-                        $historicoModel->cod_emp = $empleado['NumeroDocumento'];
-                        $historicoModel->cod_fdo = $eps_nueva->cod_fdo;
-                        $historicoModel->fec_afi = $fecha_actual_format;
-                        $historicoModel->tip_nov = 1;
-                        $historicoModel->tip_fdo = 2;
-                        $historicoModel->save();
+                        if ($eps_nueva) {
+                            $historicoModel = new HistoricoFondosModel();
+                            $historicoModel->cod_emp = $empleado['NumeroDocumento'];
+                            $historicoModel->cod_fdo = $eps_nueva->cod_fdo;
+                            $historicoModel->fec_afi = $fecha_actual_format;
+                            $historicoModel->tip_nov = 1;
+                            $historicoModel->tip_fdo = 2;
+                            $historicoModel->save();
+                        }
                     }
                     if ($ultimo_registro_afp && $ultimo_registro_afp->codigo_adres != $empleado['CodigoAfp'] && $empleado['CodigoAfp'] != null) {
                         $solo_fecha = \Carbon\Carbon::parse($ultimo_registro_afp->fec_afi)->format('d-m-Y');
