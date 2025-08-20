@@ -41,7 +41,7 @@ class ConsultaPilaExport implements FromCollection, WithHeadings
                 $empleado['afp_novasoft'],
                 $empleado['afp_nombre_novasoft'],
                 $empleado['FechaAfiliacionAfp'],
-                $empleado['afp_fecha_afiliacion_novasoft'],
+                $empleado['afp_fecha_afiliacion_novasoft'] == $empleado['afp_fecha_afiliacion_novasoft'] ? $empleado['afp_fecha_afiliacion_novasoft'] : null,
                 $empleado['CertificadoAfp'] == true ? "Si" : "No",
                 $empleado['EsPensionado'] == true ? "Si" : "No",
                 $empleado['EnTramitePension'],
