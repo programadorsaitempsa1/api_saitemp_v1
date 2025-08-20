@@ -150,33 +150,109 @@ class CargoClienteController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    // public function create(Request $request, $id)
+    // {
+    //     try {
+    //         $cargos = Cargo2::where('cliente_id', '=', $id)->get();
+    //         return $request;
+    //         return $cargos;
+    //         $request = $request->all();
+
+    //         DB::Begintransaction();
+    //         $contador = 0;
+    //         foreach ($request as $item) {
+    //             // if (!empty($cargo_candidato_id) && isset($item['cargo_cliente_id']) && $cargo_candidato_id->cargo_solicitado_id == $item['cargo_cliente_id']) {
+    //             //     continue;
+    //             // }
+
+    //             if ($item['cargo_id'] != '' || $item['riesgo_laboral_id'] != '') {
+    //                 $cargo = new cargo2;
+    //                 $cargo->cargo_id = $item['cargo_id'];
+    //                 $cargo->riesgo_laboral_id = $item['riesgo_laboral_id'];
+    //                 $cargo->funcion_cargo = $item['funcion_cargo'];
+    //                 $cargo->cliente_id = $id;
+    //                 $cargo->save();
+
+
+    //                 foreach ($request[$contador]['examenes'] as $item) {
+    //                     if ($item['id'] != '') {
+    //                         $cargoExamen = new Cargo2Examen;
+    //                         $cargoExamen->examen_id = $item['id'];
+    //                         $cargoExamen->cargo_id = $cargo->id;
+    //                         $cargoExamen->save();
+    //                     }
+    //                 }
+
+    //                 // Se eliminan los requisitos del formulario
+    //                 foreach ($request[$contador]['recomendaciones'] as $item) {
+    //                     if ($item['id'] != '') {
+    //                         $cargoRecomendacion = new Cargo2Recomendacion;
+    //                         $cargoRecomendacion->recomendacion_id = $item['id'];
+    //                         $cargoRecomendacion->cargo_id = $cargo->id;
+    //                         $cargoRecomendacion->save();
+    //                     }
+    //                 }
+
+    //                 if (!empty($request[$contador]['tareas_alto_riesgo_seleccionadas'])) {
+    //                     foreach ($request[$contador]['tareas_alto_riesgo_seleccionadas'] as $item) {
+    //                         $tarea_alto_riesgo = new Cargos2TareaAltoRiesgo;
+    //                         $tarea_alto_riesgo->tarea_alto_riesgo_id = $item;
+    //                         $tarea_alto_riesgo->cargo_id = $cargo->id;
+    //                         $tarea_alto_riesgo->save();
+    //                     }
+    //                 }
+    //                 $contador++;
+    //             }
+    //         }
+    //         DB::commit();
+    //         return response()->json(['status' => 'success', 'message' => 'Registros insertados de manera exitosa.']);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return $e;
+    //         return response()->json(['status' => 'success', 'message' => 'Hubo un error al guardar los registros.']);
+    //     }
+    // }
+
     public function create(Request $request, $id)
     {
+
+        $cargos = Cargo2::where('cliente_id', '=', $id)->get();
+        $cargos_id = $cargos->pluck('id')->toArray();
+        $cargoExamenes = Cargo2Examen::whereIn('cargo_id', $cargos_id)->select()->delete();
+        // $cargoRecomendaciones = Cargo2Recomendacion::whereIn('cargo_id', $cargos_id)->select()->delete();
+        $cargoRiesgoLaboral = Cargos2TareaAltoRiesgo::whereIn('cargo_id', $cargos_id)->select()->delete();
+        // $cargo = Cargo2::where('cliente_id', '=', $id)->delete();
+
+        $request = $request->all();
         try {
-            $cargo = Cargo2::where('cliente_id', '=', $id)->first();
-            $cargo_candidato_id = CandidatoSolicitudServicioModel::where('cargo_solicitado_id', $cargo->id)->first();
-            $request = $request->all();
 
             DB::Begintransaction();
             $contador = 0;
             foreach ($request as $item) {
-                if (!empty($cargo_candidato_id) && isset($item['cargo_cliente_id']) && $cargo_candidato_id->cargo_solicitado_id == $item['cargo_cliente_id']) {
-                    continue;
-                }
                 if ($item['cargo_id'] != '' || $item['riesgo_laboral_id'] != '') {
-                    $cargo = new cargo2;
-                    $cargo->cargo_id = $item['cargo_id'];
-                    $cargo->riesgo_laboral_id = $item['riesgo_laboral_id'];
-                    $cargo->funcion_cargo = $item['funcion_cargo'];
-                    $cargo->cliente_id = $id;
-                    $cargo->save();
+                    $posicion = false;
+                    if(isset($item['cargo_cliente_id'])){
+                        $posicion = array_search($item['cargo_cliente_id'], $cargos_id);
+                    }
+                    if ($posicion !== false) {
+                        $cargos[$posicion]->funcion_cargo = $item['funcion_cargo'];
+                        $cargos[$posicion]->save();
+                    } else {
+                        $cargo = new cargo2;
+                        $cargo->cargo_id = $item['cargo_id'];
+                        $cargo->riesgo_laboral_id = $item['riesgo_laboral_id'];
+                        $cargo->funcion_cargo = $item['funcion_cargo'];
+                        $cargo->cliente_id = $id;
+                        $cargo->save();
+                    }
 
+                    $cargo_id = isset($cargo->id) ? $cargo->id : $cargos[$posicion]->id;
 
                     foreach ($request[$contador]['examenes'] as $item) {
                         if ($item['id'] != '') {
                             $cargoExamen = new Cargo2Examen;
                             $cargoExamen->examen_id = $item['id'];
-                            $cargoExamen->cargo_id = $cargo->id;
+                            $cargoExamen->cargo_id = $cargo_id;
                             $cargoExamen->save();
                         }
                     }
@@ -186,7 +262,7 @@ class CargoClienteController extends Controller
                         if ($item['id'] != '') {
                             $cargoRecomendacion = new Cargo2Recomendacion;
                             $cargoRecomendacion->recomendacion_id = $item['id'];
-                            $cargoRecomendacion->cargo_id = $cargo->id;
+                            $cargoRecomendacion->cargo_id = $cargo_id;
                             $cargoRecomendacion->save();
                         }
                     }
@@ -195,10 +271,11 @@ class CargoClienteController extends Controller
                         foreach ($request[$contador]['tareas_alto_riesgo_seleccionadas'] as $item) {
                             $tarea_alto_riesgo = new Cargos2TareaAltoRiesgo;
                             $tarea_alto_riesgo->tarea_alto_riesgo_id = $item;
-                            $tarea_alto_riesgo->cargo_id = $cargo->id;
+                            $tarea_alto_riesgo->cargo_id = $cargo_id;
                             $tarea_alto_riesgo->save();
                         }
                     }
+
                     $contador++;
                 }
             }
@@ -268,9 +345,9 @@ class CargoClienteController extends Controller
         $cargo_candidato_id = CandidatoSolicitudServicioModel::where('cargo_solicitado_id', $cargo->id)->first();
         if (empty($cargo_candidato_id)) {
             $cargo->delete();
-             return response()->json(['status'=>'success','message'=>'Cargo eliminado de manera exitosa.','delete'=>1]);
+            return response()->json(['status' => 'success', 'message' => 'Cargo eliminado de manera exitosa.', 'delete' => 1]);
         } else {
-            return response()->json(['status'=>'success','message'=>'El cargo no puede ser eliminado.','delete'=>0]);
+            return response()->json(['status' => 'success', 'message' => 'El cargo no puede ser eliminado.', 'delete' => 0]);
         }
     }
 
