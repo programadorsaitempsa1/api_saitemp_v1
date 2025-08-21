@@ -203,8 +203,6 @@ use App\Http\Controllers\EnvioSmsYeastarController;
 use App\Http\Controllers\SubestadoOrdenServivicioController;
 use App\Http\Controllers\FacilitadorAnalistaController;
 use App\Http\Controllers\HistoricoConsultasPilaController;
-use App\Models\RecepcionEmpleado;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -1317,4 +1315,3 @@ Route::group([
   //Rutas para verificar empleado activo
   Route::get('/empleadoactivo/{id}', [DashboardController::class, 'empleadosActivosById']);
 });
-
