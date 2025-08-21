@@ -40,7 +40,8 @@ class CargoClienteController extends Controller
                 'sc.categoria_cargo_id as tipo_cargo_id',
                 'sc.nombre as categoria',
                 'cc.nombre as tipo_cargo',
-                'usr_app_cargos2.funcion_cargo as funcion_cargo',
+                'usr_app_cargos2.funcion_cargo',
+                'usr_app_cargos2.tarea_cargo',
                 'usr_app_cargos2.riesgo_laboral_id',
                 'rl2.nombre as riesgo_laboral',
                 'cr.recomendacion_id',
@@ -66,6 +67,7 @@ class CargoClienteController extends Controller
             // Extraer los datos del objeto
 
             $funcion_cargo = $objeto['funcion_cargo'];
+            $tarea_cargo = $objeto['tarea_cargo'];
             $idCargo = $objeto['cargo_id'];
             $cargo_cliente_id = $objeto['cargo_cliente_id'];
             $cargo = $objeto['cargo'];
@@ -101,6 +103,7 @@ class CargoClienteController extends Controller
                     'tipo_cargo_id' => $idCategoria,
                     'tipo_cargo' => $categoria,
                     'funcion_cargo' => $funcion_cargo,
+                    'tarea_cargo' => $tarea_cargo,
                     'tareas_alto_riesgo_seleccionadas' => [],
                     'recomendacion_examen' => []
                 ];
@@ -236,12 +239,14 @@ class CargoClienteController extends Controller
                     }
                     if ($posicion !== false) {
                         $cargos[$posicion]->funcion_cargo = $item['funcion_cargo'];
+                        $cargos[$posicion]->tarea_cargo = $item['tarea_cargo'];
                         $cargos[$posicion]->save();
                     } else {
                         $cargo = new cargo2;
                         $cargo->cargo_id = $item['cargo_id'];
                         $cargo->riesgo_laboral_id = $item['riesgo_laboral_id'];
                         $cargo->funcion_cargo = $item['funcion_cargo'];
+                        $cargo->tarea_cargo = $item['tarea_cargo'];
                         $cargo->cliente_id = $id;
                         $cargo->save();
                     }
@@ -371,7 +376,8 @@ class CargoClienteController extends Controller
                 'sc.categoria_cargo_id as tipo_cargo_id',
                 'sc.nombre as categoria',
                 'cc.nombre as tipo_cargo',
-                'usr_app_cargos2.funcion_cargo as funcion_cargo',
+                'usr_app_cargos2.funcion_cargo',
+                'usr_app_cargos2.tarea_cargo',
                 'usr_app_cargos2.riesgo_laboral_id',
                 'rl2.nombre as riesgo_laboral',
                 'cr.recomendacion_id',
@@ -395,6 +401,7 @@ class CargoClienteController extends Controller
             // Extraer los datos del objeto
 
             $funcion_cargo = $objeto['funcion_cargo'];
+            $tarea_cargo = $objeto['tarea_cargo'];
             $idCargo = $objeto['cargo_id'];
             $cargo = $objeto['cargo'];
             $idSubcategoria = $objeto['categoria_cargo_id'];
@@ -423,7 +430,8 @@ class CargoClienteController extends Controller
                     'categoria' => $subcategoria,
                     'tipo_cargo_id' => $idCategoria,
                     'tipo_cargo' => $categoria,
-                    'funcion_cargo' => $funcion_cargo
+                    'funcion_cargo' => $funcion_cargo,
+                    'tarea_cargo' => $tarea_cargo
                 ];
             }
 
