@@ -27,6 +27,7 @@ use App\Traits\Permisos;
 use App\Traits\AutenticacionGuard;
 use App\Exports\SalidasNoConformeExport;
 use App\Models\Cargo2Examen;
+use App\Models\ExamenesRecomendacionesModel;
 use App\Models\Cargo2;
 
 class formularioGestionIngresoController extends Controller
@@ -355,8 +356,9 @@ class formularioGestionIngresoController extends Controller
             ->leftJoin('gen_tipide as ti2', 'ti2.cod_tip', '=', 'usr_app_formulario_ingreso.tipo_documento_id')
             ->leftJoin('usr_app_formulario_ingreso_tipo_servicio as tiser', 'tiser.id', 'sc.linea_servicio_id')
             ->leftJoin('usr_app_formulario_ingreso_tipo_servicio as tiser2', 'tiser2.id', 'usr_app_formulario_ingreso.tipo_servicio_id')
-            ->leftJoin('usr_app_lista_cargos as car', 'car.id', 'cs.cargo_solicitado_id')
             ->leftJoin('usr_app_subestados_orden_servicio as sub', 'sub.id', 'usr_app_formulario_ingreso.subestado_id')
+            ->leftjoin('usr_app_cargos2 as car2', 'car2.id', '=', 'cs.cargo_solicitado_id')
+            ->leftjoin('usr_app_lista_cargos as car', 'car.id', '=', 'car2.cargo_id')
             ->where('usr_app_formulario_ingreso.id', '=', $id)
             ->select(
                 'historico_candidatos.id as historico_candidatos_id',
@@ -430,34 +432,39 @@ class formularioGestionIngresoController extends Controller
                 'sub.id as subestado_id',
                 'sc.id as servicio_id',
                 'cs.usuario_id as candidato_id',
+                'car2.id as cargo_cliente_id'
             )
             ->first();
 
+
+        // se comentan algunas lineas de código porque al parecer no están usando 14/08/2025
         $examenes = Cargo2::leftJoin('usr_app_riesgos_laborales as rl2', 'rl2.id', '=', 'usr_app_cargos2.riesgo_laboral_id')
             ->leftJoin('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_cargos2.cargo_id')
             ->leftJoin('usr_app_subcategoria_cargos as sc', 'sc.id', '=', 'lc.subcategoria_cargo_id')
             ->leftJoin('usr_app_categoria_cargos as cc', 'cc.id', '=', 'sc.categoria_cargo_id')
-            ->leftJoin('usr_app_cargos2_recomendaciones as cr', 'cr.cargo_id', '=', 'usr_app_cargos2.id')
-            ->leftJoin('usr_app_lista_recomendaciones as recom', 'recom.id', '=', 'cr.recomendacion_id')
+            // ->leftJoin('usr_app_cargos2_recomendaciones as cr', 'cr.cargo_id', '=', 'usr_app_cargos2.id')
+            // ->leftJoin('usr_app_lista_recomendaciones as recom', 'recom.id', '=', 'cr.recomendacion_id')
             ->leftJoin('usr_app_cargos2_examenes as cx', 'cx.cargo_id', '=', 'usr_app_cargos2.id')
             ->leftJoin('usr_app_lista_examenes as exam', 'exam.id', '=', 'cx.examen_id')
-            ->where('usr_app_cargos2.cargo_id', $result->cargo_id)
-            ->where('usr_app_cargos2.cliente_id', $result->cliente_id)
+            // ->leftJoin('usr_app_examenes_recomendaciones as er', 'er.examen_id', '=', 'exam.id')
+            // ->leftJoin('usr_app_perfil_cargo_examenes_recomendaciones as pcer', 'pcer.id', '=', 'er.recomendacion_id')
+            ->where('usr_app_cargos2.id', $result->cargo_cliente_id)
             ->select(
-                'usr_app_cargos2.cargo_id as cargo_id',
-                'lc.nombre as cargo',
-                'lc.subcategoria_cargo_id as categoria_cargo_id',
-                'sc.categoria_cargo_id as tipo_cargo_id',
-                'sc.nombre as categoria',
-                'cc.nombre as tipo_cargo',
-                'usr_app_cargos2.funcion_cargo as funcion_cargo',
-                'usr_app_cargos2.riesgo_laboral_id',
-                'rl2.nombre as riesgo_laboral',
-                'cr.recomendacion_id',
-                'recom.recomendacion1 as recomendacion1',
-                'recom.recomendacion2 as recomendacion2',
-                'cx.examen_id',
+                // 'usr_app_cargos2.cargo_id as cargo_id',
+                // 'lc.nombre as cargo',
+                // 'lc.subcategoria_cargo_id as categoria_cargo_id',
+                // 'sc.categoria_cargo_id as tipo_cargo_id',
+                // 'sc.nombre as categoria',
+                // 'cc.nombre as tipo_cargo',
+                // 'usr_app_cargos2.funcion_cargo as funcion_cargo',
+                // 'usr_app_cargos2.riesgo_laboral_id',
+                // 'rl2.nombre as riesgo_laboral',
+                // 'cr.recomendacion_id',
+                // 'recom.recomendacion1 as recomendacion1',
+                // 'recom.recomendacion2 as recomendacion2',
+                'exam.examen_id',
                 'exam.nombre as examen',
+                // 'pcer.nombre as recomendaciones',
 
             )
 
@@ -465,6 +472,14 @@ class formularioGestionIngresoController extends Controller
             ->get();
 
         $result['lista_examenes'] = $examenes;
+        $idsExamenes = $examenes->pluck('examen_id')->unique()->values();
+        $recomendaciones = ExamenesRecomendacionesModel::leftJoin('usr_app_perfil_cargo_examenes_recomendaciones as pcer', 'pcer.id', 'usr_app_examenes_recomendaciones.recomendacion_id')
+            ->whereIn('usr_app_examenes_recomendaciones.examen_id', $idsExamenes)->select(
+                'pcer.id',
+                'pcer.nombre'
+            )->get();
+        $result['recomendaciones'] = $recomendaciones;
+
         $laboratorios = RegistroIngresoLaboratorio::join('usr_app_ciudad_laboraorio as ciulab', 'ciulab.id', '=', 'usr_app_registro_ingreso_laboraorio.laboratorio_medico_id')
             ->join('usr_app_municipios as mun', 'mun.id', '=', 'ciulab.ciudad_id')
             ->join('usr_app_departamentos as dep', 'dep.id', '=', 'mun.departamento_id')
@@ -543,6 +558,8 @@ class formularioGestionIngresoController extends Controller
             ->orderby('usr_app_salida_n_conforme_seiya.id', 'DESC')
             ->get();
         $result['salidas_no_conforme'] = $salidasNoConforme;
+        // return 'cargo'.$result->cargo_id.' cliente ' .$result->cliente_id;
+
         return response()->json($result);
     }
 
@@ -554,7 +571,6 @@ class formularioGestionIngresoController extends Controller
     {
 
         $formulario = $this->byid($registro_id)->getData();
-
 
         $pdf = new TCPDF();
         $pdf->SetTextColor(4, 66, 105);
@@ -586,7 +602,10 @@ class formularioGestionIngresoController extends Controller
         $municipio = $formulario->municipio;
         $numero_contacto = $formulario->numero_contacto;
         $otro_laboratorio = $formulario->laboratorio;
-        $examenes = $formulario->examenes;
+        $examenes = implode(", ", array_map(fn($o) => $o->examen, $formulario->lista_examenes));
+        $recomendaciones_examen = implode(", ", array_map(fn($o) => $o->nombre, $formulario->recomendaciones));
+
+
 
         $fecha_examenes = $formulario->fecha_examen;
         if (!empty($fecha_examenes)) {
@@ -614,7 +633,6 @@ class formularioGestionIngresoController extends Controller
         $informe_seleccion = $formulario->informe_seleccion;
         $direccion_empresa = $formulario->direccion_empresa;
         $direccion_laboratorio = $formulario->direccion_laboratorio;
-        $recomendaciones_examen = $formulario->recomendaciones_examen;
         $ancho_maximo = 70;
         $ancho_infor_texto = 90;
         $ancho_examenes = 105;
@@ -832,6 +850,7 @@ class formularioGestionIngresoController extends Controller
             $pdf->Cell(65, 1, $municipio, 0, 1, 'L');
             $pdf->Ln(2);
 
+
             if (isset($formulario->laboratorios[0])) {
 
                 if (!empty($formulario->laboratorios && $otro_laboratorio == '')) {
@@ -935,7 +954,10 @@ class formularioGestionIngresoController extends Controller
 
                     $pdf->SetX(120);
                     $pdf->Cell(65, 1, $recomendaciones_examen != null ? $recomendaciones_examen : 'N/A', 0, 1, 'L');
+
                     $pdf->Ln(2);
+                    $pdf->SetX(20); // margen izquierdo
+                    $pdf->MultiCell(170, 10, "\n\n\n\"No se exige la práctica de pruebas específicas consideradas discriminatorias como obligatorias para el acceso o permanencia en cualquier actividad laboral acorde a la resolución 1843 de 2025\"", 0, 'L');
                 } else {
                     $pdf->SetFont('helveticaI', 'B', 10);
                     $pdf->SetX(20);
@@ -2210,7 +2232,6 @@ class formularioGestionIngresoController extends Controller
 
     public function formularioingresoservicio(Request $request)
     {
-
         set_time_limit(0);
         $candidatos = CandidatoSolicitudServicioModel::where('servicio_id', '=', $request->servicio_id)->where('usuario_id', '!=', '')->where('en_proceso', '!=', 1)
             ->select(
@@ -2317,10 +2338,10 @@ class formularioGestionIngresoController extends Controller
             }
         }
         DB::commit();
-        $numero_radicados_seiya = formularioGestionIngreso::select('id')->where('n_servicio', '=', $request->n_servicio)->get();
-        $orden_servicio = SolicitudServicioModel::where('numero_radicado', '=', $request->n_servicio)->first();
-        $orden_servicio->numero_radicados_seiya = $numero_radicados_seiya->count();
-        $orden_servicio->save();
+        // $numero_radicados_seiya = formularioGestionIngreso::select('id')->where('n_servicio', '=', $request->n_servicio)->get();
+        // $orden_servicio = SolicitudServicioModel::where('numero_radicado', '=', $request->n_servicio)->first();
+        // $orden_servicio->numero_radicados_seiya = $numero_radicados_seiya->count();
+        // $orden_servicio->save();
         return response()->json(['status' => '200', 'message' => 'ok', 'registro_ingreso_id' => $ids]);
     }
 

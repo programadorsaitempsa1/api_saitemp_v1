@@ -87,9 +87,8 @@ class SolicitudServicioController extends Controller
                 'usr_app_solicitud_servicio.id',
                 'usr_app_solicitud_servicio.numero_radicado',
                 'usr_app_solicitud_servicio.created_at',
-                'usr_app_solicitud_servicio.fecha_fin',
+                // 'usr_app_solicitud_servicio.fecha_fin',
                 'ts.nombre_servicio as linea_servicio',
-                'ms.nombre as motivo_servicio',
                 'usr_app_solicitud_servicio.cantidad_contrataciones',
             );
         }
@@ -108,7 +107,8 @@ class SolicitudServicioController extends Controller
             ->leftJoin('usr_app_estado_servicio as est', 'est.id', '=', 'usr_app_solicitud_servicio.estado_servicio_id')
             ->leftJoin('usr_app_municipios as mun', 'mun.id', '=', 'usr_app_solicitud_servicio.ciudad_prestacion_servicio_id')
             ->leftJoin('usr_app_departamentos as dep', 'dep.id', '=', 'mun.departamento_id')
-            ->leftJoin('usr_app_lista_cargos as car', 'car.id', '=', 'usr_app_solicitud_servicio.cargo_solicitado_id')
+            ->leftJoin('usr_app_cargos2 as car2', 'car2.id', '=', 'usr_app_solicitud_servicio.cargo_solicitado_id')
+            ->leftJoin('usr_app_lista_cargos as liscar', 'liscar.id', '=', 'car2.cargo_id')
             ->where('usr_app_solicitud_servicio.id', '=', $id)
             ->select(
                 'usr_app_solicitud_servicio.id',
@@ -140,22 +140,21 @@ class SolicitudServicioController extends Controller
                 'usr_app_solicitud_servicio.ciudad_prestacion_servicio_id',
                 'dep.nombre as departamento_prestacion_servicio',
                 'dep.id as departamento_prestacion_servicio_id',
-                'car.nombre as consulta_cargo_solicitado',
                 'usr_app_solicitud_servicio.cargo_solicitado_id',
                 'usr_app_solicitud_servicio.direccion_presentacion',
                 'usr_app_solicitud_servicio.fecha_hora_ingreso',
                 'usr_app_solicitud_servicio.salario',
                 'usr_app_solicitud_servicio.subsidio_transporte',
                 'usr_app_solicitud_servicio.hora_ingreso',
+                'liscar.nombre as cargo_solicitado',
 
             )->first();
-        $candidatos = CandidatoSolicitudServicioModel:: //LeftJoin('usr_app_usuarios as us', 'us.id', 'usr_app_candadato_solicitud_servicio.usuario_id')
-            // ->leftJoin('usr_app_candidatos_c as can', 'can.usuario_id', 'usr_app_candadato_solicitud_servicio.usuario_id')
-            leftjoin('gen_tipide as ti', 'ti.cod_tip', '=', 'usr_app_candadato_solicitud_servicio.tipo_identificacion_id')
+        $candidatos = CandidatoSolicitudServicioModel::leftjoin('gen_tipide as ti', 'ti.cod_tip', '=', 'usr_app_candadato_solicitud_servicio.tipo_identificacion_id')
             ->leftjoin('usr_app_estado_candidato_servicio as est', 'est.id', '=', 'usr_app_candadato_solicitud_servicio.estado_candidato_id')
             ->leftjoin('usr_app_municipios as ciu', 'ciu.id', '=', 'usr_app_candadato_solicitud_servicio.ciudad_prestacion_servicio_id')
             ->leftjoin('usr_app_departamentos as dep', 'dep.id', '=', 'ciu.departamento_id')
-            ->leftjoin('usr_app_lista_cargos as car', 'car.id', '=', 'usr_app_candadato_solicitud_servicio.cargo_solicitado_id')
+            ->leftjoin('usr_app_cargos2 as car2', 'car2.id', '=', 'usr_app_candadato_solicitud_servicio.cargo_solicitado_id')
+            ->leftjoin('usr_app_lista_cargos as car', 'car.id', '=', 'car2.cargo_id')
             ->where('usr_app_candadato_solicitud_servicio.servicio_id', '=', $id,)
             ->select(
                 'usr_app_candadato_solicitud_servicio.id as candidato_id',
@@ -174,8 +173,8 @@ class SolicitudServicioController extends Controller
                 'usr_app_candadato_solicitud_servicio.tipo_identificacion_id',
                 'usr_app_candadato_solicitud_servicio.subsidio_transporte',
                 'usr_app_candadato_solicitud_servicio.hora_ingreso',
-                'usr_app_candadato_solicitud_servicio.cargo_solicitado_id',
                 'car.nombre as cargo_solicitado',
+                'car.id as cargo_solicitado_id',
                 'usr_app_candadato_solicitud_servicio.whatsapp',
                 'ciu.nombre as ciudad_prestacion_servicio',
                 'ciu.id as ciudad_prestacion_servicio_id',
@@ -210,7 +209,6 @@ class SolicitudServicioController extends Controller
      */
     public function create(Request $request)
     {
-
         DB::beginTransaction();
         $result = TipoAsignacionServicioModel::join('usr_app_asignacion_servicio as as', 'as.id', 'usr_app_tipo_asignacion_servicio.asignacion_servicio_id')
             ->join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', 'usr_app_tipo_asignacion_servicio.linea_servicio_id')
@@ -238,7 +236,7 @@ class SolicitudServicioController extends Controller
             $ordenServicio->cantidad_contrataciones = $request->cantidad_contrataciones;
             $ordenServicio->fecha_acuerdo_fin = $request->fecha_acuerdo_fin;
             $ordenServicio->estado_servicio_id = 1;
-            $ordenServicio->cargo_solicitado_id = $request->cargo_solicitado_id;
+            $ordenServicio->cargo_solicitado_id = $request->cargo_cliente_id;
             $ordenServicio->ciudad_prestacion_servicio_id = $request->ciudad_prestacion_servicio_id;
             $ordenServicio->direccion_presentacion = $request->direccion_presentacion;
             $ordenServicio->fecha_hora_ingreso = Carbon::parse($request->fecha_hora_ingreso)->format('d-m-Y H:i:s');
@@ -349,7 +347,7 @@ class SolicitudServicioController extends Controller
             $candidato_servicio->direccion_prestacion_servicio = $candidato['direccion_presentacion'];
             $candidato_servicio->hora_ingreso = $candidato['hora_ingreso'];
             $candidato_servicio->fecha_ingreso = Carbon::parse($candidato['fecha_ingreso'])->format('Y-d-m');
-            $candidato_servicio->cargo_solicitado_id = $candidato['cargo_solicitado_id'];
+            $candidato_servicio->cargo_solicitado_id = $candidato['cargo_cliente_id'];
             $candidato_servicio->ciudad_prestacion_servicio_id = $candidato['ciudad_prestacion_servicio_id'];
             $candidato_servicio->whatsapp = $candidato['whatsapp'];
             $candidato_servicio->estado_candidato_id = $candidato['estado_candidato_id'];
@@ -424,7 +422,7 @@ class SolicitudServicioController extends Controller
             $candidato->subsidio_transporte = $usuario['subsidio_transporte'];
             $candidato->direccion_prestacion_servicio = $usuario['direccion_presentacion'];
             $candidato->fecha_ingreso = Carbon::parse($usuario['fecha_ingreso'])->format('Y-d-m');
-            $candidato->cargo_solicitado_id = $usuario['cargo_solicitado_id'];
+            $candidato->cargo_solicitado_id = $usuario['cargo_cliente_id'];
             $candidato->ciudad_prestacion_servicio_id = $usuario['ciudad_prestacion_servicio_id'];
             $candidato->whatsapp = $usuario['whatsapp'];
             $candidato->save();
@@ -610,10 +608,10 @@ class SolicitudServicioController extends Controller
 
         $result = CandidatoSolicitudServicioModel::leftJoin('usr_app_solicitud_servicio as ss', 'ss.id', '=', 'usr_app_candadato_solicitud_servicio.servicio_id')
             ->LeftJoin('usr_app_clientes as cli', 'cli.id', '=', 'ss.cliente_id')
-            ->join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'ss.linea_servicio_id')
-            ->join('usr_app_municipios as ciu', 'ciu.id', '=', 'usr_app_candadato_solicitud_servicio.ciudad_prestacion_servicio_id')
-            ->join('usr_app_departamentos as dep', 'dep.id', '=', 'ciu.departamento_id')
-            ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_candadato_solicitud_servicio.cargo_solicitado_id')
+            ->LeftJoin('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'ss.linea_servicio_id')
+            ->LeftJoin('usr_app_municipios as ciu', 'ciu.id', '=', 'usr_app_candadato_solicitud_servicio.ciudad_prestacion_servicio_id')
+            ->LeftJoin('usr_app_departamentos as dep', 'dep.id', '=', 'ciu.departamento_id')
+            ->LeftJoin('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_candadato_solicitud_servicio.cargo_solicitado_id')
             ->where('ss.id', '=', $id)
             ->select(
                 'ss.id',
