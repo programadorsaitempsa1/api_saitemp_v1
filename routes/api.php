@@ -695,7 +695,7 @@ Route::group([
   Route::put('/cargoscliente/{id}', [CargoClienteController::class, 'update']);
   Route::delete('/cargoscliente/{id}', [CargoClienteController::class, 'destroy']);
   Route::get('/cargosclientebyid/{id}/{cliente_id}', [CargoClienteController::class, 'cargoById']);
-
+  Route::get('/cargosclientebyidrelacion/{id}', [CargoClienteController::class, 'cargoByIdRelacion']);
   // Tipos de operaciones internacionales
   Route::get('/operacioninternacional', [OperacionInternacionalController::class, 'index']);
   Route::post('/operacioninternacional', [OperacionInternacionalController::class, 'create']);
