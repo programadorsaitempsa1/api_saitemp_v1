@@ -40,7 +40,8 @@ class CargoClienteController extends Controller
                 'sc.categoria_cargo_id as tipo_cargo_id',
                 'sc.nombre as categoria',
                 'cc.nombre as tipo_cargo',
-                'usr_app_cargos2.funcion_cargo as funcion_cargo',
+                'usr_app_cargos2.funcion_cargo',
+                'usr_app_cargos2.tarea_cargo',
                 'usr_app_cargos2.riesgo_laboral_id',
                 'rl2.nombre as riesgo_laboral',
                 'cr.recomendacion_id',
@@ -66,6 +67,7 @@ class CargoClienteController extends Controller
             // Extraer los datos del objeto
 
             $funcion_cargo = $objeto['funcion_cargo'];
+            $tarea_cargo = $objeto['tarea_cargo'];
             $idCargo = $objeto['cargo_id'];
             $cargo_cliente_id = $objeto['cargo_cliente_id'];
             $cargo = $objeto['cargo'];
@@ -101,6 +103,7 @@ class CargoClienteController extends Controller
                     'tipo_cargo_id' => $idCategoria,
                     'tipo_cargo' => $categoria,
                     'funcion_cargo' => $funcion_cargo,
+                    'tarea_cargo' => $tarea_cargo,
                     'tareas_alto_riesgo_seleccionadas' => [],
                     'recomendacion_examen' => []
                 ];
@@ -231,17 +234,19 @@ class CargoClienteController extends Controller
             foreach ($request as $item) {
                 if ($item['cargo_id'] != '' || $item['riesgo_laboral_id'] != '') {
                     $posicion = false;
-                    if(isset($item['cargo_cliente_id'])){
+                    if (isset($item['cargo_cliente_id'])) {
                         $posicion = array_search($item['cargo_cliente_id'], $cargos_id);
                     }
                     if ($posicion !== false) {
                         $cargos[$posicion]->funcion_cargo = $item['funcion_cargo'];
+                        $cargos[$posicion]->tarea_cargo = $item['tarea_cargo'];
                         $cargos[$posicion]->save();
                     } else {
                         $cargo = new cargo2;
                         $cargo->cargo_id = $item['cargo_id'];
                         $cargo->riesgo_laboral_id = $item['riesgo_laboral_id'];
                         $cargo->funcion_cargo = $item['funcion_cargo'];
+                        $cargo->tarea_cargo = $item['tarea_cargo'];
                         $cargo->cliente_id = $id;
                         $cargo->save();
                     }
@@ -353,32 +358,40 @@ class CargoClienteController extends Controller
 
     public function cargoById($id, $cliente_id)
     {
-        // $result = CargoCliente::select()
-        //     ->get();
-        // return response()->json($result);
-        $cargos = Cargo2::join('usr_app_riesgos_laborales as rl2', 'rl2.id', '=', 'usr_app_cargos2.riesgo_laboral_id')
-            ->join('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_cargos2.cargo_id')
-            ->join('usr_app_subcategoria_cargos as sc', 'sc.id', '=', 'lc.subcategoria_cargo_id')
-            ->join('usr_app_categoria_cargos as cc', 'cc.id', '=', 'sc.categoria_cargo_id')
-            ->join('usr_app_cargos2_recomendaciones as cr', 'cr.cargo_id', '=', 'usr_app_cargos2.id')
-            ->join('usr_app_lista_recomendaciones as recom', 'recom.id', '=', 'cr.recomendacion_id')
-            ->join('usr_app_cargos2_examenes as cx', 'cx.cargo_id', '=', 'usr_app_cargos2.id')
-            ->join('usr_app_lista_examenes as exam', 'exam.id', '=', 'cx.examen_id')
+        $cargos = Cargo2::leftJoin('usr_app_riesgos_laborales as rl2', 'rl2.id', '=', 'usr_app_cargos2.riesgo_laboral_id')
+            ->leftJoin('usr_app_lista_cargos as lc', 'lc.id', '=', 'usr_app_cargos2.cargo_id')
+            ->leftJoin('usr_app_subcategoria_cargos as sc', 'sc.id', '=', 'lc.subcategoria_cargo_id')
+            ->leftJoin('usr_app_categoria_cargos as cc', 'cc.id', '=', 'sc.categoria_cargo_id')
+            ->leftJoin('usr_app_cargos2_recomendaciones as cr', 'cr.cargo_id', '=', 'usr_app_cargos2.id')
+            ->leftJoin('usr_app_lista_recomendaciones as recom', 'recom.id', '=', 'cr.recomendacion_id')
+            ->leftJoin('usr_app_cargos2_examenes as cx', 'cx.cargo_id', '=', 'usr_app_cargos2.id')
+            ->leftJoin('usr_app_lista_examenes as exam', 'exam.id', '=', 'cx.examen_id')
+            ->leftJoin('usr_app_perfil_cargo_examenes as pcexa', 'pcexa.id', '=', 'exam.examen_id')
+            ->leftJoin('usr_app_cargos2_tareas_alto_riesgo as c2tar', 'c2tar.cargo_id', '=', 'usr_app_cargos2.id')
+            ->leftJoin('usr_app_tareas_alto_riesgo_cargos as tar', 'tar.id', '=', 'c2tar.tarea_alto_riesgo_id')
+            ->leftJoin('usr_app_examenes_recomendaciones as er', 'er.examen_id', '=', 'pcexa.id')
+            ->leftJoin('usr_app_perfil_cargo_examenes_recomendaciones as pcer', 'pcer.id', '=', 'er.recomendacion_id')
             ->select(
+                'usr_app_cargos2.id as cargo_cliente_id',  // id del cargo del cliente
                 'usr_app_cargos2.cargo_id as cargo_id',
                 'lc.nombre as cargo',
                 'lc.subcategoria_cargo_id as categoria_cargo_id',
                 'sc.categoria_cargo_id as tipo_cargo_id',
                 'sc.nombre as categoria',
                 'cc.nombre as tipo_cargo',
-                'usr_app_cargos2.funcion_cargo as funcion_cargo',
+                'usr_app_cargos2.funcion_cargo',
+                'usr_app_cargos2.tarea_cargo',
                 'usr_app_cargos2.riesgo_laboral_id',
                 'rl2.nombre as riesgo_laboral',
                 'cr.recomendacion_id',
                 'recom.recomendacion1 as recomendacion1',
                 'recom.recomendacion2 as recomendacion2',
-                'cx.examen_id',
-                'exam.nombre as examen',
+                'tar.nombre as tarea_alto_riesgo',
+                'tar.id as tarea_alto_riesgo_id',
+                'pcexa.id as examen_id',
+                'pcexa.nombre as examen',
+                'pcer.id as recomendacion_examen_id',
+                'pcer.nombre as recomendacion_examen',
 
             )
             ->where('usr_app_cargos2.cargo_id', '=', $id)
@@ -389,13 +402,14 @@ class CargoClienteController extends Controller
         // Array para almacenar los resultados
         $resultados = [];
 
-
         // Recorrer el array original
         foreach ($cargos as $objeto) {
             // Extraer los datos del objeto
 
             $funcion_cargo = $objeto['funcion_cargo'];
+            $tarea_cargo = $objeto['tarea_cargo'];
             $idCargo = $objeto['cargo_id'];
+            $cargo_cliente_id = $objeto['cargo_cliente_id'];
             $cargo = $objeto['cargo'];
             $idSubcategoria = $objeto['categoria_cargo_id'];
             $subcategoria = $objeto['categoria'];
@@ -408,12 +422,17 @@ class CargoClienteController extends Controller
             $recomendacion2 = $objeto['recomendacion2'];
             $idExamen = $objeto['examen_id'];
             $examen = $objeto['examen'];
+            $tarea_alto_riesgo_id = $objeto['tarea_alto_riesgo_id'];
+            $tareas_alto_riesgo_seleccionadas = $objeto['tarea_alto_riesgo'];
+            $recomendacion_examen_id = $objeto['recomendacion_examen_id'];
+            $recomendacion_examen = $objeto['recomendacion_examen'];
 
             // Verificar si el cargo ya existe en los resultados
             if (!isset($resultados[$idCargo])) {
                 // Si no existe, crear un nuevo objeto para el cargo
                 $resultados[$idCargo] = [
                     'cargo_id' => $idCargo,
+                    'cargo_cliente_id' => $cargo_cliente_id,
                     'cargo' => $cargo,
                     'riesgo_laboral_id' => $idRiesgoLaboral,
                     'riesgo_laboral' => $riesgoLaboral,
@@ -423,7 +442,10 @@ class CargoClienteController extends Controller
                     'categoria' => $subcategoria,
                     'tipo_cargo_id' => $idCategoria,
                     'tipo_cargo' => $categoria,
-                    'funcion_cargo' => $funcion_cargo
+                    'funcion_cargo' => $funcion_cargo,
+                    'tarea_cargo' => $tarea_cargo,
+                    'tareas_alto_riesgo_seleccionadas' => [],
+                    'recomendacion_examen' => []
                 ];
             }
 
@@ -443,10 +465,26 @@ class CargoClienteController extends Controller
                     'recomendacion2' => $recomendacion2,
                 ];
             }
+
+            if (
+                $recomendacion_examen_id !== null &&
+                $recomendacion_examen !== null &&
+                !in_array($recomendacion_examen_id, array_column($resultados[$idCargo]['recomendacion_examen'], 'id'))
+            ) {
+                $resultados[$idCargo]['recomendacion_examen'][] = [
+                    'id' => $recomendacion_examen_id,
+                    'recomendacion_examen' => $recomendacion_examen,
+                ];
+            }
+
+
+            if (!in_array($tarea_alto_riesgo_id, $resultados[$idCargo]['tareas_alto_riesgo_seleccionadas'])) {
+                $resultados[$idCargo]['tareas_alto_riesgo_seleccionadas'][] = $tarea_alto_riesgo_id;
+            }
         }
 
         // Resultado: Array final con cargos, exámenes y requisitos sin duplicados
         $resultados = array_values($resultados);
-        return response()->json($resultados[0]);
+        return response()->json($resultados);
     }
 }
