@@ -155,6 +155,7 @@ class SolicitudServicioController extends Controller
             ->leftjoin('usr_app_departamentos as dep', 'dep.id', '=', 'ciu.departamento_id')
             ->leftjoin('usr_app_cargos2 as car2', 'car2.id', '=', 'usr_app_candadato_solicitud_servicio.cargo_solicitado_id')
             ->leftjoin('usr_app_lista_cargos as car', 'car.id', '=', 'car2.cargo_id')
+            ->leftjoin('usr_app_motivos_servicio as mot_ser', 'mot_ser.id', '=', 'usr_app_candadato_solicitud_servicio.motivo_servicio_id')
             ->where('usr_app_candadato_solicitud_servicio.servicio_id', '=', $id,)
             ->select(
                 'usr_app_candadato_solicitud_servicio.id as candidato_id',
@@ -183,6 +184,8 @@ class SolicitudServicioController extends Controller
                 'est.id as estado_candidato_id',
                 'est.clave as estado_candidato_clave',
                 'est.nombre as estado_candidato',
+                'usr_app_candadato_solicitud_servicio.motivo_servicio_id',
+                'mot_ser.nombre as consulta_motivo_servicio',
             )->get();
         $candidatos->transform(function ($item) {
             $item->registrado = !empty($item->usuario_id) ? 1 : 0;
@@ -324,7 +327,7 @@ class SolicitudServicioController extends Controller
     {
 
         try {
-
+            DB::beginTransaction();
             $result = $candidato_servicio = CandidatoSolicitudServicioModel::where('usuario_id', $candidato['usuario_id'])->where('servicio_id', $ordenServicio_id)->first();
 
             if (empty($result)) {
@@ -351,6 +354,7 @@ class SolicitudServicioController extends Controller
             $candidato_servicio->ciudad_prestacion_servicio_id = $candidato['ciudad_prestacion_servicio_id'];
             $candidato_servicio->whatsapp = $candidato['whatsapp'];
             $candidato_servicio->estado_candidato_id = $candidato['estado_candidato_id'];
+            $candidato_servicio->motivo_servicio_id = $candidato['motivo_servicio_id'];
             $candidato_servicio->save();
             DB::commit();
             return $candidato_servicio->id;
@@ -362,6 +366,7 @@ class SolicitudServicioController extends Controller
 
     public function candidatoNoRegistradoServicio(array $usuario, string $ordenServicio_id)
     {
+
         try {
             DB::beginTransaction();
             $rol = Rol::select('id')->where('clave', 'candidato')->first();
@@ -408,6 +413,7 @@ class SolicitudServicioController extends Controller
             if (!empty($usuario['tipo_identificacion_id'] ?? null) && !empty($usuario['numero_documento_candidato']) && !empty($usuario['correo_candidato'])) {
                 $candidato->usuario_id =  $user->id;
             }
+
             $candidato->servicio_id = $ordenServicio_id;
             $candidato->en_proceso = 0;
             $candidato->estado_candidato_id = $estado_candidato->id;
@@ -425,6 +431,7 @@ class SolicitudServicioController extends Controller
             $candidato->cargo_solicitado_id = $usuario['cargo_cliente_id'];
             $candidato->ciudad_prestacion_servicio_id = $usuario['ciudad_prestacion_servicio_id'];
             $candidato->whatsapp = $usuario['whatsapp'];
+            $candidato->motivo_servicio_id = $usuario['motivo_servicio_id'] ? $usuario['motivo_servicio_id'] : null;
             $candidato->save();
             DB::commit();
         } catch (\Exception $e) {
@@ -681,6 +688,7 @@ class SolicitudServicioController extends Controller
      */
     public function update(Request $request, $id)
     {
+
         try {
             DB::beginTransaction();
             $ordenServicio = SolicitudServicioModel::find($id);
@@ -708,7 +716,6 @@ class SolicitudServicioController extends Controller
                     $result = $this->candidatoRegistradoServicio($candidato, $ordenServicio->id);
                 }
             }
-
 
             DB::commit();
             if ($candidatos_con_servicio != '') {

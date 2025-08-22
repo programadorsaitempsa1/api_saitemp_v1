@@ -207,9 +207,6 @@ use App\Http\Controllers\ExamenPerfilCargoController;
 use App\Http\Controllers\RecomendacionesExamenPerfilCargoController;
 use App\Http\Controllers\ExamenesRecomendacionesController;
 use App\Http\Controllers\HistoricoConsultasPilaController;
-use App\Models\RecepcionEmpleado;
-
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -698,7 +695,7 @@ Route::group([
   Route::put('/cargoscliente/{id}', [CargoClienteController::class, 'update']);
   Route::delete('/cargoscliente/{id}', [CargoClienteController::class, 'destroy']);
   Route::get('/cargosclientebyid/{id}/{cliente_id}', [CargoClienteController::class, 'cargoById']);
-
+  Route::get('/cargosclientebyidrelacion/{id}', [CargoClienteController::class, 'cargoByIdRelacion']);
   // Tipos de operaciones internacionales
   Route::get('/operacioninternacional', [OperacionInternacionalController::class, 'index']);
   Route::post('/operacioninternacional', [OperacionInternacionalController::class, 'create']);
@@ -1262,7 +1259,7 @@ Route::group([
   Route::delete('/facilitadoranalista/{id}', [FacilitadorAnalistaController::class, 'delete']);
   Route::get('/facilitadoranalistaById/{usuario_id}', [FacilitadorAnalistaController::class, 'byUserId']);
   Route::get('/facilitadoranalistafiltro/{cadena}/{cantidad}', [FacilitadorAnalistaController::class, 'byUserId']);
-  
+
 
   Route::get('/tareasaltoriesgocargo', [TareasAltoRiesgoCargoController::class, 'index']);
 
@@ -1274,7 +1271,7 @@ Route::group([
   Route::get('/recomendacionesexamenesperfilcargo', [RecomendacionesExamenPerfilCargoController::class, 'index']);
   Route::get('/recomendacionesexamenesperfilcargo/{cantidad}', [RecomendacionesExamenPerfilCargoController::class, 'tabla']);
   Route::get('/recomendacionesexamenesperfilcargofiltro/{cadena}', [RecomendacionesExamenPerfilCargoController::class, 'filtro']);
-  
+
   Route::get('/recomendacionesexamenes/{cantidad}', [ExamenesRecomendacionesController::class, 'index']);
   Route::post('/recomendacionesexamenes', [ExamenesRecomendacionesController::class, 'create']);
   Route::delete('/recomendacionesexamenes/{id}', [ExamenesRecomendacionesController::class, 'destroy']);
@@ -1340,4 +1337,3 @@ Route::group([
   //Rutas para verificar empleado activo
   Route::get('/empleadoactivo/{id}', [DashboardController::class, 'empleadosActivosById']);
 });
-

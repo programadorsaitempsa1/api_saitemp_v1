@@ -46,7 +46,7 @@ class EnvioSmsYeastarController extends Controller
     }
     public function envioIndividual(Request $request)
     {
-        $numero = $request->num_cel;
+        $numero = "57" . $request->num_cel;
         $mensaje = $request->mensaje;
         $response = $this->enviarSmsYeastar($numero, $mensaje);
 
@@ -59,6 +59,8 @@ class EnvioSmsYeastarController extends Controller
 
     public function envioMasivo(Request $request)
     {
+
+        set_time_limit(3600);
         if (!$request->hasFile('excel')) {
             return response()->json([
                 'status' => 'error',
@@ -74,7 +76,6 @@ class EnvioSmsYeastarController extends Controller
             $enviados = 0;
             $fallidos = 0;
             $errores = [];
-
             foreach ($rows as $index => $row) {
                 // Saltar la fila 0 si contiene encabezado
                 if ($index === 0) continue;
@@ -96,8 +97,10 @@ class EnvioSmsYeastarController extends Controller
                     $fallidos++;
                     $errores[] = "Fila " . ($index + 1) . ": " . $response['message'];
                 }
-            }
 
+                // Espera de 60 segundos antes del próximo envío
+                sleep(30);
+            }
             return response()->json([
                 'status' => 'success',
                 'message' => "Proceso finalizado. Enviados: $enviados, Fallidos: $fallidos",
