@@ -17,9 +17,7 @@ class DashboardController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-    }
+    public function index() {}
 
     public function empleadosactivos()
     {
@@ -136,16 +134,17 @@ class DashboardController extends Controller
         return response()->json($result);
     }
 
-    public function analista($id){
+    public function analista($id)
+    {
         $result = DB::table('usr_analista')
-        ->where('cod_analista','=',$id)
-        ->select(
-            'Nombre',
-            'Telefono',
-            'Correo',
-            'Ext',
-        )
-        ->paginate();
+            ->where('cod_analista', '=', $id)
+            ->select(
+                'Nombre',
+                'Telefono',
+                'Correo',
+                'Ext',
+            )
+            ->paginate();
         return response()->json($result);
     }
 

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\EstadoCivil;
 use Illuminate\Http\Request;
 
@@ -13,8 +14,8 @@ class EstadoCivilController extends Controller
      */
     public function index()
     {
-        $result = EstadoCivil::select()
-        ->get();
+        $result = EstadoCivil::whereIn('cod_est', ['1', '2', '3', '4', '5',])->select()
+            ->get();
         return response()->json($result);
     }
 

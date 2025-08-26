@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\User;
-use Mockery\Undefined;
+use App\Models\UsuariosInternosModel;
 
 class LDAPUsersController extends Controller
 {
@@ -29,7 +29,7 @@ class LDAPUsersController extends Controller
         ldap_bind($ldap_conn, $ldap_user, $ldap_pass);
 
         ldap_set_option($ldap_conn, LDAP_OPT_REFERRALS, 0);
-        ldap_set_option($ldap_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
+        // ldap_set_option($ldap_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
         $search_attrs = array("*", "memberOf");
 
         // Búsqueda de usuarios
@@ -76,21 +76,28 @@ class LDAPUsersController extends Controller
      */
     public function create(Request $request)
     {
-        $rol = $request[0]['rol'];
+        $rol_id = $request[0]['rol_id'];
+        $rol_interno_id = $request[0]['rol_interno_id'];
         $array = $request->all();
         $errors = 'Los usuarios ';
         $swich = false;
         for ($i = 1; $i < count($array); $i++) {
             try {
                 $user = new User;
-                $user->nombres = $array[$i]['nombre'];
-                $user->apellidos = $request->apellidos;
-                $user->documento_identidad = $request->documento_identidad;
                 $user->email = $array[$i]['usuario'];
                 $user->password = '';
-                $user->rol_id = $rol == '' ? 3 : $rol;
+                $user->rol_id = $rol_id;
+                $user->tipo_usuario_id = 1;
                 $user->save();
+                $usuario_interno = new UsuariosInternosModel;
+                $usuario_interno->usuario_id = $user->id;
+                $usuario_interno->nombres = $array[$i]['nombre'];
+                $usuario_interno->apellidos = $request->apellidos;
+                $usuario_interno->documento_identidad = $request->documento_identidad;
+                $usuario_interno->rol_usuario_interno_id = $rol_interno_id;
+                $usuario_interno->save();
             } catch (\Exception $e) {
+                return $e;
                 $errors .= $array[$i]['nombre'] . ', ';
                 $swich = true;
             }

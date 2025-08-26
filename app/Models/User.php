@@ -68,10 +68,10 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
-
-    public function fromDateTime($value)
+    protected $dateFormat = 'd-m-Y H:i:s';
+    /*     public function fromDateTime($value)
     {
         // return Carbon::parse(parent::fromDateTime($value))->format('Y-d-m H:i:s');
         return Carbon::parse(parent::fromDateTime($value))->format('Y-d-m');
-    }
+    } */
 }

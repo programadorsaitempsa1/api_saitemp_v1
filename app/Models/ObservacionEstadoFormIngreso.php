@@ -1,0 +1,14 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class ObservacionEstadoFormIngreso extends Model
+{
+    use HasFactory;
+
+    protected $table = 'usr_app_categorias_snc_seiya';
+    // protected $table = 'usr_app_observacion_estado';
+}

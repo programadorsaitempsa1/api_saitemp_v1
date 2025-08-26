@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\cliente;
 use App\Models\RepresentanteLegal;
+use App\Models\VersionContratoDD;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,20 +15,21 @@ class ContratoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index($id)
+    public function index($id, $asJson = true)
     {
         $municipio_expedicion = RepresentanteLegal::join('usr_app_municipios as mun', 'mun.id', '=', 'usr_app_representantes_legales.municipio_expedicion_id')
-        ->where('usr_app_representantes_legales.cliente_id', '=', $id)
-        ->select(
-            'mun.nombre as municipio_expedicion'
-        )
-        ->first();
+            ->where('usr_app_representantes_legales.cliente_id', '=', $id)
+            ->select(
+                'mun.nombre as municipio_expedicion'
+            )
+            ->first();
         $result = Cliente::join('usr_app_representantes_legales as rl', 'rl.cliente_id', '=', 'usr_app_clientes.id')
             ->join('usr_app_municipios as mun', 'mun.id', '=', 'usr_app_clientes.municipio_id')
             ->join('usr_app_departamentos as dep', 'dep.id', '=', 'mun.departamento_id')
             ->join('usr_app_actividades_ciiu as ac', 'ac.id', '=', 'usr_app_clientes.actividad_ciiu_id')
-            ->join('gen_tipide as doc', 'doc.cod_tip', '=', 'usr_app_clientes.tipo_identificacion_id')
+            ->join('gen_tipide as doc', 'doc.cod_tip', '=', 'rl.tipo_identificacion_id')
             ->select(
+                'usr_app_clientes.id',
                 'razon_social',
                 'nit',
                 'rl.nombre as representante_legal',
@@ -42,9 +44,26 @@ class ContratoController extends Controller
                 'correo_facturacion_electronica',
                 'aiu_negociado',
                 'plazo_pago',
+                DB::raw('COALESCE(CONVERT(VARCHAR, usr_app_clientes.numero_radicado), CONVERT(VARCHAR, usr_app_clientes.id)) AS radicado'),
             )
             ->where('usr_app_clientes.id', '=', $id)
             ->first();
+
+        $currentDate = now(); // Obtener la fecha actual
+
+        // Establecer la versión del formulario basada en la fecha actual
+        $version = $currentDate->isAfter('2024-08-04') ? 2 : 1;
+
+        // Realizar la consulta con la versión seleccionada
+        $versionamiento = VersionContratoDD::where('version_contrato', $version)
+            ->select()
+            ->get();
+        $result->codigo_documento = $versionamiento[0]['descripcion'];
+        $result->fecha_documento = $versionamiento[1]['descripcion'];
+        $result->version_documento = $versionamiento[2]['descripcion'];
+        if (!$asJson) {
+            return $result;
+        }
         return response()->json($result);
     }
 
