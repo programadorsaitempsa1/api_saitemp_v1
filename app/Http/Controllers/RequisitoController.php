@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Requisito;
 use Illuminate\Http\Request;
 
@@ -14,10 +15,15 @@ class RequisitoController extends Controller
     public function index()
     {
         $result = Requisito::select()
-        ->get();
+            ->get();
         return response()->json($result);
     }
 
+    public function index2()
+    {
+        $result = Requisito::whereNotIn('id', ['1', '4'])->orderBy('nombre', 'asc')->get();
+        return response()->json($result);
+    }
     /**
      * Show the form for creating a new resource.
      *

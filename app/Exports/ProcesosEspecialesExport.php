@@ -4,39 +4,31 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 
-
-class ProcesosEspecialesExport implements FromCollection, WithStyles, ShouldAutoSize
+class ProcesosEspecialesExport implements FromArray, WithHeadings
 {
+    protected $data;
+    protected $headings;
 
-    use Exportable;
-
-    protected $exportData;
-
-    public function __construct($exportData = null)
+    public function __construct(array $data, array $headings)
     {
-        $this->exportData = $exportData;
+        $this->data = $data;
+        $this->headings = $headings;
     }
 
-
-
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function collection()
+    public function array(): array
     {
-        return $this->exportData;
+        return $this->data;
     }
 
-    public function styles(Worksheet $sheet)
+    public function headings(): array
     {
-        return [
-            1 => ['font' => ['bold' => true, 'size' => 12]],
-        ];
+        return $this->headings;
     }
-
 }

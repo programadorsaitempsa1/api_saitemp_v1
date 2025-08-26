@@ -3,7 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\ListaTrump;
+use App\Models\formularioGestionIngreso;
+use App\Models\AsignacionEstadosModel;
+use App\Models\EstadoCandidatoServicioModel;
+use App\Models\CandidatoSolicitudServicioModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ListaTrumpController extends Controller
 {
@@ -41,9 +46,44 @@ class ListaTrumpController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+
+    public function create(Request $request)
     {
-        //
+        try {
+            DB::beginTransaction();
+            $candidato = ListaTrump::where('cod_emp', $request->numero_documento_candidato)->first();
+            if (!isset($candidato)) {
+                $result = new ListaTrump;
+                $result->cod_emp = $request->numero_documento_candidato;
+                $result->nombre = $request->nombre_candidato . ' ' . $request->apellido_candidato;
+                $result->observacion = $request->motivo;
+                $result->fecha = now();
+                $result->cod_conv = 'NA';
+                $result->usuario = 1;
+                $result->bloqueado = 1;
+                $result->save();
+
+                $estado_orden_servicio = AsignacionEstadosModel::select('estado_id')->where('clave', '=', 'bloquea_candidato_servicio')->first();
+                $orden_servicio = formularioGestionIngreso::select()->where('candidato_servicio_id', $request->candidato_id)->first();
+                $orden_servicio->estado_ingreso_id = $estado_orden_servicio->estado_id;
+                $orden_servicio->estado_ingreso_id;
+                $orden_servicio->save();
+
+                $estado_candidato = EstadoCandidatoServicioModel::select('id')->where('clave','bloqueado')->first();
+                $candidato_solicitud_servicio = CandidatoSolicitudServicioModel::select()->where('id',$request->candidato_id)->first();
+                $candidato_solicitud_servicio->estado_candidato_id = $estado_candidato->id;
+                $candidato_solicitud_servicio->save();
+
+
+                DB::commit();
+                return response()->json(['status' => 'success', 'message' => 'Registro guardado exitosamente']);
+            } else {
+                return response()->json(['status' => 'error', 'message' => 'El candidato ya cuenta con un registro en lista trump.']);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['status' => 'error', 'message' => 'Error al guardar el registro']);
+        }
     }
 
     /**

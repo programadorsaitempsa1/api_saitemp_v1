@@ -55,6 +55,23 @@ return [
     'url' => env('APP_URL', 'http://localhost'),
 
     'asset_url' => env('ASSET_URL', null),
+    'USUARIO_VALIDART' => env('USUARIO_VALIDART'),
+    'VALIDART_URL' => env('VALIDART_URL'),
+    'URL_FRONT' => env('URL_FRONT'),
+    'PASSWORD_VALIDART' => env('PASSWORD_VALIDART'),
+    'CAPTCHA_KEY' => env('CAPTCHA_KEY'),
+    'CONTRASENA_NO_REPLY' => env('CONTRASENA_NO_REPLY'),
+    'CORREO_NO_REPLY' => env('CORREO_NO_REPLY'),
+    'CAPTCHA_URL' => env('CAPTCHA_URL'),
+    'PILA_APLICACION' => env('PILA_APLICACION'),
+    'PILA_URL' => env('PILA_URL'),
+    'USUARIO_PILA' => env('USUARIO_PILA'),
+    'PASSWORD_PILA' => env('PASSWORD_PILA'),
+    'ARL_API_URL' => env('ARL_API_URL'),
+    'ARL_API_KEY' => env('ARL_API_KEY'),
+    'YEASTAR_IP' => env('YEASTAR_IP'),
+    'YEASTAR_USER' => env('YEASTAR_USER'),
+    'YEASTAR_PASSWORD' => env('YEASTAR_PASSWORD'),
 
     /*
     |--------------------------------------------------------------------------
@@ -161,6 +178,7 @@ return [
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
+        Barryvdh\DomPDF\ServiceProvider::class,
 
         /*
          * Package Service Providers...
@@ -171,7 +189,7 @@ return [
          */
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
-        // App\Providers\BroadcastServiceProvider::class,
+        App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
