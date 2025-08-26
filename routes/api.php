@@ -280,6 +280,7 @@ Route::group([
   Route::get('/usersbyrolinternosst', [UsuarioController::class, 'byRolSst']);
   Route::get('/usersbyrolinternocartera', [UsuarioController::class, 'byRolCartera']);
   Route::get('/usersbyrolinternonomina', [UsuarioController::class, 'byRolNomina']);
+  Route::get('/usersbyrolinternocontratacion', [UsuarioController::class, 'byRolContratacion']);
   // Route::post('/user', [UsuarioController::class, 'create']); 
   Route::post('/user', [UsuarioController::class, 'update']);
   Route::post('/user2', [UsuarioController::class, 'update2']);
