@@ -760,7 +760,8 @@ class SolicitudServicioController extends Controller
         $result = SolicitudServicioModel::leftjoin('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_solicitud_servicio.linea_servicio_id')
             ->leftjoin('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_solicitud_servicio.motivo_servicio_id')
             ->leftjoin('usr_app_clientes as cli', 'cli.id', '=', 'usr_app_solicitud_servicio.cliente_id')
-            ->leftjoin('usr_app_lista_cargos as car', 'car.id', '=', 'usr_app_solicitud_servicio.cargo_solicitado_id')
+            ->leftjoin('usr_app_cargos2 as car2', 'car2.id', '=', 'usr_app_solicitud_servicio.cargo_solicitado_id')
+            ->leftjoin('usr_app_lista_cargos as car', 'car.id', '=', 'car2.cargo_id')
             ->when($tipo_usuario == '2', function ($query) use ($nit) {
                 return $query->where('usr_app_solicitud_servicio.nit', $nit);
             })
