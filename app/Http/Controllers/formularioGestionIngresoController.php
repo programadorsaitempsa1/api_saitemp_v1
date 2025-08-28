@@ -346,6 +346,7 @@ class formularioGestionIngresoController extends Controller
             ->leftjoin('usr_app_historico_concepto_candidatos as historico_candidatos', 'historico_candidatos.formulario_ingreso_id', '=', 'usr_app_formulario_ingreso.id')
             ->leftjoin('usr_app_candadato_solicitud_servicio as cs', 'cs.id', '=', 'usr_app_formulario_ingreso.candidato_servicio_id')
             ->leftjoin('usr_app_solicitud_servicio as sc', 'sc.id', '=', 'cs.servicio_id')
+            ->leftjoin('usr_app_motivos_servicio as ms', 'ms.id', '=', 'sc.motivo_servicio_id')
             ->leftJoin('usr_app_usuarios as us1', 'us1.id', 'cs.usuario_id')
             ->leftJoin('usr_app_candidatos_c as can1', 'can1.usuario_id', 'us1.id')
             ->leftJoin('usr_app_clientes as cli', 'cli.id', 'sc.cliente_id')
@@ -433,7 +434,9 @@ class formularioGestionIngresoController extends Controller
                 'sub.id as subestado_id',
                 'sc.id as servicio_id',
                 'cs.usuario_id as candidato_id',
-                'car2.id as cargo_cliente_id'
+                'car2.id as cargo_cliente_id',
+                'ms.id as motivo_servicio_id',
+                'ms.nombre as motivo_servicio'
             )
             ->first();
 
