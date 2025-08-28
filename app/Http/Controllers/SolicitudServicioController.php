@@ -48,9 +48,9 @@ class SolicitudServicioController extends Controller
             ->where('analista_id', $usuario_id)
             ->pluck('facilitador_id');
 
-        $result = SolicitudServicioModel::join('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_solicitud_servicio.linea_servicio_id')
-            ->join('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_solicitud_servicio.motivo_servicio_id')
-            ->join('usr_app_clientes as cli', 'cli.id', '=', 'usr_app_solicitud_servicio.cliente_id')
+        $result = SolicitudServicioModel::leftjoin('usr_app_formulario_ingreso_tipo_servicio as ts', 'ts.id', '=', 'usr_app_solicitud_servicio.linea_servicio_id')
+            ->leftjoin('usr_app_motivos_servicio as ms', 'ms.id', '=', 'usr_app_solicitud_servicio.motivo_servicio_id')
+            ->leftjoin('usr_app_clientes as cli', 'cli.id', '=', 'usr_app_solicitud_servicio.cliente_id')
             ->when($tipo_usuario == '2', function ($query) use ($nit) {
                 return $query->where('usr_app_solicitud_servicio.nit', $nit);
             })

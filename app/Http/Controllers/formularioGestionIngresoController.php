@@ -52,6 +52,7 @@ class formularioGestionIngresoController extends Controller
             ->leftjoin('usr_app_solicitud_servicio as sc', 'sc.id', '=', 'cs.servicio_id')
             ->leftJoin('usr_app_usuarios as us1', 'us1.id', 'cs.usuario_id')
             ->leftJoin('usr_app_candidatos_c as can1', 'can1.usuario_id', 'us1.id')
+            ->leftJoin('usr_app_genero as genero', 'genero.id', '=', 'can1.genero_id')
             ->leftJoin('usr_app_clientes as cli', 'cli.id', 'sc.cliente_id')
             ->leftJoin('usr_app_clientes as cli2', 'cli2.id', 'usr_app_formulario_ingreso.cliente_id')
             ->leftJoin('usr_app_municipios as mun', 'mun.id', 'cs.ciudad_prestacion_servicio_id')
@@ -108,7 +109,7 @@ class formularioGestionIngresoController extends Controller
                 'cli.contratacion_hora_confirmacion as hora_confirmacion',
                 'usr_app_formulario_ingreso.responsable_id',
                 'concepto_medico.clave as concepto_medico_clave',
-
+                /*   'genero.nombre as genero' */
             )
             ->orderby('usr_app_formulario_ingreso.id', 'DESC')
             ->paginate($cantidad);
