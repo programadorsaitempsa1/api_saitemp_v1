@@ -21,6 +21,7 @@ class CargosCandidatoController extends Controller
 
     public function store(Request $request)
     {
+        set_time_limit(3600);
         $request->validate([
             'archivo_excel' => 'required|file|mimes:xlsx,xls,csv'
         ]);

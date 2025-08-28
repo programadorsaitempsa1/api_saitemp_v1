@@ -338,4 +338,15 @@ class UsuarioController extends Controller
             ->get();
         return response()->json($result);
     }
+    public function byRolContratacion()
+    {
+        $result = UsuariosInternosModel::select(
+            'id',
+            DB::raw("CONCAT(nombres,' ',apellidos)  AS nombre"),
+            'correo AS email',
+
+        )->where('rol_usuario_interno_id', 5)
+            ->get();
+        return response()->json($result);
+    }
 }

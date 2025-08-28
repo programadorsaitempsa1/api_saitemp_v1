@@ -88,21 +88,31 @@ class formularioDebidaDiligenciaController extends Controller
     public function consultacliente($cantidad)
     {
         $permisos = $this->permisos();
-
         $user = auth()->user();
 
         $result = cliente::join('gen_vendedor as ven', 'ven.cod_ven', '=', 'usr_app_clientes.vendedor_id')
             ->leftJoin('usr_app_estados_firma as estf', 'estf.id', '=', 'usr_app_clientes.estado_firma_id')
             ->leftJoin(
                 DB::raw('(SELECT cliente_id, estado_contrato 
-                             FROM usr_app_historico_contratos_dd 
-                             WHERE activo = 1) AS contratos'),
+                         FROM usr_app_historico_contratos_dd 
+                         WHERE activo = 1) AS contratos'),
                 'contratos.cliente_id',
                 '=',
                 'usr_app_clientes.id'
             )
-
-            /*   ->whereYear('usr_app_clientes.created_at', $year_actual) */
+            ->leftJoin(
+                DB::raw('(SELECT hp1.cliente_id, hp1.profesional_cartera, hp1.profesional_contratacion, hp1.profesional_sst, hp1.profesional_nomina
+                        FROM usr_app_historico_profesionales_dd hp1
+                        INNER JOIN (
+                            SELECT cliente_id, MAX(id) as max_id
+                            FROM usr_app_historico_profesionales_dd
+                            GROUP BY cliente_id
+                        ) hp2 ON hp1.cliente_id = hp2.cliente_id AND hp1.id = hp2.max_id
+                     ) AS historico_prof'),
+                'historico_prof.cliente_id',
+                '=',
+                'usr_app_clientes.id'
+            )
             ->when(!in_array('39', $permisos), function ($query) use ($user) {
                 return $query->where(function ($subQuery) use ($user) {
                     $subQuery->where('usr_app_clientes.vendedor_id', $user->vendedor_id)
@@ -119,11 +129,15 @@ class formularioDebidaDiligenciaController extends Controller
                 'usr_app_clientes.telefono_empresa',
                 'usr_app_clientes.created_at',
                 'estf.nombre as nombre_estado_firma',
-                'contratos.estado_contrato', // Estado del contrato como propiedad directa
+                'contratos.estado_contrato',
                 'estf.color as color_estado_firma',
                 'usr_app_clientes.responsable_corregir',
                 'usr_app_clientes.responsable',
                 'estf.id as estado_firma_id',
+                'historico_prof.profesional_cartera',
+                'historico_prof.profesional_contratacion',
+                'historico_prof.profesional_sst',
+                'historico_prof.profesional_nomina'
             )
             ->orderby('usr_app_clientes.created_at', 'DESC')
             ->orderby('usr_app_clientes.numero_radicado', 'DESC')
@@ -1553,9 +1567,14 @@ class formularioDebidaDiligenciaController extends Controller
                     $historico_profesionales->usuario_nomina_id  = $request['profesional_nomina_id'];
                     $historico_profesionales->anotacion_nomina = $request['anotacion_nomina'];
                 }
+                if ($request['profesional_contratacion_id']) {
+                    $historico_profesionales->profesional_contratacion = $request['profesional_contratacion'];
+                    $historico_profesionales->usuario_contratacion_id = $request['profesional_contratacion_id'];
+                    $historico_profesionales->anotacion_contratacion = $request['anotacion_contratacion'];
+                }
                 $historico_profesionales->save();
             } else {
-
+                $historico->anotacion_contratacion = $request['anotacion_contratacion'];
                 $historico->anotacion_nomina = $request['anotacion_nomina'];
                 $historico->anotacion_cartera = $request['anotacion_cartera'];
                 $historico->anotacion_sst = $request['anotacion_sst'];

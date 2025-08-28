@@ -100,6 +100,7 @@ class CentrosDeTrabajoSeiyaController extends Controller
 
     public function inyectarCentrosTrabajo(Request $request)
     {
+        set_time_limit(3600);
         // Validar que el archivo sea un Excel
         $request->validate([
             'archivo' => 'required|file|mimes:xlsx,csv,xls'
