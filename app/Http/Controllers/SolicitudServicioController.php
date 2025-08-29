@@ -158,6 +158,7 @@ class SolicitudServicioController extends Controller
             ->leftjoin('usr_app_motivos_servicio as mot_ser', 'mot_ser.id', '=', 'usr_app_candadato_solicitud_servicio.motivo_servicio_id')
             ->where('usr_app_candadato_solicitud_servicio.servicio_id', '=', $id,)
             ->select(
+                'car2.id as cargo_solicitado_id',
                 'car2.id as cargo_cliente_id',
                 'usr_app_candadato_solicitud_servicio.id as candidato_id',
                 'usr_app_candadato_solicitud_servicio.servicio_id',
@@ -176,7 +177,6 @@ class SolicitudServicioController extends Controller
                 'usr_app_candadato_solicitud_servicio.subsidio_transporte',
                 'usr_app_candadato_solicitud_servicio.hora_ingreso',
                 'car.nombre as cargo_solicitado',
-                'car.id as cargo_solicitado_id',
                 'usr_app_candadato_solicitud_servicio.whatsapp',
                 'ciu.nombre as ciudad_prestacion_servicio',
                 'ciu.id as ciudad_prestacion_servicio_id',
