@@ -111,6 +111,7 @@ class SolicitudServicioController extends Controller
             ->leftJoin('usr_app_lista_cargos as liscar', 'liscar.id', '=', 'car2.cargo_id')
             ->where('usr_app_solicitud_servicio.id', '=', $id)
             ->select(
+                'car2.id as cargo_cliente_id',
                 'usr_app_solicitud_servicio.id',
                 'usr_app_solicitud_servicio.cliente_id',
                 'usr_app_solicitud_servicio.numero_radicado as radicado',
@@ -158,7 +159,7 @@ class SolicitudServicioController extends Controller
             ->leftjoin('usr_app_motivos_servicio as mot_ser', 'mot_ser.id', '=', 'usr_app_candadato_solicitud_servicio.motivo_servicio_id')
             ->where('usr_app_candadato_solicitud_servicio.servicio_id', '=', $id,)
             ->select(
-                'car2.id as cargo_solicitado_id',
+                'car2.id as cargo_cliente_id',
                 'usr_app_candadato_solicitud_servicio.id as candidato_id',
                 'usr_app_candadato_solicitud_servicio.servicio_id',
                 'usr_app_candadato_solicitud_servicio.usuario_id',
@@ -328,14 +329,11 @@ class SolicitudServicioController extends Controller
 
         try {
             DB::beginTransaction();
-            $result = $candidato_servicio = CandidatoSolicitudServicioModel::where('usuario_id', $candidato['usuario_id'])->where('servicio_id', $ordenServicio_id)->first();
+            $candidato_servicio = CandidatoSolicitudServicioModel::where('usuario_id', $candidato['usuario_id'])->where('servicio_id', $ordenServicio_id)->first();
 
-            if (empty($result)) {
+            if (empty($candidato_servicio)) {
                 $candidato_servicio = new CandidatoSolicitudServicioModel;
-            } else {
-                return;
             }
-
             $candidato_servicio->servicio_id = $ordenServicio_id;
             $candidato_servicio->en_proceso = 0;
             $candidato_servicio->usuario_id = $candidato['usuario_id'];
@@ -357,7 +355,6 @@ class SolicitudServicioController extends Controller
             $candidato_servicio->motivo_servicio_id = $candidato['motivo_servicio_id'];
             $candidato_servicio->save();
             DB::commit();
-            return $candidato_servicio->id;
         } catch (\Exception $e) {
             DB::rollBack();
             return $e;
@@ -711,12 +708,12 @@ class SolicitudServicioController extends Controller
                     }
                 }
                 if ($candidato['registrado'] == 0) {
-                    $result = $this->candidatoNoRegistradoServicio($candidato, $ordenServicio->id);
+                    $result .= $this->candidatoNoRegistradoServicio($candidato, $ordenServicio->id);
                 } else if ($candidato['registrado'] == 1) {
-                    $result = $this->candidatoRegistradoServicio($candidato, $ordenServicio->id);
+                    $result .= $this->candidatoRegistradoServicio($candidato, $ordenServicio->id);
                 }
             }
-
+         
             DB::commit();
             if ($candidatos_con_servicio != '') {
                 return response()->json(["status" => "success", "message" => "Formulario guardado exitosamente, sin embargo los candidatos con numero de doucmento de identidad $candidatos_con_servicio no pudieron ser registrados, por favor comuniquese con su asesor para mas información.", 'id' => $ordenServicio->id]);
