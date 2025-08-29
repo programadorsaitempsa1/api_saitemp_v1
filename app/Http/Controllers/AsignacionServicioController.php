@@ -123,12 +123,15 @@ class AsignacionServicioController extends Controller
             $candidato->motivo_cancelacion =  $request->motivo_cancelacion_id;
             $candidato->descripcion_cancelacion =  $request->descripcion_cancelacion;
             $candidato->estado_candidato_id = $estado_candidato->id; // se coloca el registro en estado cancelado
-            $estado_candidato_relacional = EstadoCandidatoServioOrdenServicioModel::where('estado_candidato_servicio_id', $estado_candidato->id)->first();
-            if ($estado_candidato_relacional) {
-                $orden_servicio = formularioGestionIngreso::where('candidato_servicio_id', $candidato->id)->first();
-                $orden_servicio->estado_ingreso_id = $estado_candidato_relacional->estado_orden_servicio_id;
-                $orden_servicio->save();
+            if ($candidato->en_proceso == 1) {
+                $estado_candidato_relacional = EstadoCandidatoServioOrdenServicioModel::where('estado_candidato_servicio_id', $estado_candidato->id)->first();
+                if ($estado_candidato_relacional) {
+                    $orden_servicio = formularioGestionIngreso::where('candidato_servicio_id', $candidato->id)->first();
+                    $orden_servicio->estado_ingreso_id = $estado_candidato_relacional->estado_orden_servicio_id;
+                    $orden_servicio->save();
+                }
             }
+
             $candidato->save();
             DB::commit();
             return response()->json(["status" => "success", "message" => "Candidato cancelado de manera exitosa"]);
