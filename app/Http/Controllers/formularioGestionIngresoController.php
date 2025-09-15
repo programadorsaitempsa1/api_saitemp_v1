@@ -26,9 +26,10 @@ use Illuminate\Support\Facades\DB;
 use App\Traits\Permisos;
 use App\Traits\AutenticacionGuard;
 use App\Exports\SalidasNoConformeExport;
-use App\Models\Cargo2Examen;
 use App\Models\ExamenesRecomendacionesModel;
 use App\Models\Cargo2;
+use App\Models\UsuariosInternosModel;
+use App\Models\Municipios;
 
 class formularioGestionIngresoController extends Controller
 {
@@ -57,6 +58,7 @@ class formularioGestionIngresoController extends Controller
             ->leftJoin('usr_app_clientes as cli2', 'cli2.id', 'usr_app_formulario_ingreso.cliente_id')
             ->leftJoin('usr_app_municipios as mun', 'mun.id', 'cs.ciudad_prestacion_servicio_id')
             ->leftJoin('usr_app_departamentos as dep', 'dep.id', 'mun.departamento_id')
+            ->leftJoin('usr_app_municipios as mun2', 'mun2.id', 'usr_app_formulario_ingreso.municipio_id')
             ->leftJoin('usr_app_paises as pais', 'pais.id', 'dep.pais_id')
             ->leftJoin('gen_tipide as ti', 'ti.cod_tip', '=', 'can1.tip_doc_id')
             ->leftJoin('gen_tipide as ti2', 'ti2.cod_tip', '=', 'usr_app_formulario_ingreso.tipo_documento_id')
@@ -91,7 +93,7 @@ class formularioGestionIngresoController extends Controller
                 "),
                 DB::RAW("COALESCE(car.nombre,usr_app_formulario_ingreso.cargo) as cargo"),
                 DB::raw("COALESCE(cli.razon_social, cli2.razon_social) as razon_social"),
-                'mun.nombre as municipio',
+                DB::raw("COALESCE(mun.nombre, mun2.nombre) as municipio"),
                 'ciulab.laboratorio',
                 'usr_app_formulario_ingreso.laboratorio as otro_laboratorio',
                 'usr_app_formulario_ingreso.fecha_examen',
@@ -192,6 +194,9 @@ class formularioGestionIngresoController extends Controller
         $indiceResponsable = $registro_ingreso->id % $numeroResponsables; // Calcula el índice del responsable basado en el ID del registro
         $responsable = $usuarios[$indiceResponsable];
 
+        if ($responsable_id != null) {
+            $responsable = UsuariosInternosModel::where('usuario_id', $responsable_id)->select('usuario_id', 'nombres', 'apellidos',)->first();
+        }
         $this->eventoSocket($responsable->usuario_id);
 
         $seguimiento_estado = new FormularioIngresoSeguimientoEstado;
@@ -268,7 +273,6 @@ class formularioGestionIngresoController extends Controller
     {
         DB::beginTransaction();
         try {
-            // $user = auth()->user();
             $user = $this->getUserRelaciones();
             $user = $user->getData(true);
             $registro_ingreso = formularioGestionIngreso::where('usr_app_formulario_ingreso.id', '=', $item_id)
@@ -353,6 +357,8 @@ class formularioGestionIngresoController extends Controller
             ->leftJoin('usr_app_clientes as cli2', 'cli2.id', 'usr_app_formulario_ingreso.cliente_id')
             ->leftJoin('usr_app_municipios as mun', 'mun.id', 'cs.ciudad_prestacion_servicio_id')
             ->leftJoin('usr_app_departamentos as dep', 'dep.id', 'mun.departamento_id')
+            ->leftJoin('usr_app_municipios as mun2', 'mun2.id', 'usr_app_formulario_ingreso.municipio_id')
+            ->leftJoin('usr_app_departamentos as dep2', 'dep2.id', 'mun2.departamento_id')
             ->leftJoin('usr_app_paises as pais', 'pais.id', 'dep.pais_id')
             ->leftJoin('gen_tipide as ti', 'ti.cod_tip', '=', 'can1.tip_doc_id')
             ->leftJoin('gen_tipide as ti2', 'ti2.cod_tip', '=', 'usr_app_formulario_ingreso.tipo_documento_id')
@@ -385,8 +391,12 @@ class formularioGestionIngresoController extends Controller
                 DB::raw("COALESCE(cs.direccion_prestacion_servicio, usr_app_formulario_ingreso.direccion_empresa) as direccion_empresa"),
                 'car.id as cargo_id',
                 'cs.salario',
-                'mun.nombre as municipio',
-                'mun.id as municipio_id',
+
+                DB::raw("COALESCE(mun.nombre, mun2.nombre) as municipio"),
+                DB::raw("COALESCE(mun.id, mun2.id) as municipio_id"),
+                DB::raw("COALESCE(dep.nombre, dep2.nombre) as departamento"),
+                DB::raw("COALESCE(dep.id, dep2.id) as departamento_id"),
+
                 DB::raw("COALESCE(usr_app_formulario_ingreso.n_servicio, sc.numero_radicado) as n_servicio"),
                 DB::RAW("COALESCE(cs.celular_candidato,usr_app_formulario_ingreso.numero_contacto) as numero_contacto"),
                 DB::RAW("COALESCE(car.nombre,usr_app_formulario_ingreso.cargo) as cargo"),
@@ -398,8 +408,6 @@ class formularioGestionIngresoController extends Controller
                 'usr_app_formulario_ingreso.laboratorio',
                 'usr_app_formulario_ingreso.examenes',
                 'usr_app_formulario_ingreso.fecha_examen',
-                'dep.nombre as departamento',
-                'dep.id as departamento_id',
                 'pais.id as pais_id',
                 'pais.nombre as pais',
                 'usr_app_formulario_ingreso.created_at as fecha_radicado',
@@ -2551,17 +2559,17 @@ class formularioGestionIngresoController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
-    {
+    {      
 
         DB::beginTransaction();
         try {
-            // $user = auth()->user();
+
             $user = $this->getUserRelaciones();
             $user = $user->getData(true);
             $ids = [];
             array_push($ids, $id);
-            $estado_id = $request->estado_id;
             $result = formularioGestionIngreso::find($id);
+            $estado_id = $request->estado_id;
             $responsable_inicial = str_replace("null", "", $result->responsable);
             $estado_inicial = $result->estado_ingreso_id;
 
@@ -2577,6 +2585,11 @@ class formularioGestionIngresoController extends Controller
 
                 return response()->json(['status' => '200', 'message' => 'ok', 'registro_ingreso_id' => $ids]);
             }
+
+            if ($request->subestado_id != null && $request->subestado_id != 1 && ($estado_id == 9)) {
+                return response()->json(['status' => 'error', 'message' => 'No se puede cambiar el estado a contratar con documentos faltante o novedades.']);
+            }
+
             $result->concepto_medico_id = $request->concepto_medico_id;
             $result->fecha_ingreso = $request->fecha_ingreo;
             $result->eps = $request->eps;
@@ -2689,17 +2702,21 @@ class formularioGestionIngresoController extends Controller
             }
 
 
-            if ($estado_id != $result->estado_ingreso_id ||  $result->responsable == null) {
-                $this->actualizaestadoingreso($id, $estado_id, $result->responsable_id, $responsable_inicial, $estado_inicial);
+            if ($request->concepto_medico_id == 2) {
+                $this->asignaNoApto($result);
             } else {
-                $seguimiento_estado = new FormularioIngresoSeguimientoEstado;
-                $seguimiento_estado->responsable_inicial =  $responsable_inicial;
-                $seguimiento_estado->responsable_final = str_replace("null", "", $result->responsable);
-                $seguimiento_estado->estado_ingreso_inicial = $estado_inicial;
-                $seguimiento_estado->estado_ingreso_final =   $request->estado_id;
-                $seguimiento_estado->formulario_ingreso_id =  $id;
-                $seguimiento_estado->actualiza_registro =   $user['nombres'] . ' ' . str_replace("null", "", $user['apellidos']);
-                $seguimiento_estado->save();
+                if ($estado_id != $result->estado_ingreso_id ||  $result->responsable == null) {
+                    $this->actualizaestadoingreso($id, $estado_id, $result->responsable_id, $responsable_inicial, $estado_inicial);
+                } else {
+                    $seguimiento_estado = new FormularioIngresoSeguimientoEstado;
+                    $seguimiento_estado->responsable_inicial =  $responsable_inicial;
+                    $seguimiento_estado->responsable_final = str_replace("null", "", $result->responsable);
+                    $seguimiento_estado->estado_ingreso_inicial = $estado_inicial;
+                    $seguimiento_estado->estado_ingreso_final =   $request->estado_id;
+                    $seguimiento_estado->formulario_ingreso_id =  $id;
+                    $seguimiento_estado->actualiza_registro =   $user['nombres'] . ' ' . str_replace("null", "", $user['apellidos']);
+                    $seguimiento_estado->save();
+                }
             }
             DB::commit();
             return response()->json(['status' => '200', 'message' => 'ok', 'registro_ingreso_id' => $ids]);
@@ -2707,6 +2724,29 @@ class formularioGestionIngresoController extends Controller
             DB::rollback();
             return $e;
             return response()->json(['status' => 'error', 'message' => 'Error al guardar formulario, por favor verifique el llenado de todos los campos e intente nuevamente']);
+        }
+    }
+
+
+    public function asignaNoApto($result)
+    {
+        $departamento_id = CandidatoSolicitudServicioModel::leftJoin('usr_app_municipios as mun', 'mun.id', 'usr_app_candadato_solicitud_servicio.ciudad_prestacion_servicio_id')
+            ->leftJoin('usr_app_departamentos as dep', 'dep.id', 'mun.departamento_id')
+            ->where('usr_app_candadato_solicitud_servicio.id', $result->candidato_servicio_id)
+            ->select('mun.departamento_id as id')->first();
+        if (empty($departamento_id)) {
+            $departamento_id = Municipios::join('usr_app_departamentos as dep', 'dep.id', 'usr_app_municipios.departamento_id')
+                ->where('usr_app_municipios.id', $result->municipio_id)
+                ->select('dep.id')
+                ->first();
+        }
+
+        //Se envia a Karen Lizeth Peñuela Rodriguez cuando es no apto cambiar en caso de ser necesario
+        if (in_array($departamento_id->id, ['8', '16', '11', '33', '22', '17', '18', '10', '32', '2'])) {
+            $this->actualizaestadoingreso($result->id, 9, 443);
+        } else{
+            //Se envia a Guisela Maria Marin Diaz cuando es no apto cambiar en caso de ser necesario
+            $this->actualizaestadoingreso($result->id, 9, 30);
         }
     }
 
