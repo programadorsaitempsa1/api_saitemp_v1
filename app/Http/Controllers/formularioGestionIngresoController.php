@@ -361,6 +361,7 @@ class formularioGestionIngresoController extends Controller
             ->leftJoin('usr_app_subestados_orden_servicio as sub', 'sub.id', 'usr_app_formulario_ingreso.subestado_id')
             ->leftjoin('usr_app_cargos2 as car2', 'car2.id', '=', 'cs.cargo_solicitado_id')
             ->leftjoin('usr_app_lista_cargos as car', 'car.id', '=', 'car2.cargo_id')
+            ->leftjoin('usr_app_conceptos_medicos as concepto_medico', 'concepto_medico.id', '=', 'usr_app_formulario_ingreso.concepto_medico_id')
             ->where('usr_app_formulario_ingreso.id', '=', $id)
             ->select(
                 'historico_candidatos.id as historico_candidatos_id',
@@ -436,7 +437,9 @@ class formularioGestionIngresoController extends Controller
                 'cs.usuario_id as candidato_id',
                 'car2.id as cargo_cliente_id',
                 'ms.id as motivo_servicio_id',
-                'ms.nombre as motivo_servicio'
+                'ms.nombre as motivo_servicio',
+                'concepto_medico.id as concepto_medico_id',
+                'concepto_medico.nombre as concepto_medico'
             )
             ->first();
 
