@@ -335,7 +335,6 @@ class SolicitudServicioController extends Controller
                 $candidato_servicio = new CandidatoSolicitudServicioModel;
             }
             $candidato_servicio->servicio_id = $ordenServicio_id;
-            /* $candidato_servicio->en_proceso = 0; */
             $candidato_servicio->usuario_id = $candidato['usuario_id'];
             $candidato_servicio->tipo_identificacion_id = $candidato['tipo_identificacion_id'] ?? null;
             $candidato_servicio->numero_documento_identidad = $candidato['numero_documento_candidato'];
